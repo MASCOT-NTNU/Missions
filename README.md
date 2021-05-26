@@ -27,6 +27,8 @@
 
 ![Satellite true image](Nidelva/May26/S01.png "Satellite true image")
 <!-- (https://apps.sentinel-hub.com/eo-browser/?zoom=13&lat=63.45481&lng=10.39547&themeId=DEFAULT-THEME&visualizationUrl=https%3A%2F%2Fservices.sentinel-hub.com%2Fogc%2Fwms%2Fbd86bcc0-f318-402b-a145-015f85b9427e&datasetId=S2L2A&fromTime=2021-05-25T00%3A00%3A00.000Z&toTime=2021-05-25T23%3A59%3A59.999Z&layerId=1_TRUE_COLOR) -->
+
+
 ![Satellite moisture image](Nidelva/May26/S02.png "Satellite moisture index image")
 <!-- (https://apps.sentinel-hub.com/eo-browser/?zoom=13&lat=63.45481&lng=10.39547&themeId=DEFAULT-THEME&visualizationUrl=https%3A%2F%2Fservices.sentinel-hub.com%2Fogc%2Fwms%2Fbd86bcc0-f318-402b-a145-015f85b9427e&datasetId=S2L2A&fromTime=2021-05-25T00%3A00%3A00.000Z&toTime=2021-05-25T23%3A59%3A59.999Z&layerId=5-MOISTURE-INDEX1) -->
 
@@ -34,4 +36,4 @@
 
 # Contact
 
-Please contact Yaolin Ge (yaolin.ge@ntnu.no) if you have any questions. :grin:
+Please contact Yaolin Ge (yaolin.ge@ntnu.no) if you have any questions. :grin: :thinking: :metal:
