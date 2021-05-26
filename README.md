@@ -23,8 +23,11 @@
 - Tomorrow, we do lawn mower manoeuvres as many as we can, as dense as we are allowed to get a better understanding of the plume. 
 - 3D simple model will be tested first, and decide whether to continue with complex ones based on what we get. 
 
+###### Results:
 
+[Satellite true iamge](https://apps.sentinel-hub.com/eo-browser/?zoom=13&lat=63.45481&lng=10.39547&themeId=DEFAULT-THEME&visualizationUrl=https%3A%2F%2Fservices.sentinel-hub.com%2Fogc%2Fwms%2Fbd86bcc0-f318-402b-a145-015f85b9427e&datasetId=S2L2A&fromTime=2021-05-25T00%3A00%3A00.000Z&toTime=2021-05-25T23%3A59%3A59.999Z&layerId=1_TRUE_COLOR)
 
+[Satellite moisture image](https://apps.sentinel-hub.com/eo-browser/?zoom=13&lat=63.45481&lng=10.39547&themeId=DEFAULT-THEME&visualizationUrl=https%3A%2F%2Fservices.sentinel-hub.com%2Fogc%2Fwms%2Fbd86bcc0-f318-402b-a145-015f85b9427e&datasetId=S2L2A&fromTime=2021-05-25T00%3A00%3A00.000Z&toTime=2021-05-25T23%3A59%3A59.999Z&layerId=5-MOISTURE-INDEX1)
 ---
 
 # Contact
