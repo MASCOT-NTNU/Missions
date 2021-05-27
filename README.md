@@ -12,8 +12,8 @@
 
 
 
-<details>
-  <summary>26th-May-2021</summary>
+<!-- <details> -->
+  <!-- <summary>26th-May-2021</summary> -->
 
 ###### Log:
 - LAUV cannot be logged in, which will be solved by Tore today. 
@@ -35,7 +35,7 @@
 ![Satellite moisture image](Nidelva/May26/S02.png "Satellite moisture index image")
 <!-- (https://apps.sentinel-hub.com/eo-browser/?zoom=13&lat=63.45481&lng=10.39547&themeId=DEFAULT-THEME&visualizationUrl=https%3A%2F%2Fservices.sentinel-hub.com%2Fogc%2Fwms%2Fbd86bcc0-f318-402b-a145-015f85b9427e&datasetId=S2L2A&fromTime=2021-05-25T00%3A00%3A00.000Z&toTime=2021-05-25T23%3A59%3A59.999Z&layerId=5-MOISTURE-INDEX1) -->
 
-</details>
+<!-- </details> -->
 
 
 <!-- <details> -->
@@ -58,7 +58,11 @@
 - Tuesday (1st-June) and on is set to be the integration workshop and more field with adaptive framework. 
 
 ###### Results:
-![LAUV travelling in the water masses](https://youtu.be/0ngE9tWy0Ms)
+![I1](Nidelva/May27/I1.PNG)
+![I2](Nidelva/May27/I2.MOV)
+![I3](Nidelva/May27/I3.PNG)
+![I4](Nidelva/May27/I4.MOV)
+<!-- ![LAUV travelling in the water masses](https://youtu.be/0ngE9tWy0Ms) -->
 
 
 
