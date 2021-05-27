@@ -41,17 +41,18 @@
 <details>
   <summary>27th-May-2021</summary>
  
-###### Duration: 9:00 - 14:30
-###### Number of tests: multiple lawn mowers
-###### Log:
-- In the morning, some small problems occurred, cable issues, but easily fixed.
-- When driving the boat from TBS to the outlet of the Nidelva, naked eyes can easily distinguish the water plume, see figures below.
-- Satellite images cannot be loaded, since it takes every three days to travel to the same place for the satellite, which is sad since it can easily tell from the satellite image if we could have one.
-- Tide was low in the morning, but rised a bit afterwards.
+	###### Duration: 9:00 - 14:30
+	###### Number of tests: multiple lawn mowers
+	###### Log:
+	- In the morning, some small problems occurred, cable issues, but easily fixed.
+	- When driving the boat from TBS to the outlet of the Nidelva, naked eyes can easily distinguish the water plume, see figures below.
+	- Satellite images cannot be loaded, since it takes every three days to travel to the same place for the satellite, which is sad since it can easily tell from the satellite image if we could have one.
+	- Tide was low in the morning, but rised a bit afterwards.
 
-###### Plan:
+	###### Plan:
 
-###### Results:
+	###### Results:
+
 </details>
 
 
@@ -59,4 +60,4 @@
 
 # Contact
 
-Please contact Yaolin Ge (yaolin.ge@ntnu.no) if you have any questions. :grin: :thinking: :metal:😁 🤔 🤘
+Please contact Yaolin Ge (yaolin.ge@ntnu.no) if you have any questions. 😁 🤔 🤘
