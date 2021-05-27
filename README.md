@@ -33,6 +33,10 @@
 <!-- (https://apps.sentinel-hub.com/eo-browser/?zoom=13&lat=63.45481&lng=10.39547&themeId=DEFAULT-THEME&visualizationUrl=https%3A%2F%2Fservices.sentinel-hub.com%2Fogc%2Fwms%2Fbd86bcc0-f318-402b-a145-015f85b9427e&datasetId=S2L2A&fromTime=2021-05-25T00%3A00%3A00.000Z&toTime=2021-05-25T23%3A59%3A59.999Z&layerId=5-MOISTURE-INDEX1) -->
 
 
+
+<details>
+  <summary>27th-May-2021</summary>
+  
 #### 27th-May-2021
 ###### Duration: 9:00 - 14:30
 ###### Number of tests: multiple lawn mowers
@@ -43,28 +47,8 @@
 - Tide was low in the morning, but rised a bit afterwards.
 
 ###### Plan:
-- May-26th, we will do lawn mower manoeuvres as many as we can, as dense as we are allowed to get a better understanding of the plume. 
-- 3D simple model will be tested first, and decide whether to continue with complex ones based on what we get. 
 
 ###### Results:
-
-![Satellite true image](Nidelva/May26/S01.png "Satellite true image")
-<!-- (https://apps.sentinel-hub.com/eo-browser/?zoom=13&lat=63.45481&lng=10.39547&themeId=DEFAULT-THEME&visualizationUrl=https%3A%2F%2Fservices.sentinel-hub.com%2Fogc%2Fwms%2Fbd86bcc0-f318-402b-a145-015f85b9427e&datasetId=S2L2A&fromTime=2021-05-25T00%3A00%3A00.000Z&toTime=2021-05-25T23%3A59%3A59.999Z&layerId=1_TRUE_COLOR) -->
-
-
-![Satellite moisture image](Nidelva/May26/S02.png "Satellite moisture index image")
-<!-- (https://apps.sentinel-hub.com/eo-browser/?zoom=13&lat=63.45481&lng=10.39547&themeId=DEFAULT-THEME&visualizationUrl=https%3A%2F%2Fservices.sentinel-hub.com%2Fogc%2Fwms%2Fbd86bcc0-f318-402b-a145-015f85b9427e&datasetId=S2L2A&fromTime=2021-05-25T00%3A00%3A00.000Z&toTime=2021-05-25T23%3A59%3A59.999Z&layerId=5-MOISTURE-INDEX1) -->
-
-
-# A collapsible section with markdown
-<details>
-  <summary>Click to expand!</summary>
-  
-  ## Heading
-  1. A numbered
-  2. list
-     * With some
-     * Sub bullets
 </details>
 
 
