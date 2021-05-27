@@ -1,4 +1,4 @@
-!bash/bin
+#!bash/bin
 
 git add .
 git commit -m "new"
