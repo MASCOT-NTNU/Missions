@@ -59,4 +59,4 @@
 
 # Contact
 
-Please contact Yaolin Ge (yaolin.ge@ntnu.no) if you have any questions. :grin: :thinking: :metal:
+Please contact Yaolin Ge (yaolin.ge@ntnu.no) if you have any questions. :grin: :thinking: :metal:😁 🤔 🤘
