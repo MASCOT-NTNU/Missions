@@ -58,9 +58,9 @@
 - Tuesday (1st-June) and on is set to be the integration workshop and more field with adaptive framework. 
 
 ###### Results:
-![I1](Nidelva/May27/I1.PNG)
+![I1](Nidelva/May27/I1.JPG)
 ![I2](Nidelva/May27/I2.MOV)
-![I3](Nidelva/May27/I3.PNG)
+![I3](Nidelva/May27/I3.JPG)
 ![I4](Nidelva/May27/I4.MOV)
 <!-- ![LAUV travelling in the water masses](https://youtu.be/0ngE9tWy0Ms) -->
 
