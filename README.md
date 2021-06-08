@@ -74,3 +74,12 @@
 # Contact
 
 Please contact Yaolin Ge (yaolin.ge@ntnu.no) if you have any questions. 😁 🤔 🤘
+
+
+# References
+
+![Semi-variance and covariance](https://www.aspexit.com/en/fundamental-assumptions-of-the-variogram-second-order-stationarity-intrinsic-stationarity-what-is-this-all-about/#Intrinsic_stationarity)
+
+![variogram](https://scikit-gstat.readthedocs.io/en/latest/userguide/variogram.html)
+
+![variogram notes](https://gsp.humboldt.edu/olm/R/04_01_Variograms.html)
