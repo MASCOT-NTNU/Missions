@@ -9,9 +9,13 @@ import os
 rawTemp = pd.read_csv(datapath + "Temperature.csv", delimiter=', ', header=0, engine='python')
 rawLoc = pd.read_csv(datapath + "EstimatedState.csv", delimiter=', ', header=0, engine='python')
 rawSal = pd.read_csv(datapath + "Salinity.csv", delimiter=', ', header=0, engine='python')
+<<<<<<< HEAD
 rawCurrent = pd.read_csv(datapath + "EstimatedStreamVelocity.csv", delimiter=', ', header=0, engine='python')
 
 #%%
+=======
+
+>>>>>>> 722a616ebab3a6534442dfae2295d934827bce8d
 rawSal.iloc[:, 0] = np.ceil(rawSal.iloc[:, 0])
 rawTemp.iloc[:, 0] = np.ceil(rawTemp.iloc[:, 0])
 rawCTDTemp = rawTemp[rawTemp.iloc[:, 2] == 'SmartX']

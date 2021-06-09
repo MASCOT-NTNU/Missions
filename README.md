@@ -84,8 +84,11 @@ Please contact Yaolin Ge (yaolin.ge@ntnu.no) if you have any questions. ğŸ˜ ğŸ¤
 
 [variogram notes](https://gsp.humboldt.edu/olm/R/04_01_Variograms.html)
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 [variogram slides](https://slideplayer.com/slide/8781466/)
 
+=======
+>>>>>>> 722a616ebab3a6534442dfae2295d934827bce8d
 =======
 >>>>>>> 722a616ebab3a6534442dfae2295d934827bce8d
