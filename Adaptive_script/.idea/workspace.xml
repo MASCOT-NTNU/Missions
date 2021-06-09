@@ -2,12 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="accea8ac-0bd2-452f-bacf-f93761b28ea7" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/other.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/other.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ES_3D_Gaussian_Matern.py" beforeDir="false" afterPath="$PROJECT_DIR$/ES_3D_Gaussian_Matern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Prior.py" beforeDir="false" afterPath="$PROJECT_DIR$/Prior.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/func_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/func_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datainfo.md" beforeDir="false" afterPath="$PROJECT_DIR$/datainfo.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/usr_func.py" beforeDir="false" afterPath="$PROJECT_DIR$/usr_func.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -89,6 +89,7 @@
       <workItem from="1623134904959" duration="2091000" />
       <workItem from="1623138126554" duration="15221000" />
       <workItem from="1623166456268" duration="4022000" />
+      <workItem from="1623221628941" duration="804000" />
     </task>
     <servers />
   </component>

@@ -1,3 +1,15 @@
+# Pipeline
+
+- [X] Prior modelling
+  - Generate the prior mean from SINMOD data with adding the intercept
+  - Generate the trend from the SINMOD data
+- [ ] Path planning
+  - Generate the initial starting point
+  - Generate the next waypoint based on EIBV
+  - Move the AUV and collect the data
+  - Update the field
+
+
 # Missions conducted under MASCOT project
 
 ---
