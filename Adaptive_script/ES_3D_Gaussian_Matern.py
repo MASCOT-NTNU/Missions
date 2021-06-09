@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import numpy as np
 
 from Prior import *
@@ -91,4 +92,22 @@ for j in range(N_steps):
     north_now, east_now, depth_now = north_next, east_next, depth_next
     print("Step NO.", str(j), ". The current ind is ", north_now, east_now, depth_now)
 
+=======
+# TO DO
+# Define the operational limit
+
+
+# Setup parameters
+
+
+
+# Conduct eibv sampling
+
+
+# Move to next waypoint
+
+
+
+
+>>>>>>> 722a616ebab3a6534442dfae2295d934827bce8d
 
