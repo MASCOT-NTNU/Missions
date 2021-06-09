@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import numpy as np
@@ -224,7 +223,7 @@ def Matern_cov(sigma, eta, t):
     :return: matern covariance
     '''
     return sigma ** 2 * (1 + eta * t) * np.exp(-eta * t)
-=======
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -248,57 +247,6 @@ from matplotlib.patches import Patch
 cmap_proba = ListedColormap(sns.color_palette("RdBu_r", 30))
 CMAP_EXCU = ListedColormap(sns.color_palette("Reds", 300))
 ## CONSTRUCT A BIG CLASS ##
-
-
-
-
-#
-# def plot_posterior(mu, Sig, s):
-#     fig = plt.figure(figsize=(20, 5))
-#     gs = GridSpec(nrows=1, ncols=3)
-#     m = [mu[np.arange(0, N, 2)], mu[np.arange(1, N, 2)]]
-#
-#     i = 0
-#     axes = fig.add_subplot(gs[i])
-#     im = axes.imshow(m[i].reshape(n1, n2))
-#     plt.colorbar(im, fraction=0.045, pad=0.04)
-#     plt.gca().invert_yaxis()
-#     axes.set(title = "ES", xlabel = 's1', ylabel = 's2')
-#
-#     i = 1
-#     axes = fig.add_subplot(gs[i])
-#     im = axes.imshow(m[i].reshape(n1, n2))
-#     plt.colorbar(im, fraction=0.045, pad=0.04)
-#     plt.gca().invert_yaxis()
-#     axes.set(title="ES temp", xlabel='s1', ylabel='s2')
-#
-#     i = 2
-#     axes = fig.add_subplot(gs[i])
-#     im = axes.imshow(np.sqrt(np.diag(Sig)[np.arange(0, N, 2)]).reshape(n1, n2))
-#     plt.colorbar(im, fraction=0.045, pad=0.04)
-#     plt.gca().invert_yaxis()
-#     axes.set(title="ES sal", xlabel='s1', ylabel='s2')
-#
-#     if not os.path.exists(figpath + "Cond/"):
-#         os.mkdir(figpath + "Cond/")
-#     fig.savefig(figpath + "Cond/M_{:03d}.pdf".format(s))
-
-
-def check_path_iter(path):
-    i = 0
-    while os.path.exists(path + "EIBV_%s/" % i):
-        i += 1
-    name = path + "EIBV_%s/" % i
-    os.mkdir(name)
-    print(name)
-    print("new path has been made")
-    return name
-
-def check_path(path):
-    if not os.path.exists(path):
-        print("path is not existed, now make new path ")
-        os.mkdir(path)
-        print("new path has been made")
 
 
 def distance_matrix(sites1v, sites2v):
@@ -354,14 +302,12 @@ def plotf(Y, string, xlim = None, ylim = None, vmin = None, vmax = None):
     # plt.show()
     # plt.savefig()
     return fig
->>>>>>> 722a616ebab3a6534442dfae2295d934827bce8d
 
 
 def mu(H, beta):
     '''
     :param H: design matrix
     :param beta: regression coef
-<<<<<<< HEAD
     :return: mean
     '''
     return np.dot(H, beta)
@@ -456,11 +402,7 @@ def find_next_EIBV(north_cand, east_cand, depth_cand, north_now, east_now, depth
 
     return north_next, east_next, depth_next
 
-=======
-    :return: prior mean
-    '''
-    # beta = np.hstack((-alpha, alpha, alpha))
-    return np.dot(H, beta)
+
 
 
 def GRF2D(Sigma, F, T, y_sampled, mu_prior):
@@ -604,4 +546,4 @@ def ExpectedVariance2(threshold, mu, Sig, H, R, eval_indexes, evar_debug=False):
         plt.show()
 
     return IntA
->>>>>>> 722a616ebab3a6534442dfae2295d934827bce8d
+

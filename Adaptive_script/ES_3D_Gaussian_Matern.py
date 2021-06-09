@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 import numpy as np
-
 from Prior import *
-
 
 #%% Section I: Build the waypoint and grid
 sigma = np.sqrt(30)  # scaling coef in matern kernel
@@ -92,7 +89,7 @@ for j in range(N_steps):
     north_now, east_now, depth_now = north_next, east_next, depth_next
     print("Step NO.", str(j), ". The current ind is ", north_now, east_now, depth_now)
 
-=======
+
 # TO DO
 # Define the operational limit
 
@@ -109,5 +106,5 @@ for j in range(N_steps):
 
 
 
->>>>>>> 722a616ebab3a6534442dfae2295d934827bce8d
+
 
