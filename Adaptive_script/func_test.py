@@ -1,8 +1,30 @@
 from usr_func import *
 
+a = xy2latlon(0, 0, origin, distance, -60)
+b = xy2latlon(0, N2 - 1, origin, distance, -60)
+c = xy2latlon(N1 - 1, 0, origin, distance, -60)
+d = xy2latlon(N1 - 1, N2 - 1, origin, distance, -60)
+plt.figure(figsize=(5, 5))
+plt.plot(a[1], a[0], 'k.')
+plt.plot(b[1], b[0], 'r.')
+plt.plot(c[1], c[0], 'y.')
+plt.plot(d[1], d[0], 'b.')
+plt.show()
 
+#%%
+figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/Adaptive/"
+mup = mu_prior_sal.reshape(N3, N1, N2)
+fig = plt.figure(figsize=(35, 5))
+gs = GridSpec(nrows = 1, ncols = 5)
+for i in range(len(depth_obs)):
+    ax = fig.add_subplot(gs[i])
+    im = ax.imshow(np.rot90(mup[i, :, :]), extent = (0, 1000, 0, 1000))
+    ax.set(title = "Prior at depth {:.1f} meter".format(depth_obs[i]))
+    plt.colorbar(im)
+fig.savefig(figpath + "Prior.pdf")
+plt.show()
 
-
+#%%
 # This tries out the directional variogram,
 # test = DirectionalVariogram(coordinates = np.hstack((y_loc[i].reshape(-1, 1), x_loc[i].reshape(-1, 1))),
 #                             values = sal_residual[i].squeeze(),azimuth=90, tolerance=90, maxlag=80, n_lags=200,
@@ -13,7 +35,29 @@ from usr_func import *
 # fig = V_v.plot(hist = True)
 # print(V_v)
 
+beta0_sal = np.kron(beta0_sal, np.ones([N1 * N2, 1]))
+beta1_sal = np.kron(beta1_sal, np.ones([N1 * N2, 1]))
+beta0_temp = np.kron(beta0_temp, np.ones([N1 * N2, 1]))
+beta1_temp = np.kron(beta1_temp, np.ones([N1 * N2, 1]))
+muTrend_sal = np.zeros([grid.shape[0], 1])
+muTrend_temp = np.zeros([grid.shape[0], 1])
+#%% Trend for the field
+for i in range(grid.shape[0]):
+    muTrend_sal[i] = beta0_sal[i, 0] + grid[i, 0:2] @ beta1_sal[i, :]
+    muTrend_temp[i] = beta1_temp[i, 0] + grid[i, 0:2] @ beta1_temp[i, :]
 
+# figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/Adaptive/"
+mup = muTrend_sal.reshape(N3, N1, N2)
+fig = plt.figure(figsize=(35, 5))
+gs = GridSpec(nrows = 1, ncols = 5)
+for i in range(len(depth_obs)):
+    ax = fig.add_subplot(gs[i])
+    im = ax.imshow(mup[i, :, :], extent = (0, 1000, 0, 1000))
+    # plt.gca().invert_yaxis()
+    ax.set(title = "Trend at depth {:.1f} meter".format(depth_obs[i]))
+    plt.colorbar(im)
+# fig.savefig(figpath + "Trend.pdf")
+plt.show()
 
 
 #%%
