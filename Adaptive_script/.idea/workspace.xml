@@ -2,10 +2,16 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="accea8ac-0bd2-452f-bacf-f93761b28ea7" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/other.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/other.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Plot_data.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data_manipulation.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data_manipulation.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ES_3D_Gaussian_Matern.py" beforeDir="false" afterPath="$PROJECT_DIR$/ES_3D_Gaussian_Matern.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datainfo.md" beforeDir="false" afterPath="$PROJECT_DIR$/datainfo.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Prior.py" beforeDir="false" afterPath="$PROJECT_DIR$/Prior.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bigmap.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/func_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/func_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/map.osm" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/map.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/map.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/usr_func.py" beforeDir="false" afterPath="$PROJECT_DIR$/usr_func.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" afterDir="false" />
     </list>
@@ -13,6 +19,13 @@
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="FlaskConsoleOptions" custom-start-script="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))">
     <envs>
@@ -89,11 +102,24 @@
       <workItem from="1623134904959" duration="2091000" />
       <workItem from="1623138126554" duration="15221000" />
       <workItem from="1623166456268" duration="4022000" />
-      <workItem from="1623221628941" duration="804000" />
+      <workItem from="1623221628941" duration="20817000" />
+      <workItem from="1623308055850" duration="6185000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
 </project>

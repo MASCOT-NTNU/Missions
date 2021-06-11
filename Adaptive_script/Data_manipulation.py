@@ -20,6 +20,14 @@ z = data[:, 5]
 depth = data[:, 6]
 sal = data[:, 7]
 temp = data[:, 8]
+#%%
+
+ind_obs = (depth <= 2.1) & (depth >= 1.9)
+plt.figure()
+plt.scatter(y[ind_obs], x[ind_obs], c = sal[ind_obs])
+plt.colorbar()
+plt.show()
+
 
 
 

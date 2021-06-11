@@ -15,6 +15,68 @@ circumference = 40075000 # [m]
 err_bound = 0.1 # [m]
 
 
+
+def ravel_index(loc, n1, n2, n3):
+    '''
+    :param loc:
+    :param n1:
+    :param n2:
+    :param n3:
+    :return:
+    '''
+    x, y, z = loc
+    ind = int(z * n1 * n2 + y * n1 + x)
+    return ind
+
+
+def unravel_index(ind, n1, n2, n3):
+    '''
+    :param ind:
+    :param n1:
+    :param n2:
+    :param n3:
+    :return:
+    '''
+    zind = np.floor(ind / (n1 * n2))
+    residual = ind - zind * (n1 * n2)
+    yind = np.floor(residual / n1)
+    xind = residual - yind * n1
+    loc = [int(xind), int(yind), int(zind)]
+    return loc
+
+
+def find_starting_loc(EP_Prior, n1, n2, n3):
+    '''
+    :param EP_Prior:
+    :param n1:
+    :param n2:
+    :param n3:
+    :return:
+    '''
+    ep_criterion = 0.5
+    ind = (np.abs(EP_Prior - ep_criterion)).argmin()
+    loc = unravel_index(ind, n1, n2, n3)
+    return loc
+
+
+def xy2latlon(x, y, origin, distance, alpha):
+    '''
+    :param x: index from origin along left line
+    :param y: index from origin along right line
+    :param origin:
+    :param distance:
+    :param alpha:
+    :return:
+    '''
+    R = np.array([[np.cos(deg2rad(alpha)), -np.sin(deg2rad(alpha))],
+                  [np.sin(deg2rad(alpha)), np.cos(deg2rad(alpha))]])
+    x_loc, y_loc = R @ np.vstack((x * distance, y * distance)) # converted xp/yp with distance inside
+    lat_origin, lon_origin = origin
+    lat = lat_origin + rad2deg(x_loc * np.pi * 2.0 / circumference)
+    lon = lon_origin + rad2deg(y_loc * np.pi * 2.0 / (circumference * np.cos(deg2rad(lat))))
+    return np.hstack((lat, lon))
+
+
 def rotateXY(nx, ny, distance, alpha):
     '''
     :param nx:
@@ -106,16 +168,19 @@ def getCoefficients(data, SINMOD, depth):
         sal_obs = sal_auv[ind_obs].reshape(-1, 1)
         temp_obs = temp_auv[ind_obs].reshape(-1, 1)
         sal_SINMOD, temp_SINMOD = GetSINMODFromCoordinates(SINMOD, np.hstack((lat_obs, lon_obs)), depth[i])
+
         model_sal = LinearRegression()
         model_sal.fit(sal_SINMOD, sal_obs)
         beta0[i, 0] = model_sal.intercept_
         beta1[i, 0] = model_sal.coef_
+
         model_temp = LinearRegression()
         model_temp.fit(temp_SINMOD, temp_obs)
         beta0[i, 1] = model_temp.intercept_
         beta1[i, 1] = model_temp.coef_
-        sal_residual.append(sal_obs - sal_SINMOD)
-        temp_residual.append(temp_obs - temp_SINMOD)
+
+        sal_residual.append(sal_obs - beta0[i, 0] - beta1[i, 0] * sal_SINMOD)
+        temp_residual.append(temp_obs - beta0[i, 1] - beta1[i, 1] * temp_SINMOD)
         x_loc.append(xauv[ind_obs])
         y_loc.append(yauv[ind_obs])
 
@@ -334,56 +399,66 @@ def EIBV(threshold, mu, Sig, F, R):
 
 
 def GPupd(mu, Sig, R, F, y_sampled):
+    '''
+    :param mu:
+    :param Sig:
+    :param R:
+    :param F:
+    :param y_sampled:
+    :return:
+    '''
     C = F @ Sig @ F.T + R
     mu_p = mu + Sig @ F.T @ np.linalg.solve(C, (y_sampled - F @ mu))
     Sigma_p = Sig - Sig @ F.T @ np.linalg.solve(C, F @ Sig)
     return mu_p, Sigma_p
 
 
-def find_candidates_loc(north_ind, east_ind, depth_ind, N1, N2, N3):
+def find_candidates_loc(x_ind, y_ind, z_ind, N1, N2, N3):
     '''
-    This will find the neighbouring loc
-    But also limit it inside the grid
-    :param idx:
-    :param idy:
-    :return:
+    :param x_ind: 
+    :param y_ind: 
+    :param z_ind: 
+    :param N1: number of grid along x direction 
+    :param N2: 
+    :param N3: 
+    :return: 
     '''
 
-    north_ind_l = [north_ind - 1 if north_ind > 0 else north_ind]
-    north_ind_u = [north_ind + 1 if north_ind < N1 - 1 else north_ind]
-    east_ind_l = [east_ind - 1 if east_ind > 0 else east_ind]
-    east_ind_u = [east_ind + 1 if east_ind < N2 - 1 else east_ind]
-    depth_ind_l = [depth_ind - 1 if depth_ind > 0 else depth_ind]
-    depth_ind_u = [depth_ind + 1 if depth_ind < N3 - 1 else depth_ind]
+    x_ind_l = [x_ind - 1 if x_ind > 0 else x_ind]
+    x_ind_u = [x_ind + 1 if x_ind < N1 - 1 else x_ind]
+    y_ind_l = [y_ind - 1 if y_ind > 0 else y_ind]
+    y_ind_u = [y_ind + 1 if y_ind < N2 - 1 else y_ind]
+    z_ind_l = [z_ind - 1 if z_ind > 0 else z_ind]
+    z_ind_u = [z_ind + 1 if z_ind < N3 - 1 else z_ind]
 
-    north_ind_v = np.unique(np.vstack((north_ind_l, north_ind, north_ind_u)))
-    east_ind_v = np.unique(np.vstack((east_ind_l, east_ind, east_ind_u)))
-    depth_ind_v = np.unique(np.vstack((depth_ind_l, depth_ind, depth_ind_u)))
+    x_ind_v = np.unique(np.vstack((x_ind_l, x_ind, x_ind_u)))
+    y_ind_v = np.unique(np.vstack((y_ind_l, y_ind, y_ind_u)))
+    z_ind_v = np.unique(np.vstack((z_ind_l, z_ind, z_ind_u)))
 
-    north_ind, east_ind, depth_ind = np.meshgrid(north_ind_v, east_ind_v, depth_ind_v)
+    x_ind, y_ind, z_ind = np.meshgrid(x_ind_v, y_ind_v, z_ind_v)
 
-    return north_ind.reshape(-1, 1), east_ind.reshape(-1, 1), depth_ind.reshape(-1, 1)
+    return x_ind.reshape(-1, 1), y_ind.reshape(-1, 1), z_ind.reshape(-1, 1)
 
 
-def find_next_EIBV(north_cand, east_cand, depth_cand, north_now, east_now, depth_now,
-                   north_pre, east_pre, depth_pre, N1, N2, N3, Sig, mu, tau, Thres):
+def find_next_EIBV(x_cand, y_cand, z_cand, x_now, y_now, z_now,
+                   x_pre, y_pre, z_pre, N1, N2, N3, Sig, mu, tau, Thres):
 
     id = []
-    dnorth1 = north_now - north_pre
-    deast1 = east_now - east_pre
-    ddepth1 = depth_now - depth_pre
-    vec1 = np.array([dnorth1, deast1, ddepth1])
-    for i in north_cand:
-        for j in east_cand:
-            for z in depth_cand:
-                if i == north_now and j == east_now and z == depth_now:
+    dx1 = x_now - x_pre
+    dy1 = y_now - y_pre
+    dz1 = z_now - z_pre
+    vec1 = np.array([dx1, dy1, dz1])
+    for i in x_cand:
+        for j in y_cand:
+            for z in z_cand:
+                if i == x_now and j == y_now and z == z_now:
                     continue
-                dnorth2 = i - north_now
-                deast2 = j - east_now
-                ddepth2 = z - depth_now
-                vec2 = np.array([dnorth2, deast2, ddepth2])
+                dx2 = i - x_now
+                dy2 = j - y_now
+                dz2 = z - z_now
+                vec2 = np.array([dx2, dy2, dz2])
                 if np.dot(vec1, vec2) >= 0:
-                    id.append(np.ravel_multi_index((i, j, z), (N1, N2, N3)))
+                    id.append(ravel_index([i, j, z], N1, N2, N3))
                 else:
                     continue
     id = np.unique(np.array(id))
@@ -398,152 +473,152 @@ def find_next_EIBV(north_cand, east_cand, depth_cand, north_now, east_now, depth
         F[0, id[k]] = True
         eibv.append(EIBV(Thres, mu, Sig, F, R))
     ind_desired = np.argmin(np.array(eibv))
-    north_next, east_next, depth_next = np.unravel_index(id[ind_desired], (N1, N2, N3))
+    x_next, y_next, z_next = unravel_index(id[ind_desired], N1, N2, N3)
 
-    return north_next, east_next, depth_next
-
-
-
-
-def GRF2D(Sigma, F, T, y_sampled, mu_prior):
-    '''
-    :param Sigma:
-    :param F:
-    :param T:
-    :param y_sampled:
-    :param mu_prior:
-    :return:
-    '''
-    Cmatrix = np.dot(F, np.dot(Sigma, F.T)) + T
-    mu_posterior = mu_prior + np.dot(Sigma, np.dot(F.T, np.linalg.solve(Cmatrix, (y_sampled - np.dot(F, mu_prior)))))
-    Sigma_posterior = Sigma - np.dot(Sigma, np.dot(F.T, np.linalg.solve(Cmatrix, np.dot(F, Sigma))))
-    return (mu_posterior, Sigma_posterior)
-
-
-def EIBV(Sig, H, R, mu, N, T_thres, S_thres):
-    '''
-    :param Sig:
-    :param H: Sampling matrix
-    :param R: Noise matrix
-    :param mu: cond mean
-    :param N: number of points to be integrateed
-    :param T_thres: threshold for Temp
-    :param S_thres: threshold for Salinity
-    :return:
-    '''
-
-    # Update the field variance
-    a = np.dot(Sig, H.T)
-    b = np.dot(np.dot(H, Sig), H.T) + R
-    c = np.dot(H, Sig)
-    Sigxi = np.dot(a, np.linalg.solve(b, c))  # new covariance matrix
-    V = Sig - Sigxi  # Uncertainty reduction # updated covariance
-
-    IntA = 0.0
-
-    # integrate out all elements in the bernoulli variance term
-    for i in np.arange(0, N, 2):
-
-        # extract the corresponding variance reduction term
-        SigMxi = Sigxi[np.ix_([i, i + 1], [i, i + 1])]
-
-        # extract the corresponding mean terms
-        Mxi = [mu[i], mu[i + 1]] # temp and salinity
-
-        sn2 = V[np.ix_([i, i + 1], [i, i + 1])]
-        # vv2 = np.add(sn2, SigMxi) # was originally used to make it obscure
-        vv2 = Sig[np.ix_([i, i + 1], [i, i + 1])]
-
-        # compute the first part of the integration
-        Thres = np.vstack((T_thres, S_thres))
-        mur = np.subtract(Thres, Mxi)
-        IntB_a = mvn.mvnun(np.array([[-np.inf], [-np.inf]]), np.zeros([2, 1]), mur, vv2)[0]
-
-        # compute the second part of the integration, which is squared
-        mm = np.vstack((Mxi, Mxi))
-        # SS = np.array([[vv2, SigMxi], [SigMxi, vv2]]) # thought of it as a simplier version
-        SS = np.add(np.vstack((np.hstack((sn2, np.zeros((2, 2)))), np.hstack((np.zeros((2, 2)), sn2)))),
-                    np.vstack((np.hstack((SigMxi, SigMxi)), np.hstack((SigMxi, SigMxi)))))
-        Thres = np.vstack((T_thres, S_thres, T_thres, S_thres))
-        mur = np.subtract(Thres, mm)
-        IntB_b = mvn.mvnun(np.array([[-np.inf], [-np.inf], [-np.inf], [-np.inf]]), np.zeros([4, 1]), mur, SS)[0]
-
-        # compute the total integration
-        IntA = IntA + np.nansum([IntB_a, -IntB_b])
-
-    return IntA
+    return x_next, y_next, z_next
 
 
 
-def ExpectedVariance2(threshold, mu, Sig, H, R, eval_indexes, evar_debug=False):
-    # __slots__ = ('Sigxi', 'Sig', 'muxi', 'a', 'b', 'c')
-    # H, design matrix used for in front of beta
-    # R, noise matrix
-    # eval_indexes, indices for the grid points where EV is computed
-    """
-    Computes IntA = \sum_x \int  p_x(y) (1-p_x(y)) p (y) dy
-    x is a discretization of the spatial domain
-    y is the data
-    p_x(y)=P(T_x<T_threshold , S_x < S_threshold | y) = ...
-    \Phi_2_corrST ( [T_threshold-E(T_x|y)] /Std(T_x/y) , S_threshold-E(S_x|y)] /Std(S_x/y)] # once it is standardized, then it can be computed from the standard normal cdf
-    E(T,S|y)=mu+Sig*H'*(H*Sig*H'+R)\(y-H mu ) = xi
-    where xi \sim N (mu, Sig*H'*((H*Sig*H'+R)\(H*Sig)) is the only variable
-    that matters in the integral and for each x, this is an integral over
-    xi_x = (xi_xT,xi_xS)
-    """
-    # For debug
-    # H = np.zeros((2*50,2*50*50))
-    # H[0:50, 0:50] = np.eye(50)
-    # H[50:100, 50:100] = np.eye(50)
-    # R = 0.25 * np.eye(100)
-
-    # Xi variable distribution N(muxi, Sigxi)
-    a = np.dot(Sig, H.T)
-    b = np.dot(np.dot(H, Sig), H.T) + R
-    c = np.dot(H, Sig)
-    Sigxi = np.dot(a, np.linalg.solve(b, c)) # new covariance matrix
-    V = Sig - Sigxi  # Uncertainty reduction # updated covariance
-    n = int(mu.flatten().shape[0]/2)
-    muxi = np.copy(mu)
-
-    IntA = 0.0
-    pp = None
-
-    if evar_debug:
-        pp = []
-
-    for i in eval_indexes:
-
-        SigMxi = Sigxi[np.ix_([i, n+i], [i, n+i])]
-        rho = V[i, n+i] / np.sqrt(V[i, i]*V[n+i, n+i])
-
-        if np.isnan(rho):
-            rho = 0.6
-
-        Mxi = [muxi[i], muxi[n+i]]
-        sn_1 = np.sqrt(V[i, i])
-        sn_2 = np.sqrt(V[n+i, n+i])
-        sn2 = np.array([[sn_1**2, sn_1*sn_2*rho], [sn_1*sn_2*rho, sn_2**2]])
-
-        if evar_debug:
-            pp.append(mvn.mvnun(np.array([[-np.inf], [-np.inf]]), np.array([[0], [0]]), np.subtract([threshold[0], threshold[1]], np.array(Mxi).ravel()), SigMxi)[0])
-
-        mm = np.vstack((Mxi, Mxi))
-        SS = np.add(np.vstack((np.hstack((sn2, np.zeros((2, 2)))), np.hstack((np.zeros((2, 2)), sn2)))), np.vstack((np.hstack((SigMxi, SigMxi)), np.hstack((SigMxi, SigMxi)))))
-        vv2 = np.add(sn2, SigMxi)
-        Thres = np.array([threshold[0], threshold[1]])
-        mur = np.subtract(Thres, Mxi)
-        IntB_a = mvn.mvnun(np.array([[-np.inf], [-np.inf]]), np.array([[0], [0]]), mur, vv2)[0]
-        Thres = np.array([threshold[0], threshold[1], threshold[0], threshold[1]])
-        mur = np.subtract(Thres, mm)
-        IntB_b = mvn.mvnun(np.array([[-np.inf], [-np.inf], [-np.inf], [-np.inf]]), np.array([[0], [0], [0], [0]]), mur, SS)[0]
-
-        IntA = IntA + np.nansum([IntB_a, -IntB_b])
-
-    if evar_debug:
-        plt.figure()
-        plt.imshow(np.array(pp).reshape(30, 30))
-        plt.show()
-
-    return IntA
+#
+# def GRF2D(Sigma, F, T, y_sampled, mu_prior):
+#     '''
+#     :param Sigma:
+#     :param F:
+#     :param T:
+#     :param y_sampled:
+#     :param mu_prior:
+#     :return:
+#     '''
+#     Cmatrix = np.dot(F, np.dot(Sigma, F.T)) + T
+#     mu_posterior = mu_prior + np.dot(Sigma, np.dot(F.T, np.linalg.solve(Cmatrix, (y_sampled - np.dot(F, mu_prior)))))
+#     Sigma_posterior = Sigma - np.dot(Sigma, np.dot(F.T, np.linalg.solve(Cmatrix, np.dot(F, Sigma))))
+#     return (mu_posterior, Sigma_posterior)
+#
+#
+# def EIBV(Sig, H, R, mu, N, T_thres, S_thres):
+#     '''
+#     :param Sig:
+#     :param H: Sampling matrix
+#     :param R: Noise matrix
+#     :param mu: cond mean
+#     :param N: number of points to be integrateed
+#     :param T_thres: threshold for Temp
+#     :param S_thres: threshold for Salinity
+#     :return:
+#     '''
+#
+#     # Update the field variance
+#     a = np.dot(Sig, H.T)
+#     b = np.dot(np.dot(H, Sig), H.T) + R
+#     c = np.dot(H, Sig)
+#     Sigxi = np.dot(a, np.linalg.solve(b, c))  # new covariance matrix
+#     V = Sig - Sigxi  # Uncertainty reduction # updated covariance
+#
+#     IntA = 0.0
+#
+#     # integrate out all elements in the bernoulli variance term
+#     for i in np.arange(0, N, 2):
+#
+#         # extract the corresponding variance reduction term
+#         SigMxi = Sigxi[np.ix_([i, i + 1], [i, i + 1])]
+#
+#         # extract the corresponding mean terms
+#         Mxi = [mu[i], mu[i + 1]] # temp and salinity
+#
+#         sn2 = V[np.ix_([i, i + 1], [i, i + 1])]
+#         # vv2 = np.add(sn2, SigMxi) # was originally used to make it obscure
+#         vv2 = Sig[np.ix_([i, i + 1], [i, i + 1])]
+#
+#         # compute the first part of the integration
+#         Thres = np.vstack((T_thres, S_thres))
+#         mur = np.subtract(Thres, Mxi)
+#         IntB_a = mvn.mvnun(np.array([[-np.inf], [-np.inf]]), np.zeros([2, 1]), mur, vv2)[0]
+#
+#         # compute the second part of the integration, which is squared
+#         mm = np.vstack((Mxi, Mxi))
+#         # SS = np.array([[vv2, SigMxi], [SigMxi, vv2]]) # thought of it as a simplier version
+#         SS = np.add(np.vstack((np.hstack((sn2, np.zeros((2, 2)))), np.hstack((np.zeros((2, 2)), sn2)))),
+#                     np.vstack((np.hstack((SigMxi, SigMxi)), np.hstack((SigMxi, SigMxi)))))
+#         Thres = np.vstack((T_thres, S_thres, T_thres, S_thres))
+#         mur = np.subtract(Thres, mm)
+#         IntB_b = mvn.mvnun(np.array([[-np.inf], [-np.inf], [-np.inf], [-np.inf]]), np.zeros([4, 1]), mur, SS)[0]
+#
+#         # compute the total integration
+#         IntA = IntA + np.nansum([IntB_a, -IntB_b])
+#
+#     return IntA
+#
+#
+#
+# def ExpectedVariance2(threshold, mu, Sig, H, R, eval_indexes, evar_debug=False):
+#     # __slots__ = ('Sigxi', 'Sig', 'muxi', 'a', 'b', 'c')
+#     # H, design matrix used for in front of beta
+#     # R, noise matrix
+#     # eval_indexes, indices for the grid points where EV is computed
+#     """
+#     Computes IntA = \sum_x \int  p_x(y) (1-p_x(y)) p (y) dy
+#     x is a discretization of the spatial domain
+#     y is the data
+#     p_x(y)=P(T_x<T_threshold , S_x < S_threshold | y) = ...
+#     \Phi_2_corrST ( [T_threshold-E(T_x|y)] /Std(T_x/y) , S_threshold-E(S_x|y)] /Std(S_x/y)] # once it is standardized, then it can be computed from the standard normal cdf
+#     E(T,S|y)=mu+Sig*H'*(H*Sig*H'+R)\(y-H mu ) = xi
+#     where xi \sim N (mu, Sig*H'*((H*Sig*H'+R)\(H*Sig)) is the only variable
+#     that matters in the integral and for each x, this is an integral over
+#     xi_x = (xi_xT,xi_xS)
+#     """
+#     # For debug
+#     # H = np.zeros((2*50,2*50*50))
+#     # H[0:50, 0:50] = np.eye(50)
+#     # H[50:100, 50:100] = np.eye(50)
+#     # R = 0.25 * np.eye(100)
+#
+#     # Xi variable distribution N(muxi, Sigxi)
+#     a = np.dot(Sig, H.T)
+#     b = np.dot(np.dot(H, Sig), H.T) + R
+#     c = np.dot(H, Sig)
+#     Sigxi = np.dot(a, np.linalg.solve(b, c)) # new covariance matrix
+#     V = Sig - Sigxi  # Uncertainty reduction # updated covariance
+#     n = int(mu.flatten().shape[0]/2)
+#     muxi = np.copy(mu)
+#
+#     IntA = 0.0
+#     pp = None
+#
+#     if evar_debug:
+#         pp = []
+#
+#     for i in eval_indexes:
+#
+#         SigMxi = Sigxi[np.ix_([i, n+i], [i, n+i])]
+#         rho = V[i, n+i] / np.sqrt(V[i, i]*V[n+i, n+i])
+#
+#         if np.isnan(rho):
+#             rho = 0.6
+#
+#         Mxi = [muxi[i], muxi[n+i]]
+#         sn_1 = np.sqrt(V[i, i])
+#         sn_2 = np.sqrt(V[n+i, n+i])
+#         sn2 = np.array([[sn_1**2, sn_1*sn_2*rho], [sn_1*sn_2*rho, sn_2**2]])
+#
+#         if evar_debug:
+#             pp.append(mvn.mvnun(np.array([[-np.inf], [-np.inf]]), np.array([[0], [0]]), np.subtract([threshold[0], threshold[1]], np.array(Mxi).ravel()), SigMxi)[0])
+#
+#         mm = np.vstack((Mxi, Mxi))
+#         SS = np.add(np.vstack((np.hstack((sn2, np.zeros((2, 2)))), np.hstack((np.zeros((2, 2)), sn2)))), np.vstack((np.hstack((SigMxi, SigMxi)), np.hstack((SigMxi, SigMxi)))))
+#         vv2 = np.add(sn2, SigMxi)
+#         Thres = np.array([threshold[0], threshold[1]])
+#         mur = np.subtract(Thres, Mxi)
+#         IntB_a = mvn.mvnun(np.array([[-np.inf], [-np.inf]]), np.array([[0], [0]]), mur, vv2)[0]
+#         Thres = np.array([threshold[0], threshold[1], threshold[0], threshold[1]])
+#         mur = np.subtract(Thres, mm)
+#         IntB_b = mvn.mvnun(np.array([[-np.inf], [-np.inf], [-np.inf], [-np.inf]]), np.array([[0], [0], [0], [0]]), mur, SS)[0]
+#
+#         IntA = IntA + np.nansum([IntB_a, -IntB_b])
+#
+#     if evar_debug:
+#         plt.figure()
+#         plt.imshow(np.array(pp).reshape(30, 30))
+#         plt.show()
+#
+#     return IntA
 
