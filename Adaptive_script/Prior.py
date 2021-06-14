@@ -47,6 +47,10 @@ for i in range(len(depth_obs)):
 #%%
 plt.figure()
 plt.plot(sal_residual[0], temp_residual[0], 'k.')
+plt.xlabel("Salinity")
+plt.title("Cross plot of the residuals")
+plt.ylabel("Temperature")
+plt.savefig(figpath + "Cross.pdf")
 plt.show()
 from scipy.stats import pearsonr
 print(pearsonr(sal_residual[0].squeeze(), temp_residual[0].squeeze())[0])
