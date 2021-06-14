@@ -41,8 +41,89 @@ for i in range(len(depth_obs)):
     # fig.suptitle("test")
     # fig = V_v.plot(hist = True)
 
-    fig.savefig(figpath + "sal_{:03d}.pdf".format(i))
+    # fig.savefig(figpath + "sal_{:03d}.pdf".format(i))
     print(V_v)
+#%% Find depth variation
+
+depth_obs = [0.5, 2.0, 5.0]
+beta0, beta1, sal_residual, temp_residual, x_loc, y_loc = getCoefficients(data, nc, [0.5, 1.0, 1.5, 2.0, 2.5])
+
+#%%
+depth_obs = [0.5, 2.0, 5.0]
+timestamp = data[:, 0].reshape(-1, 1)
+lat_auv = rad2deg(data[:, 1].reshape(-1, 1))
+lon_auv = rad2deg(data[:, 2].reshape(-1, 1))
+xauv = data[:, 3].reshape(-1, 1)
+yauv = data[:, 4].reshape(-1, 1)
+zauv = data[:, 5].reshape(-1, 1)
+depth_auv = data[:, 6].reshape(-1, 1)
+sal_auv = data[:, 7].reshape(-1, 1)
+temp_auv = data[:, 8].reshape(-1, 1)
+lat_auv = lat_auv + rad2deg(xauv * np.pi * 2.0 / circumference)
+lon_auv = lon_auv + rad2deg(yauv * np.pi * 2.0 / (circumference * np.cos(deg2rad(lat_auv))))
+
+depthl = np.array(depth_obs) - err_bound
+depthu = np.array(depth_obs) + err_bound
+x_obs = []
+y_obs = []
+sal_obs = []
+temp_obs = []
+
+for i in range(len(depth_obs)):
+    ind_obs = (depthl[i] <= depth_auv) & (depth_auv <= depthu[i])
+    x_obs.append(np.floor(xauv[ind_obs].reshape(-1, 1)))
+    y_obs.append(np.floor(yauv[ind_obs].reshape(-1, 1)))
+    sal_obs.append(sal_auv[ind_obs].reshape(-1, 1))
+    temp_obs.append(temp_auv[ind_obs].reshape(-1, 1))
+
+plt.figure()
+plt.plot(y_obs[0])
+plt.plot(y_obs[1])
+plt.plot(y_obs[-1])
+plt.show()
+a = np.intersect1d(x_obs[0], x_obs[1])
+b = np.intersect1d(a, x_obs[-1])
+
+#%% Find vicinity values
+
+
+#%%
+z = []
+sal_depth = []
+temp_depth = []
+for i in range(len(depth_obs)):
+    for j in range(len(sal_residual[i])):
+        sal_depth.append(sal_residual[i][j, 0])
+        temp_depth.append(temp_residual[i][j, 0])
+        z.append(depth_obs[i])
+
+V_v = Variogram(coordinates = z, values = np.array(sal_depth), use_nugget=True, model = "Matern", normalize = False,
+                n_lags = 10) # model = "Matern" check
+# V_v.estimator = 'cressie'
+V_v.fit_method = 'trf' # moment method
+
+fig = V_v.plot(hist = False)
+# fig.suptitle("test")
+# fig = V_v.plot(hist = True)
+fig.savefig(figpath + "sal_depth.pdf")
+print(V_v)
+
+#%% To find the depth \ksi
+
+plt.figure()
+plt.plot(xauv, 'k.')
+# plt.xlabel("Depth [m]")
+# plt.ylabel("Temperature residual")
+# plt.title("Temperature residual vs depth")
+# plt.savefig(figpath + "TempVSDepth.pdf")
+plt.show()
+from scipy.stats import pearsonr
+# print(pearsonr(temp_depth, z)[1])
+print(np.corrcoef(temp_depth, z))
+
+#%%
+
+
 
 #%%
 plt.figure()
