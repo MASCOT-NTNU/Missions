@@ -27,19 +27,21 @@ depth_obs = [0.5, 1.0, 1.5, 2.0, 2.5]
 fp='samples_2020.05.01.nc'
 nc = netCDF4.Dataset(fp)
 beta0, beta1, sal_residual, temp_residual, x_loc, y_loc = getCoefficients(data, nc, [0.5, 1.0, 1.5, 2.0, 2.5])
-
+figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/Variogram/'
 # This tries to find the suitable methods and estimators
-# for i in range(len(depth_obs)):
-for i in range(1):
+for i in range(len(depth_obs)):
+# for i in range(1):
     V_v = Variogram(coordinates = np.hstack((y_loc[i].reshape(-1, 1), x_loc[i].reshape(-1, 1))),
-                    values = temp_residual[i].squeeze(), use_nugget=True, model = "Matern", normalize = False,
+                    values = sal_residual[i].squeeze(), use_nugget=True, model = "Matern", normalize = False,
                     n_lags = 100) # model = "Matern" check
     # V_v.estimator = 'cressie'
     V_v.fit_method = 'trf' # moment method
 
     fig = V_v.plot(hist = False)
-    fig.suptitle("test")
+    # fig.suptitle("test")
     # fig = V_v.plot(hist = True)
+
+    fig.savefig(figpath + "sal_{:03d}.pdf".format(i))
     print(V_v)
 
 #%%
