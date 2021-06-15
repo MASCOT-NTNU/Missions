@@ -1,9 +1,18 @@
-import matplotlib.pyplot as plt
-
 from Prior import *
+#%%
+beta0 = np.loadtxt(os.getcwd() + '/data/beta0.txt', delimiter = ",")
+beta1 = np.loadtxt(os.getcwd() + '/data/beta1.txt', delimiter = ",")
+mu_prior_sal = np.loadtxt(os.getcwd() + '/data/mu_prior_sal.txt', delimiter = ",")
+mu_prior_temp = np.loadtxt(os.getcwd() + '/data/mu_prior_temp.txt', delimiter = ",")
+N = 2 * mu_prior_sal.shape[0]
+mu_prior = np.zeros([N, 1])
+for i in range(0, N, 2):
+    mu_prior[i] = mu_prior_temp[int(i / 2)]
+    mu_prior[i + 1] = mu_prior_sal[int(i / 2)]
 print("Congrats!!! Prior is built successfully!!!")
 print("Fitted beta0: \n", beta0)
 print("Fitted beta1: \n", beta1)
+
 
 #%% Section I: Setup parameters
 sigma_sal = np.sqrt(4)  # scaling coef in matern kernel for salinity
@@ -41,13 +50,8 @@ Sigma_st = np.array([[sigma_temp ** 2, sigma_sal * sigma_temp * rho_st],
                      [sigma_sal * sigma_temp * rho_st, sigma_sal ** 2]])
 Sigma_prior = np.kron(Cov_spatial, Sigma_st)
 
-#%%
-plt.figure()
-plt.imshow(Sigma_prior)
-plt.colorbar()
-plt.show()
+EP_prior = EP_2D(mu_prior, Sigma_prior, Threshold_T, Threshold_S)
 
-# EP_prior_sal = EP_2D(mu_prior_sal, Sigma_prior_sal, Threshold_S)
 #%% #%% Part II : Path planning
 
 path = []
@@ -57,7 +61,7 @@ mu = []
 Sigma = []
 t_elapsed = []
 
-loc = find_starting_loc(EP_prior_sal, N1, N2, N3)
+loc = find_starting_loc(EP_prior, N1, N2, N3)
 xstart, ystart, zstart = loc
 
 xnow, ynow, znow = xstart, ystart, zstart
@@ -69,8 +73,8 @@ coords.append([lat_start, lon_start])
 
 print("The starting location is [{:.2f}, {:.2f}]".format(lat_start, lon_start))
 
-mu_cond = mu_prior_sal
-Sigma_cond = Sigma_prior_sal
+mu_cond = mu_prior
+Sigma_cond = Sigma_prior
 mu.append(mu_cond)
 Sigma.append(Sigma_cond)
 
@@ -81,11 +85,11 @@ for j in range(N_steps):
     xcand, ycand, zcand = find_candidates_loc(xnow, ynow, znow, N1, N2, N3)
 
     t1 = time.time()
-    xnext, ynext, znext = find_next_EIBV(xcand, ycand, zcand,
+    xnext, ynext, znext = find_next_EIBV_2D(xcand, ycand, zcand,
                                          xnow, ynow, znow,
                                          xpre, ypre, zpre,
                                          N1, N2, N3, Sigma_cond,
-                                         mu_cond, tau_sal, Threshold_S)
+                                         mu_cond, tau_sal, Threshold_T, Threshold_S)
     t2 = time.time()
     t_elapsed.append(t2 - t1)
     print("It takes {:.2f} seconds to compute the next waypoint".format(t2 - t1))
@@ -102,13 +106,16 @@ for j in range(N_steps):
 
     '''
     # ====
-    ind_next = ravel_index([xnext, ynext, znext], N1, N2, N3)
-    F = np.zeros([1, N])
+    ind_next = 2 * ravel_index([xnext, ynext, znext], N1, N2, N3)
+    F = np.zeros([2, N])
     F[0, ind_next] = True
+    F[0, ind_next + 1] = True
 
     # sal_sampled = F @ TEST_SAL
+    temp_sampled = 0
     sal_sampled = 0
-    mu_cond, Sigma_cond = GPupd(mu_cond, Sigma_cond, R, F, sal_sampled)
+    y_sampled = np.vstack((temp_sampled, sal_sampled))
+    mu_cond, Sigma_cond = GPupd(mu_cond, Sigma_cond, R, F, y_sampled)
 
     xpre, ypre, zpre = xnow, ynow, znow
     xnow, ynow, znow = xnext, ynext, znext
