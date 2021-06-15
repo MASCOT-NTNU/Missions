@@ -4,10 +4,9 @@
     <list default="true" id="accea8ac-0bd2-452f-bacf-f93761b28ea7" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Prior.py" beforeDir="false" afterPath="$PROJECT_DIR$/Prior.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/func_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/func_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usr_func.py" beforeDir="false" afterPath="$PROJECT_DIR$/usr_func.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Nidelva/Variogram/ChooseCoef.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/../Nidelva/Variogram/ChooseCoef.pdf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Nidelva/Variogram/ChooseCoef.pptx" beforeDir="false" afterPath="$PROJECT_DIR$/../Nidelva/Variogram/ChooseCoef.pptx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -102,6 +101,7 @@
       <workItem from="1623578072495" duration="367000" />
       <workItem from="1623653901611" duration="10123000" />
       <workItem from="1623695446311" duration="1045000" />
+      <workItem from="1623740810517" duration="1736000" />
     </task>
     <servers />
   </component>
