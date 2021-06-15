@@ -1,5 +1,3 @@
-import numpy as np
-
 from Prior import *
 
 #%% Section I: Build the waypoint and grid

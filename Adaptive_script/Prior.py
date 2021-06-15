@@ -1,146 +1,8 @@
-import os
-
-import matplotlib.pyplot as plt
-import numpy as np
-
 from usr_func import *
-figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/fig/"
-
-
-#%% Section I: Compute variogram and trend coefficients
-data = np.loadtxt("data.txt", delimiter=",")
-timestamp = data[:, 0]
-lat = data[:, 1]
-lon = data[:, 2]
-xauv = data[:, 3]
-yauv = data[:, 4]
-zauv = data[:, 5]
-depth = data[:, 6]
-sal = data[:, 7]
-temp = data[:, 8]
-
-lat_auv = lat + rad2deg(xauv * np.pi * 2.0 / circumference)
-lon_auv = lon + rad2deg(yauv * np.pi * 2.0 / (circumference * np.cos(deg2rad(lat_auv))))
-
-depth_obs = [0.5, 1.0, 1.5, 2.0, 2.5]
-
-fp='samples_2020.05.01.nc'
-nc = netCDF4.Dataset(fp)
-beta0, beta1, sal_residual, temp_residual, x_loc, y_loc = getCoefficients(data, nc, [0.5, 1.0, 1.5, 2.0, 2.5])
-figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/Variogram/'
-# This tries to find the suitable methods and estimators
-for i in range(len(depth_obs)):
-# for i in range(1):
-    V_v = Variogram(coordinates = np.hstack((y_loc[i].reshape(-1, 1), x_loc[i].reshape(-1, 1))),
-                    values = sal_residual[i].squeeze(), use_nugget=True, model = "Matern", normalize = False,
-                    n_lags = 100) # model = "Matern" check
-    # V_v.estimator = 'cressie'
-    V_v.fit_method = 'trf' # moment method
-
-    fig = V_v.plot(hist = False)
-    # fig.suptitle("test")
-    # fig = V_v.plot(hist = True)
-
-    # fig.savefig(figpath + "sal_{:03d}.pdf".format(i))
-    print(V_v)
-#%% Find depth variation
-
-depth_obs = [0.5, 2.0, 5.0]
-beta0, beta1, sal_residual, temp_residual, x_loc, y_loc = getCoefficients(data, nc, [0.5, 1.0, 1.5, 2.0, 2.5])
-
-#%%
-depth_obs = [0.5, 2.0, 5.0]
-timestamp = data[:, 0].reshape(-1, 1)
-lat_auv = rad2deg(data[:, 1].reshape(-1, 1))
-lon_auv = rad2deg(data[:, 2].reshape(-1, 1))
-xauv = data[:, 3].reshape(-1, 1)
-yauv = data[:, 4].reshape(-1, 1)
-zauv = data[:, 5].reshape(-1, 1)
-depth_auv = data[:, 6].reshape(-1, 1)
-sal_auv = data[:, 7].reshape(-1, 1)
-temp_auv = data[:, 8].reshape(-1, 1)
-lat_auv = lat_auv + rad2deg(xauv * np.pi * 2.0 / circumference)
-lon_auv = lon_auv + rad2deg(yauv * np.pi * 2.0 / (circumference * np.cos(deg2rad(lat_auv))))
-
-depthl = np.array(depth_obs) - err_bound
-depthu = np.array(depth_obs) + err_bound
-x_obs = []
-y_obs = []
-sal_obs = []
-temp_obs = []
-
-for i in range(len(depth_obs)):
-    ind_obs = (depthl[i] <= depth_auv) & (depth_auv <= depthu[i])
-    x_obs.append(np.floor(xauv[ind_obs].reshape(-1, 1)))
-    y_obs.append(np.floor(yauv[ind_obs].reshape(-1, 1)))
-    sal_obs.append(sal_auv[ind_obs].reshape(-1, 1))
-    temp_obs.append(temp_auv[ind_obs].reshape(-1, 1))
-
-plt.figure()
-plt.plot(y_obs[0])
-plt.plot(y_obs[1])
-plt.plot(y_obs[-1])
-plt.show()
-a = np.intersect1d(x_obs[0], x_obs[1])
-b = np.intersect1d(a, x_obs[-1])
-
-#%% Find vicinity values
-
-
-#%%
-z = []
-sal_depth = []
-temp_depth = []
-for i in range(len(depth_obs)):
-    for j in range(len(sal_residual[i])):
-        sal_depth.append(sal_residual[i][j, 0])
-        temp_depth.append(temp_residual[i][j, 0])
-        z.append(depth_obs[i])
-
-V_v = Variogram(coordinates = z, values = np.array(sal_depth), use_nugget=True, model = "Matern", normalize = False,
-                n_lags = 10) # model = "Matern" check
-# V_v.estimator = 'cressie'
-V_v.fit_method = 'trf' # moment method
-
-fig = V_v.plot(hist = False)
-# fig.suptitle("test")
-# fig = V_v.plot(hist = True)
-fig.savefig(figpath + "sal_depth.pdf")
-print(V_v)
-
-#%% To find the depth \ksi
-
-plt.figure()
-plt.plot(xauv, 'k.')
-# plt.xlabel("Depth [m]")
-# plt.ylabel("Temperature residual")
-# plt.title("Temperature residual vs depth")
-# plt.savefig(figpath + "TempVSDepth.pdf")
-plt.show()
-from scipy.stats import pearsonr
-# print(pearsonr(temp_depth, z)[1])
-print(np.corrcoef(temp_depth, z))
-
-#%%
-
-
-
-#%%
-plt.figure()
-plt.plot(sal_residual[0], temp_residual[0], 'k.')
-plt.xlabel("Salinity")
-plt.title("Cross plot of the residuals")
-plt.ylabel("Temperature")
-plt.savefig(figpath + "Cross.pdf")
-plt.show()
-from scipy.stats import pearsonr
-print(pearsonr(sal_residual[0].squeeze(), temp_residual[0].squeeze())[0])
-
-
-#%% Section II: Fit the prior model
 lat4, lon4 = 63.446905, 10.419426 # right bottom corner
 origin = [lat4, lon4]
 distance = 1000
+depth_obs = [0.5, 1.0, 1.5, 2.0, 2.5] # planned depth to be observed
 box = BBox(lat4, lon4, distance, 60)
 N1 = 25 # number of grid points along north direction
 N2 = 25 # number of grid points along east direction
@@ -165,37 +27,16 @@ mu_prior_sal = []
 mu_prior_temp = []
 coordinates= getCoordinates(box, N1, N2, dx, 60)
 
-TEST_SAL = []
-TEST_TEMP = []
+data = np.loadtxt("data.txt", delimiter=",")
+fp='samples_2020.05.01.nc'
+nc = netCDF4.Dataset(fp)
+beta0, beta1, sal_residual, temp_residual, x_loc, y_loc = getCoefficients(data, nc, depth_obs)
 
 for i in range(len(depth_obs)):
     sal_sinmod, temp_sinmod = GetSINMODFromCoordinates(nc, coordinates, depth_obs[i])
     mu_prior_sal.append(beta0[i, 0] + beta1[i, 0] * sal_sinmod) # build the prior based on SINMOD data
     mu_prior_temp.append(beta0[i, 1] + beta1[i, 1] * temp_sinmod)
-    TEST_SAL.append(sal_sinmod)
-    TEST_TEMP.append(temp_sinmod)
 
 mu_prior_sal = np.array(mu_prior_sal).reshape(-1, 1)
 mu_prior_temp = np.array(mu_prior_temp).reshape(-1, 1)
-TEST_SAL = np.array(TEST_SAL).reshape(-1, 1)
-TEST_TEMP = np.array(TEST_TEMP).reshape(-1, 1)
 
-beta0_sal, beta1_sal, beta0_temp, beta1_temp = getTrend(data, depth_obs) # Compute trend
-
-
-
-#%% Create the map plotter:
-apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro' # (your API key here)
-gmap = gmplot.GoogleMapPlotter(box[-1, 0], box[-1, 1], 14, apikey=apikey)
-
-# Highlight some attractions:
-attractions_lats = coordinates[:, 0]
-attractions_lngs = coordinates[:, 1]
-gmap.scatter(attractions_lats, attractions_lngs, color='#3B0B39', size=4, marker=False)
-
-# Mark a hidden gem:
-for i in range(box.shape[0]):
-    gmap.marker(box[i, 0], box[i, 1], color='cornflowerblue')
-
-# Draw the map:
-gmap.draw(os.getcwd() + '/map.html')

@@ -15,7 +15,6 @@ circumference = 40075000 # [m]
 err_bound = 0.1 # [m]
 
 
-
 def ravel_index(loc, n1, n2, n3):
     '''
     :param loc:
@@ -98,41 +97,6 @@ def rotateXY(nx, ny, distance, alpha):
     return gridxnew, gridynew
 
 
-def getTrend(data, depth):
-    xauv = data[:, 3].reshape(-1, 1)
-    yauv = data[:, 4].reshape(-1, 1)
-    depth_auv = data[:, 6].reshape(-1, 1)
-    sal_auv = data[:, 7].reshape(-1, 1)
-    temp_auv = data[:, 8].reshape(-1, 1)
-
-    depthl = np.array(depth) - err_bound
-    depthu = np.array(depth) + err_bound
-    beta0_sal = []
-    beta1_sal = []
-    beta0_temp = []
-    beta1_temp = []
-
-    for i in range(len(depth)):
-        ind_obs = (depthl[i] <= depth_auv) & (depth_auv <= depthu[i])
-        xobs = xauv[ind_obs].reshape(-1, 1)
-        yobs = yauv[ind_obs].reshape(-1, 1)
-        sal_obs = sal_auv[ind_obs].reshape(-1, 1)
-        temp_obs = temp_auv[ind_obs].reshape(-1, 1)
-        X = np.hstack((xobs, yobs))
-
-        model_sal = LinearRegression()
-        model_sal.fit(X, sal_obs)
-        beta0_sal.append(model_sal.intercept_)
-        beta1_sal.append(model_sal.coef_)
-
-        model_temp = LinearRegression()
-        model_temp.fit(X, temp_obs)
-        beta0_temp.append(model_temp.intercept_)
-        beta1_temp.append(model_temp.coef_)
-
-    return np.array(beta0_sal), np.array(beta1_sal).squeeze(), np.array(beta0_temp), np.array(beta1_temp).squeeze()
-
-
 def getCoefficients(data, SINMOD, depth):
     '''
     :param data:
@@ -185,7 +149,6 @@ def getCoefficients(data, SINMOD, depth):
         y_loc.append(yauv[ind_obs])
 
     return beta0, beta1, sal_residual, temp_residual, x_loc, y_loc
-
 
 
 def deg2rad(deg):
