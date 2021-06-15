@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from Prior import *
 print("Congrats!!! Prior is built successfully!!!")
 print("Fitted beta0: \n", beta0)
@@ -39,7 +41,13 @@ Sigma_st = np.array([[sigma_temp ** 2, sigma_sal * sigma_temp * rho_st],
                      [sigma_sal * sigma_temp * rho_st, sigma_sal ** 2]])
 Sigma_prior = np.kron(Cov_spatial, Sigma_st)
 
-EP_prior_sal = EP_2D(mu_prior_sal, Sigma_prior_sal, Threshold_S)
+#%%
+plt.figure()
+plt.imshow(Sigma_prior)
+plt.colorbar()
+plt.show()
+
+# EP_prior_sal = EP_2D(mu_prior_sal, Sigma_prior_sal, Threshold_S)
 #%% #%% Part II : Path planning
 
 path = []

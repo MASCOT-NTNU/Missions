@@ -118,13 +118,15 @@ print(pearsonr(sal_residual[0].squeeze(), temp_residual[0].squeeze())[0])
 
 
 #%% Create the map plotter:
-apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro' # (your API key here)
+# apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro' # (your API key here)
+apikey = 'AIzaSyDkWNSq_EKnrV9qP6thJe5Y8a5kVLKEjUI'
 gmap = gmplot.GoogleMapPlotter(box[-1, 0], box[-1, 1], 14, apikey=apikey)
 
 # Highlight some attractions:
 attractions_lats = coordinates[:, 0]
 attractions_lngs = coordinates[:, 1]
-gmap.scatter(attractions_lats, attractions_lngs, color='#3B0B39', size=4, marker=False)
+# gmap.scatter(attractions_lats, attractions_lngs, color='#3B0B39', size=4, marker=False)
+gmap.scatter(attractions_lats, attractions_lngs, color='#FF0000', size=4, marker=False)
 
 # Mark a hidden gem:
 for i in range(box.shape[0]):

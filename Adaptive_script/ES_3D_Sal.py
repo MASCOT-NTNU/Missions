@@ -1,4 +1,8 @@
 from Prior import *
+beta0 = np.loadtxt(os.getcwd() + '/data/beta0.txt', delimiter = ",")
+beta1 = np.loadtxt(os.getcwd() + '/data/beta1.txt', delimiter = ",")
+mu_prior_sal = np.loadtxt(os.getcwd() + '/data/mu_prior_sal.txt', delimiter = ",")
+mu_prior_temp = np.loadtxt(os.getcwd() + '/data/mu_prior_temp.txt', delimiter = ",")
 print("Congrats!!! Prior is built successfully!!!")
 print("Fitted beta0: \n", beta0)
 print("Fitted beta1: \n", beta1)
@@ -14,7 +18,7 @@ Threshold_T = 10.5
 
 eta = 4.5 / 400 # coef in matern kernel
 ksi = 1000 / 24 / 0.5 # scaling factor in 3D
-N_steps = 10 # number of steps desired to conduct
+N_steps = 60 # number of steps desired to conduct
 
 #%% Section II: Set up the waypoint and grid
 nx = 25 # number of grid points along x-direction
@@ -45,7 +49,7 @@ mu = []
 Sigma = []
 t_elapsed = []
 
-loc = find_starting_loc(EP_prior_sal, N1, N2, N3)
+loc = find_starting_loc(EP_prior, N1, N2, N3)
 xstart, ystart, zstart = loc
 
 xnow, ynow, znow = xstart, ystart, zstart
@@ -58,7 +62,7 @@ coords.append([lat_start, lon_start])
 print("The starting location is [{:.2f}, {:.2f}]".format(lat_start, lon_start))
 
 mu_cond = mu_prior_sal
-Sigma_cond = Sigma_prior_sal
+Sigma_cond = Sigma_prior
 mu.append(mu_cond)
 Sigma.append(Sigma_cond)
 

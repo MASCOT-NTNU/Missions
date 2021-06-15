@@ -1,5 +1,17 @@
 
+figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/Path/"
 
+for i in range(F.shape[0]):
+# for i in range(100):
+    plt.figure(figsize=(5, 5))
+    plt.plot(coordinates[:, 1], coordinates[:, 0], 'k.')
+    loc = F[i, :] @ coordinates
+    plt.plot(loc[1], loc[0], 'r.')
+    plt.savefig(figpath + "P_{:03d}.pdf".format(i))
+    plt.close("all")
+
+
+#%%
 EP_prior = EP_1D(mu_prior_sal, Sigma_prior_sal, Threshold_S)
 
 mup = EP_prior.reshape(N3, N1, N2)
