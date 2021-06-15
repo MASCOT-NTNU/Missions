@@ -392,7 +392,7 @@ def mu(H, beta):
     return np.dot(H, beta)
 
 
-def EIBV(threshold, mu, Sig, F, R):
+def EIBV_1D(threshold, mu, Sig, F, R):
     '''
     :param threshold:
     :param mu:
@@ -409,6 +409,58 @@ def EIBV(threshold, mu, Sig, F, R):
         sn2 = sa2[i]
         m = mu[i]
         IntA = IntA + mvn.mvnun(-np.inf, threshold, m, sn2)[0] - mvn.mvnun(-np.inf, threshold, m, sn2)[0] ** 2
+    return IntA
+
+
+def EIBV_2D(Threshold_T, Threshold_S, mu, Sig, F, R):
+    '''
+    :param Threshold_T:
+    :param Threshold_S:
+    :param mu:
+    :param Sig:
+    :param F: sampling matrix
+    :param R: noise matrix
+    :return: EIBV evaluated at every point
+    '''
+    # Update the field variance
+    a = np.dot(Sig, F.T)
+    b = np.dot(np.dot(F, Sig), F.T) + R
+    c = np.dot(F, Sig)
+    Sigxi = np.dot(a, np.linalg.solve(b, c))  # new covariance matrix
+    V = Sig - Sigxi  # Uncertainty reduction # updated covariance
+
+    IntA = 0.0
+    N = mu.shape[0]
+    # integrate out all elements in the bernoulli variance term
+    for i in np.arange(0, N, 2):
+
+        # extract the corresponding variance reduction term
+        SigMxi = Sigxi[np.ix_([i, i + 1], [i, i + 1])]
+
+        # extract the corresponding mean terms
+        Mxi = [mu[i], mu[i + 1]] # temp and salinity
+
+        sn2 = V[np.ix_([i, i + 1], [i, i + 1])]
+        # vv2 = np.add(sn2, SigMxi) # was originally used to make it obscure
+        vv2 = Sig[np.ix_([i, i + 1], [i, i + 1])]
+
+        # compute the first part of the integration
+        Thres = np.vstack((Threshold_T, Threshold_S))
+        mur = np.subtract(Thres, Mxi)
+        IntB_a = mvn.mvnun(np.array([[-np.inf], [-np.inf]]), np.zeros([2, 1]), mur, vv2)[0]
+
+        # compute the second part of the integration, which is squared
+        mm = np.vstack((Mxi, Mxi))
+        # SS = np.array([[vv2, SigMxi], [SigMxi, vv2]]) # thought of it as a simplier version
+        SS = np.add(np.vstack((np.hstack((sn2, np.zeros((2, 2)))), np.hstack((np.zeros((2, 2)), sn2)))),
+                    np.vstack((np.hstack((SigMxi, SigMxi)), np.hstack((SigMxi, SigMxi)))))
+        Thres = np.vstack((Threshold_T, Threshold_S, Threshold_T, Threshold_S))
+        mur = np.subtract(Thres, mm)
+        IntB_b = mvn.mvnun(np.array([[-np.inf], [-np.inf], [-np.inf], [-np.inf]]), np.zeros([4, 1]), mur, SS)[0]
+
+        # compute the total integration
+        IntA = IntA + np.nansum([IntB_a, -IntB_b])
+
     return IntA
 
 
@@ -454,8 +506,8 @@ def find_candidates_loc(x_ind, y_ind, z_ind, N1, N2, N3):
     return x_ind.reshape(-1, 1), y_ind.reshape(-1, 1), z_ind.reshape(-1, 1)
 
 
-def find_next_EIBV(x_cand, y_cand, z_cand, x_now, y_now, z_now,
-                   x_pre, y_pre, z_pre, N1, N2, N3, Sig, mu, tau, Thres):
+def find_next_EIBV_1D(x_cand, y_cand, z_cand, x_now, y_now, z_now,
+                      x_pre, y_pre, z_pre, N1, N2, N3, Sig, mu, tau, Threshold):
 
     id = []
     dx1 = x_now - x_pre
@@ -485,12 +537,50 @@ def find_next_EIBV(x_cand, y_cand, z_cand, x_now, y_now, z_now,
     for k in range(M):
         F = np.zeros([1, N])
         F[0, id[k]] = True
-        eibv.append(EIBV(Thres, mu, Sig, F, R))
+        eibv.append(EIBV(Threshold, mu, Sig, F, R))
     ind_desired = np.argmin(np.array(eibv))
     x_next, y_next, z_next = unravel_index(id[ind_desired], N1, N2, N3)
 
     return x_next, y_next, z_next
 
+
+def find_next_EIBV_2D(x_cand, y_cand, z_cand, x_now, y_now, z_now,
+                      x_pre, y_pre, z_pre, N1, N2, N3, Sig, mu, tau, Threshold_T, Threshold_S):
+
+    id = []
+    dx1 = x_now - x_pre
+    dy1 = y_now - y_pre
+    dz1 = z_now - z_pre
+    vec1 = np.array([dx1, dy1, dz1])
+    for i in x_cand:
+        for j in y_cand:
+            for z in z_cand:
+                if i == x_now and j == y_now and z == z_now:
+                    continue
+                dx2 = i - x_now
+                dy2 = j - y_now
+                dz2 = z - z_now
+                vec2 = np.array([dx2, dy2, dz2])
+                if np.dot(vec1, vec2) >= 0:
+                    id.append(ravel_index([i, j, z], N1, N2, N3))
+                else:
+                    continue
+    id = np.unique(np.array(id))
+
+    M = len(id)
+    noise = np.ones([2, 1]) * tau ** 2
+    R = np.diagflat(noise)  # diag not anymore support constructing matrix from vector
+    N = N1 * N2 * N3 * 2
+    eibv = []
+    for k in range(M):
+        F = np.zeros([2, N])
+        F[0, id[k]] = True
+        F[1, id[k] + 1] = True
+        eibv.append(EIBV_2D(Threshold_T, Threshold_S, mu, Sig, F, R))
+    ind_desired = np.argmin(np.array(eibv))
+    x_next, y_next, z_next = unravel_index(id[ind_desired], N1, N2, N3)
+
+    return x_next, y_next, z_next
 
 
 #
