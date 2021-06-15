@@ -15,6 +15,38 @@ circumference = 40075000 # [m]
 err_bound = 0.1 # [m]
 
 
+def EP_1D(mu, Sigma, Threshold):
+    '''
+    This function computes the excursion probability
+    :param mu:
+    :param Sigma:
+    :param Threshold:
+    :return:
+    '''
+    EP = np.zeros_like(mu)
+    for i in range(EP.shape[0]):
+        EP[i] = norm.cdf(Threshold, mu[i], Sigma[i, i])
+    return EP
+
+
+def EP_2D(mu, Sigma, Threshold_T, Threshold_S):
+    '''
+    :param mu:
+    :param Sigma:
+    :param Threshold_T:
+    :param Threshold_S:
+    :return:
+    '''
+    EP = []
+    for i in np.arange(0, mu.shape[0], 2):
+        Sigmaxi = np.array([[Sigma[i, i], Sigma[i, i + 1]], [Sigma[i + 1, i], Sigma[i + 1, i + 1]]])
+        muxi = mu[i:i + 2] # contains the mu for temp and salinity
+        EP.append(mvn.mvnun(np.array([[-np.inf], [-np.inf]]), np.zeros([2, 1]),
+                       np.subtract(np.array([[Threshold_T], [Threshold_S]]), muxi), Sigmaxi)[0])
+    EP = np.array(EP)
+    return EP
+
+
 def ravel_index(loc, n1, n2, n3):
     '''
     :param loc:
@@ -292,15 +324,34 @@ def distance_matrix(sites1v, sites2v):
     return t
 
 
+def compute_H(grid, ksi):
+    '''
+    :param grid:
+    :param ksi:
+    :return:
+    '''
+    X = grid[:, 0].reshape(-1, 1)
+    Y = grid[:, 1].reshape(-1, 1)
+    Z = grid[:, -1].reshape(-1, 1)
+
+    distX = X @ np.ones([1, X.shape[0]]) - np.ones([X.shape[0], 1]) @ X.T
+    distY = Y @ np.ones([1, Y.shape[0]]) - np.ones([Y.shape[0], 1]) @ Y.T
+    distXY = distX ** 2 + distY ** 2
+    distZ = Z @ np.ones([1, Z.shape[0]]) - np.ones([Z.shape[0], 1]) @ Z.T
+    dist = np.sqrt(distXY + (ksi * distZ) ** 2)
+
+    return dist
+
+
 ## Functions used
-def Matern_cov(sigma, eta, t):
+def Matern_cov(sigma, eta, H):
     '''
     :param sigma: scaling coef
     :param eta: range coef
-    :param t: distance matrix
+    :param H: distance matrix
     :return: matern covariance
     '''
-    return sigma ** 2 * (1 + eta * t) * np.exp(-eta * t)
+    return sigma ** 2 * (1 + eta * H) * np.exp(-eta * H)
 
 
 def Exp_cov(eta, t):
