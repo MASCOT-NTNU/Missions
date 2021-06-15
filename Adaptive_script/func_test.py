@@ -1,4 +1,22 @@
 
+
+EP_prior = EP_1D(mu_prior_sal, Sigma_prior_sal, Threshold_S)
+
+mup = EP_prior.reshape(N3, N1, N2)
+fig = plt.figure(figsize=(35, 5))
+gs = GridSpec(nrows = 1, ncols = 5)
+for i in range(len(depth_obs)):
+    ax = fig.add_subplot(gs[i])
+    im = ax.imshow(np.rot90(mup[i, :, :]), vmin = 0.45, vmax = .7, extent = (0, 1000, 0, 1000))
+    ax.set(title = "Prior excursion probabilities at depth {:.1f} meter".format(depth_obs[i]))
+    plt.colorbar(im)
+# fig.savefig(figpath + "EP_Prior.pdf")
+plt.show()
+
+
+#%%
+
+
 def getTrend(data, depth):
     xauv = data[:, 3].reshape(-1, 1)
     yauv = data[:, 4].reshape(-1, 1)

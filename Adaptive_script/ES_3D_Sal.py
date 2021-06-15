@@ -1,15 +1,26 @@
 from Prior import *
+print("Congrats!!! Prior is built successfully!!!")
+print("Fitted beta0: \n", beta0)
+print("Fitted beta1: \n", beta1)
 
-#%% Section I: Build the waypoint and grid
-sigma = np.sqrt(30)  # scaling coef in matern kernel
-eta = np.sqrt(3) / 500 # coef in matern kernel
-tau = .3 # iid noise
+#%% Section I: Setup parameters
+sigma_sal = np.sqrt(4)  # scaling coef in matern kernel for salinity
+tau_sal = np.sqrt(.3) # iid noise
 Threshold_S = 23 # 20
+
+sigma_temp = np.sqrt(0.5)
+tau_temp = np.sqrt(.1)
 Threshold_T = 10.5
-nx = 25
-ny = 25
-L = 1000
-alpha = -60
+
+eta = 4.5 / 400 # coef in matern kernel
+ksi = 1000 / 24 / 0.5 # scaling factor in 3D
+N_steps = 10 # number of steps desired to conduct
+
+#%% Section II: Set up the waypoint and grid
+nx = 25 # number of grid points along x-direction
+ny = 25 # number of grid points along y-direction
+L = 1000 # distance of the square
+alpha = -60 # angle of the inclined grid
 distance = L / (nx - 1)
 distance_depth = depth_obs[1] - depth_obs[0]
 gridx, gridy = rotateXY(nx, ny, distance, alpha)
@@ -19,35 +30,13 @@ for k in depth_obs:
         for j in range(gridx.shape[1]):
                 grid.append([gridx[i, j], gridy[i, j], k])
 grid = np.array(grid)
-t = scdist.cdist(grid, grid) # distance matrix for the whole grid
-Sigma_prior = Matern_cov(sigma, eta, t)
 
-def EP_1D(mu, Sigma, Threshold):
-    EP_Prior = np.zeros_like(mu)
-    for i in range(EP_Prior.shape[0]):
-        EP_Prior[i] = norm.cdf(Threshold, mu[i], Sigma[i, i])
-    return EP_Prior
+H = compute_H(grid, ksi)
+
+Sigma_prior = Matern_cov(sigma_sal, eta, H)
 
 EP_prior = EP_1D(mu_prior_sal, Sigma_prior, Threshold_S)
-
-mup = EP_prior.reshape(N3, N1, N2)
-fig = plt.figure(figsize=(35, 5))
-gs = GridSpec(nrows = 1, ncols = 5)
-for i in range(len(depth_obs)):
-    ax = fig.add_subplot(gs[i])
-    im = ax.imshow(np.rot90(mup[i, :, :]), vmin = 0.45, vmax = .7, extent = (0, 1000, 0, 1000))
-    ax.set(title = "Prior excursion probabilities at depth {:.1f} meter".format(depth_obs[i]))
-    plt.colorbar(im)
-fig.savefig(figpath + "EP_Prior.pdf")
-plt.show()
-
-
-loc = find_starting_loc(EP_prior, N1, N2, N3)
-xstart, ystart, zstart = loc
-
-
 #%% #%% Part II : Path planning
-N_steps = 10
 
 path = []
 path_cand = []
@@ -56,6 +45,9 @@ mu = []
 Sigma = []
 t_elapsed = []
 
+loc = find_starting_loc(EP_prior_sal, N1, N2, N3)
+xstart, ystart, zstart = loc
+
 xnow, ynow, znow = xstart, ystart, zstart
 xpre, ypre, zpre = xnow, ynow, znow
 
@@ -63,26 +55,25 @@ lat_start, lon_start = xy2latlon(xstart, ystart, origin, distance, alpha)
 path.append([xnow, ynow, znow])
 coords.append([lat_start, lon_start])
 
-print("The starting point is ")
-print(xnow, ynow, znow)
+print("The starting location is [{:.2f}, {:.2f}]".format(lat_start, lon_start))
 
 mu_cond = mu_prior_sal
-Sigma_cond = Sigma_prior
+Sigma_cond = Sigma_prior_sal
 mu.append(mu_cond)
 Sigma.append(Sigma_cond)
 
-noise = tau ** 2
+noise = tau_sal ** 2
 R = np.diagflat(noise)
 
 for j in range(N_steps):
-# for j in range(1):
     xcand, ycand, zcand = find_candidates_loc(xnow, ynow, znow, N1, N2, N3)
 
     t1 = time.time()
     xnext, ynext, znext = find_next_EIBV(xcand, ycand, zcand,
                                          xnow, ynow, znow,
                                          xpre, ypre, zpre,
-                                         N1, N2, N3, Sigma_cond, mu_cond, tau, Threshold_S)
+                                         N1, N2, N3, Sigma_cond,
+                                         mu_cond, tau_sal, Threshold_S)
     t2 = time.time()
     t_elapsed.append(t2 - t1)
     print("It takes {:.2f} seconds to compute the next waypoint".format(t2 - t1))
@@ -103,7 +94,8 @@ for j in range(N_steps):
     F = np.zeros([1, N])
     F[0, ind_next] = True
 
-    sal_sampled = F @ TEST_SAL
+    # sal_sampled = F @ TEST_SAL
+    sal_sampled = 0
     mu_cond, Sigma_cond = GPupd(mu_cond, Sigma_cond, R, F, sal_sampled)
 
     xpre, ypre, zpre = xnow, ynow, znow
@@ -115,10 +107,7 @@ for j in range(N_steps):
     mu.append(mu_cond)
     Sigma.append(Sigma_cond)
 
-    print("Step NO.", str(j), ". The current ind is ", xnow, ynow, znow)
-
-
-#%%
+#%% Save data section
 datapath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/SimulationData/'
 data_path = np.array(path)
 data_path_cand = np.array(path_cand)
@@ -150,7 +139,4 @@ np.savetxt(datapath + "data_coords.txt", data_coords.reshape(-1, 1), delimiter="
 np.savetxt(datapath + "data_mu.txt", data_mu.reshape(-1, 1), delimiter=", ")
 np.savetxt(datapath + "data_perr.txt", data_perr.reshape(-1, 1), delimiter=", ")
 np.savetxt(datapath + "data_t_elapsed.txt", data_t_elapsed.reshape(-1, 1), delimiter=", ")
-
-# np.savetxt(datapath + "path.txt", path, delimiter=',')
-# np.savetxt(datapath + "mu.txt", mu, delimiter=",")
 
