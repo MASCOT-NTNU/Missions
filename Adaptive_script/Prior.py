@@ -40,3 +40,8 @@ for i in range(len(depth_obs)):
 mu_prior_sal = np.array(mu_prior_sal).reshape(-1, 1)
 mu_prior_temp = np.array(mu_prior_temp).reshape(-1, 1)
 
+np.savetxt(os.getcwd() + '/data/beta0.txt', beta0, delimiter = ",")
+np.savetxt(os.getcwd() + '/data/beta1.txt', beta1, delimiter = ",")
+np.savetxt(os.getcwd() + '/data/mu_prior_sal.txt', mu_prior_sal, delimiter = ",")
+np.savetxt(os.getcwd() + '/data/mu_prior_temp.txt', mu_prior_temp, delimiter = ",")
+

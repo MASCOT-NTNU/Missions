@@ -2,11 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="accea8ac-0bd2-452f-bacf-f93761b28ea7" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Post_processing.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Pre_run.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ES_3D_Gaussian_Matern.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data_extraction.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data_extraction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ES_3D_Sal.py" beforeDir="false" afterPath="$PROJECT_DIR$/ES_3D_Sal.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ES_3D_Sal_Temp.py" beforeDir="false" afterPath="$PROJECT_DIR$/ES_3D_Sal_Temp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Prior.py" beforeDir="false" afterPath="$PROJECT_DIR$/Prior.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Variogram_CrossPlot_Map.py" beforeDir="false" afterPath="$PROJECT_DIR$/Variogram_CrossPlot_Map.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/func_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/func_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/usr_func.py" beforeDir="false" afterPath="$PROJECT_DIR$/usr_func.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/map.html" beforeDir="false" afterPath="$PROJECT_DIR$/map.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -102,7 +106,8 @@
       <workItem from="1623578072495" duration="367000" />
       <workItem from="1623653901611" duration="10123000" />
       <workItem from="1623695446311" duration="1045000" />
-      <workItem from="1623740810517" duration="5944000" />
+      <workItem from="1623740810517" duration="13254000" />
+      <workItem from="1623781628210" duration="341000" />
     </task>
     <servers />
   </component>
