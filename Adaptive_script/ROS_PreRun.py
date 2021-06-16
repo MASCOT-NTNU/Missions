@@ -107,7 +107,8 @@ class PreRun:
         self.last_state = "unavailable"
         self.rate.sleep()
 
-        self.auv_handler.setWaypoint(lat4, lon4)
+        self.auv_handler.setWaypoint(deg2rad(lat4), deg2rad(lon4))
+        print("Move to lat4, lon4 as the starting point")
         self.init = True
         self.currentTemperature = 0.0
 
@@ -127,7 +128,7 @@ class PreRun:
                                 lon = loc[1]
                                 depth = depth_obs[i]
                                 print("It moves to depth {:.2f} meter and lat: {:.2f}, lon: {:.2f}".format(depth_obs[i], lat, lon))
-                                self.auv_handler.setWaypoint(lat, lon, dep)
+                                self.auv_handler.setWaypoint(deg2rad(lat), deg2rad(lon), dep)
                         else:
                             for j in range(F_odd.shape[0]):
                                 loc = F_odd[j, :] @ coordinates
@@ -135,7 +136,7 @@ class PreRun:
                                 lon = loc[1]
                                 depth = depth_obs[i]
                                 print("It moves to depth {:.2f} meter and lat: {:.2f}, lon: {:.2f}".format(depth_obs[i], lat, lon))
-                                self.auv_handler.setWaypoint(lat, lon, dep)
+                                self.auv_handler.setWaypoint(deg2rad(lat), deg2rad(lon), dep)
 
                 self.last_state = self.auv_handler.getState()
                 self.auv_handler.spin()
