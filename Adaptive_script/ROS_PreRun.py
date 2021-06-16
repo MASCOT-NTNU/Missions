@@ -2,14 +2,12 @@
 # license removed for brevity
 # Adaptive sampling group of NTNU
 
-
 # =============== USR SECTION =================
-import matplotlib.pyplot as plt
-
 from usr_func import *
 lat4, lon4 = 63.446905, 10.419426 # right bottom corner
 origin = [lat4, lon4]
-distance = 1000
+# distance = 100
+distance = 100
 depth_obs = [0.5, 1.0, 1.5, 2.0, 2.5] # planned depth to be observed
 box = BBox(lat4, lon4, distance, 60)
 
@@ -81,15 +79,31 @@ print("Total steps is ", N_steps)
 print(Path_PreRun)
 
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/June17/"
+today = date.today()
+d1 = today.strftime("%d_%m_%Y")
 
-#%%
-# figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/Path/"
-# for i in range(len(Path_PreRun)):
-#     plt.figure(figsize=(5, 5))
-#     plt.plot(coordinates[:, 1], coordinates[:, 0], 'k.')
-#     plt.plot(rad2deg(Path_PreRun[i][1]), rad2deg(Path_PreRun[i][0]), 'r.')
-#     plt.savefig(figpath + "P_{:03d}.pdf".format(i))
-#     plt.show()
+datapath = os.mkdir(os.getcwd() + "/" + d1 + "/Data/")
+
+data_temperature = []
+data_salinity = []
+data_x = []
+data_y = []
+data_z = []
+data_lat = []
+data_lon = []
+
+def save_data(datapath, timestamp, data_lat, data_lon, data_x, 
+              data_y, data_z, data_salinity, data_temperature)
+    data = np.hstack((np.array(timestamp).reshape(-1, 1), 
+                      np.array(data_lat).reshape(-1, 1), 
+                      np.array(data_lon).reshape(-1, 1), 
+                      np.array(data_x).reshape(-1, 1), 
+                      np.array(data_y).reshape(-1, 1), 
+                      np.array(data_z).reshape(-1, 1),
+                      np.array(data_z).reshape(-1, 1), 
+                      np.array(data_salinity).reshape(-1, 1), 
+                      np.array(data_temperature).reshape(-1, 1)))
+    np.savetxt(datapath + "data.txt", data, delimiter = ",")
 
 
 # =============== ROS SECTION =================
@@ -141,16 +155,36 @@ class PreRun:
 
     def run(self):
         counter = 0
+        counter_datasave = 0
+        timestamp = 0
         while not rospy.is_shutdown():
             if self.init:
+                data_temperature.append(self.currentTemperature)
+                data_salinity.append(self.currentSalinity)
+                data_x.append(self.vehicle_pos[0])
+                data_y.append(self.vehicle_pos[1])
+                data_z.append(self.vehicle_pos[-1])
+                data_lat.append(lat4)
+                data_lon.append(lon4)
+                
+                if counter_datasave >= 100:
+                    save_data(datapath, timestamp, data_lat, data_lon, data_x, 
+                              data_y, data_z, data_salinity, data_temperature)
+                    print("data is saved successfully")
+                timestamp = timestamp + 1
+                counter_datasave = counter_datasave + 1
                 print("The temperature is ", self.currentTemperature)
                 print("The salinity is ", self.currentSalinity)
                 print("The N E D is ", self.vehicle_pos)
                 if self.auv_handler.getState() == "waiting":
                     print("Arrived the current location \n")
+                    save_data(datapath, timestamp, data_lat, data_lon, data_x, 
+                              data_y, data_z, data_salinity, data_temperature)
+                    print("data is saved successfully")
                     if counter < N_steps:
                         print("Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}".format(Path_PreRun[counter][0], Path_PreRun[counter][1], Path_PreRun[counter][-1]))
                         self.auv_handler.setWaypoint(Path_PreRun[counter][0], Path_PreRun[counter][1], Path_PreRun[counter][-1])
+
                         if Path_PreRun[counter][-1] == 0:
                             for i in range(60):
                                 print(i)
@@ -158,6 +192,12 @@ class PreRun:
                                 self.auv_handler.spin() # publishes the reference, stay on the surface
                                 self.rate.sleep() # 
                         counter = counter + 1
+                    else:
+                        save_data(datapath, timestamp, data_lat, data_lon, data_x, 
+                                  data_y, data_z, data_salinity, data_temperature)
+                        print("data is saved successfully!")
+                        rospy.signal_shutdown("Mission completed!!!")
+
 
                 self.last_state = self.auv_handler.getState()
                 self.auv_handler.spin()

@@ -6,6 +6,7 @@ rm -rf usr_func.py
 wget https://raw.githubusercontent.com/MASCOT-NTNU/Missions/master/Adaptive_script/ROS_PreRun.py
 wget https://raw.githubusercontent.com/MASCOT-NTNU/Missions/master/Adaptive_script/usr_func.py
 
+
 cd ../../../
 catkin_make
 source devel/setup.bash

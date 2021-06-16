@@ -1,4 +1,14 @@
 
+#%%
+# figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/Path/"
+# for i in range(len(Path_PreRun)):
+#     plt.figure(figsize=(5, 5))
+#     plt.plot(coordinates[:, 1], coordinates[:, 0], 'k.')
+#     plt.plot(rad2deg(Path_PreRun[i][1]), rad2deg(Path_PreRun[i][0]), 'r.')
+#     plt.savefig(figpath + "P_{:03d}.pdf".format(i))
+#     plt.show()
+
+#%%
 figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/Path/"
 
 for i in range(F.shape[0]):
