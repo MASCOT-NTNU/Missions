@@ -81,8 +81,14 @@ print(Path_PreRun)
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/June17/"
 today = date.today()
 d1 = today.strftime("%d_%m_%Y")
+datafolder = os.getcwd() + "/" + d1
+if not os.path.exists(datafolder):
+    os.mkdir(datafolder)
 
-datapath = os.mkdir(os.getcwd() + "/" + d1 + "/Data/")
+datapath = datafolder + "/Data/"
+if not os.path.exists(datapath):
+    os.mkdir(datapath)
+    print(datapath + " is constructed successfully")
 
 data_temperature = []
 data_salinity = []
@@ -92,8 +98,7 @@ data_z = []
 data_lat = []
 data_lon = []
 
-def save_data(datapath, timestamp, data_lat, data_lon, data_x, \
-              data_y, data_z, data_salinity, data_temperature)
+def save_data(datapath, timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature):
     data = np.hstack((np.array(timestamp).reshape(-1, 1), 
                       np.array(data_lat).reshape(-1, 1), 
                       np.array(data_lon).reshape(-1, 1), 
@@ -156,6 +161,7 @@ class PreRun:
     def run(self):
         counter = 0
         counter_datasave = 0
+        counter_total_datasaved = 0
         timestamp = 0
         while not rospy.is_shutdown():
             if self.init:
@@ -166,20 +172,24 @@ class PreRun:
                 data_z.append(self.vehicle_pos[-1])
                 data_lat.append(lat4)
                 data_lon.append(lon4)
-                
+                print(data_temperature)
                 if counter_datasave >= 100:
-                    save_data(datapath, timestamp, data_lat, data_lon, data_x, 
-                              data_y, data_z, data_salinity, data_temperature)
+                    save_data(datapath, timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
                     print("data is saved successfully")
+                    counter_total_datasaved = counter_total_datasaved + 1
                 timestamp = timestamp + 1
                 counter_datasave = counter_datasave + 1
-                print("The temperature is ", self.currentTemperature)
-                print("The salinity is ", self.currentSalinity)
-                print("The N E D is ", self.vehicle_pos)
+                # print("The temperature is ", self.currentTemperature)
+                # print("The salinity is ", self.currentSalinity)
+                # print("The N E D is ", self.vehicle_pos)
+                print("Time stamp is ", timestamp)
+                print("Data saved {:02d} times".format(counter_datasave))
+                
+
                 if self.auv_handler.getState() == "waiting":
                     print("Arrived the current location \n")
-                    save_data(datapath, timestamp, data_lat, data_lon, data_x, 
-                              data_y, data_z, data_salinity, data_temperature)
+                    save_data(datapath, timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
+                    counter_total_datasaved = counter_total_datasaved + 1
                     print("data is saved successfully")
                     if counter < N_steps:
                         print("Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}".format(Path_PreRun[counter][0], Path_PreRun[counter][1], Path_PreRun[counter][-1]))
@@ -193,8 +203,8 @@ class PreRun:
                                 self.rate.sleep() # 
                         counter = counter + 1
                     else:
-                        save_data(datapath, timestamp, data_lat, data_lon, data_x, 
-                                  data_y, data_z, data_salinity, data_temperature)
+                        save_data(datapath, timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
+                        counter_total_datasaved = counter_total_datasaved + 1
                         print("data is saved successfully!")
                         rospy.signal_shutdown("Mission completed!!!")
 
