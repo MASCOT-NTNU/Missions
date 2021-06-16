@@ -6,6 +6,7 @@ import scipy.spatial.distance as scdist
 import netCDF4
 import os
 import gmplot
+from datetime import date
 from skgstat import Variogram, DirectionalVariogram
 from sklearn.linear_model import LinearRegression
 plt.rcParams["font.family"] = "Times New Roman"
