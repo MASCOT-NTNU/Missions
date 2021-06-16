@@ -143,13 +143,13 @@ class PreRun:
         counter = 0
         while not rospy.is_shutdown():
             if self.init:
+                print("The temperature is ", self.Temperature)
+                print("The salinity is ", self.Salinity)
+                print("The N E D is ", self.vehicle_pos)
                 if self.auv_handler.getState() == "waiting":
                     print("Arrived the current location \n")
                     if counter < N_steps:
                         print("Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}".format(Path_PreRun[counter][0], Path_PreRun[counter][1], Path_PreRun[counter][-1]))
-                        print(self.currentTemperature)
-                        print(self.currentSalinity)
-                        print(self.vehicle_pos)
                         self.auv_handler.setWaypoint(Path_PreRun[counter][0], Path_PreRun[counter][1], Path_PreRun[counter][-1])
                         if Path_PreRun[counter][-1] == 0:
                             for i in range(60):
