@@ -4,7 +4,7 @@
 
 
 # =============== USR SECTION =================
-
+import matplotlib.pyplot as plt
 
 from usr_func import *
 lat4, lon4 = 63.446905, 10.419426 # right bottom corner
@@ -69,6 +69,7 @@ for i in range(len(depth_obs)):
             lon = loc[1]
             depth = depth_obs[i]
             Path_PreRun.append([deg2rad(lat), deg2rad(lon), depth])
+    Path_PreRun.append([deg2rad(lat), deg2rad(lon), 0])
 
 N_steps = len(Path_PreRun)
 print("Total steps is ", N_steps)
@@ -77,8 +78,18 @@ print("Total steps is ", N_steps)
 # Export data to local file named "data.txt" for the later use
 # '''
 
+print(Path_PreRun)
 
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/June17/"
+# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/June17/"
+
+#%%
+# figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/Path/"
+# for i in range(len(Path_PreRun)):
+#     plt.figure(figsize=(5, 5))
+#     plt.plot(coordinates[:, 1], coordinates[:, 0], 'k.')
+#     plt.plot(rad2deg(Path_PreRun[i][1]), rad2deg(Path_PreRun[i][0]), 'r.')
+#     plt.savefig(figpath + "P_{:03d}.pdf".format(i))
+#     plt.show()
 
 
 # =============== ROS SECTION =================
@@ -99,35 +110,56 @@ class PreRun:
         self.auv_handler = AuvHandler(self.node_name,"PreRun")
 
         rospy.Subscriber("/Vehicle/Out/Temperature_filtered", Temperature, self.TemperatureCB)
-
+        rospy.Subscriber("/Vehicle/Out/Salinity_filtered", Salinity, self.SalinityCB)
+        rospy.Subscriber("/Vehicle/Out/EstimatedState_filtered", EstimatedState, self.EstimatedStateCB)
 
         self.speed = 2.0 #m/s
         self.depth = 0.0 #meters
         self.last_state = "unavailable"
         self.rate.sleep()
-        print("Hello world")
-        print("Move to lat4, lon4 as the starting point")
-        print(deg2rad(lat4), deg2rad(lon4))
-        print(lat4, lon4)
         self.auv_handler.setWaypoint(deg2rad(lat4), deg2rad(lon4))
-        print("Move to lat4, lon4 as the starting point")
+
         self.init = True
         self.currentTemperature = 0.0
+        self.currentSalinity = 0.0
+        self.vehicle_pos = [0, 0, 0]
 
     def TemperatureCB(self,msg):
         self.currentTemperature = msg.value.data
+
+    def SalinityCB(self,msg):
+        self.currentSalinity = msg.value.data
+
+    def EstimatedStateCB(self,msg):
+        offset_north = msg.lat.data - deg2rad(lat4)
+        offset_east = msg.lon.data - deg2rad(lon4)
+        circumference = 40075000.0
+        N = offset_north * circumference / (2.0 * np.pi)
+        E = offset_east * circumference * np.cos(deg2rad(lat4)) / (2.0 * np.pi)
+        D = msg.z.data
+        self.vehicle_pos = [N, E, D]
+        if not self.init:
+            self.init = True
 
     def run(self):
         counter = 0
         while not rospy.is_shutdown():
             if self.init:
                 if self.auv_handler.getState() == "waiting":
-                    print("Arrived the current location")
-
+                    print("Arrived the current location \n")
                     if counter < N_steps:
                         print("Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}".format(Path_PreRun[counter][0], Path_PreRun[counter][1], Path_PreRun[counter][-1]))
-                        counter = counter + 1
+                        print(self.currentTemperature)
+                        print(self.currentSalinity)
+                        print(self.vehicle_pos)
                         self.auv_handler.setWaypoint(Path_PreRun[counter][0], Path_PreRun[counter][1], Path_PreRun[counter][-1])
+                        if Path_PreRun[counter][-1] == 0:
+                            for i in range(60):
+                                print(i)
+                                print("Sleep {:01d} seconds".format(i))
+                                self.auv_handler.spin() # publishes the reference, stay on the surface
+                                self.rate.sleep() # 
+                        counter = counter + 1
 
                 self.last_state = self.auv_handler.getState()
                 self.auv_handler.spin()
