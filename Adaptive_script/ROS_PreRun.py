@@ -61,14 +61,14 @@ for i in range(len(depth_obs)):
             lat = loc[0]
             lon = loc[1]
             depth = depth_obs[i]
-            Path_PreRun.append([lat, lon, depth])
+            Path_PreRun.append([deg2rad(lat), deg2rad(lon), depth])
     else:
         for j in range(F_odd.shape[0]):
             loc = F_odd[j, :] @ coordinates
             lat = loc[0]
             lon = loc[1]
             depth = depth_obs[i]
-            Path_PreRun.append([lat, lon, depth])
+            Path_PreRun.append([deg2rad(lat), deg2rad(lon), depth])
 
 N_steps = len(Path_PreRun)
 print("Total steps is ", N_steps)
