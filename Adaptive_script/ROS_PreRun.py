@@ -175,7 +175,7 @@ class PreRun:
                 data_lat.append(lat4)
                 data_lon.append(lon4)
                 if counter_datasave >= 10:
-                    save_data(datapath, timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
+                    save_data(datapath, data_timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
                     print("Data saved {:02d} times".format(counter_total_datasaved))
                     counter_total_datasaved = counter_total_datasaved + 1
                 timestamp = timestamp + 1
@@ -188,7 +188,7 @@ class PreRun:
 
                 if self.auv_handler.getState() == "waiting":
                     print("Arrived the current location \n")
-                    save_data(datapath, timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
+                    save_data(datapath, data_timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
                     counter_total_datasaved = counter_total_datasaved + 1
                     print("Data saved {:02d} times".format(counter_total_datasaved))
                     if counter < N_steps:
@@ -203,7 +203,7 @@ class PreRun:
                                 self.rate.sleep() # 
                         counter = counter + 1
                     else:
-                        save_data(datapath, timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
+                        save_data(datapath, data_timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
                         counter_total_datasaved = counter_total_datasaved + 1
                         print("Data saved {:02d} times".format(counter_total_datasaved))
                         rospy.signal_shutdown("Mission completed!!!")
