@@ -7,7 +7,7 @@ from usr_func import *
 lat4, lon4 = 63.446905, 10.419426 # right bottom corner
 origin = [lat4, lon4]
 # distance = 100
-distance = 100
+distance = 200
 depth_obs = [0.5, 1.0, 1.5, 2.0, 2.5] # planned depth to be observed
 box = BBox(lat4, lon4, distance, 60)
 
@@ -16,12 +16,12 @@ N2 = 25 # number of grid points along east direction
 N3 = 5 # number of layers in the depth dimension
 N = N1 * N2 * N3 # total number of grid points
 
-XLIM = [0, 1000]
-YLIM = [0, 1000]
+XLIM = [0, distance]
+YLIM = [0, distance]
 ZLIM = [0.5, 2.5]
 x = np.linspace(XLIM[0], XLIM[1], N1)
 y = np.linspace(YLIM[0], YLIM[1], N2)
-z = np.array([0.5, 1.0, 1.5, 2.0, 2.5]).reshape(-1, 1)
+z = np.array(depth_obs).reshape(-1, 1)
 xm, ym, zm = np.meshgrid(x, y, z)
 xv = xm.reshape(-1, 1) # sites1v is the vectorised version
 yv = ym.reshape(-1, 1)
@@ -77,6 +77,17 @@ print("Total steps is ", N_steps)
 # '''
 
 print(Path_PreRun)
+# a = np.array(Path_PreRun).reshape(-1, 3)
+# print(a)
+
+# figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/Path/"
+# for i in range(len(Path_PreRun)):
+#     plt.figure(figsize=(5, 5))
+#     plt.plot(coordinates[:, 1], coordinates[:, 0], 'k.')
+#     plt.plot(rad2deg(Path_PreRun[i][1]), rad2deg(Path_PreRun[i][0]), 'r.')
+#     plt.savefig(figpath + "P_{:03d}.pdf".format(i))
+#     plt.show()
+
 
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/June17/"
 today = date.today()
@@ -176,18 +187,14 @@ class PreRun:
                 data_lon.append(lon4)
                 if counter_datasave >= 10:
                     save_data(datapath, data_timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
-                    print("Data saved {:02d} times".format(counter_total_datasaved))
+                    print("Data saved {:d} times".format(counter_total_datasaved))
+                    counter_datasave = 0
                     counter_total_datasaved = counter_total_datasaved + 1
                 timestamp = timestamp + 1
                 counter_datasave = counter_datasave + 1
-                # print("The temperature is ", self.currentTemperature)
-                # print("The salinity is ", self.currentSalinity)
-                # print("The N E D is ", self.vehicle_pos)
-                print("Time stamp is ", timestamp)
-                
 
                 if self.auv_handler.getState() == "waiting":
-                    print("Arrived the current location \n")
+                    print("Arrived the current location")
                     save_data(datapath, data_timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
                     counter_total_datasaved = counter_total_datasaved + 1
                     print("Data saved {:02d} times".format(counter_total_datasaved))
@@ -198,14 +205,15 @@ class PreRun:
                         if Path_PreRun[counter][-1] == 0:
                             for i in range(60):
                                 print(i)
-                                print("Sleep {:01d} seconds".format(i))
+                                print("Sleep {:d} seconds".format(i))
                                 self.auv_handler.spin() # publishes the reference, stay on the surface
                                 self.rate.sleep() # 
+
                         counter = counter + 1
                     else:
                         save_data(datapath, data_timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
                         counter_total_datasaved = counter_total_datasaved + 1
-                        print("Data saved {:02d} times".format(counter_total_datasaved))
+                        print("Data saved {:d} times".format(counter_total_datasaved))
                         rospy.signal_shutdown("Mission completed!!!")
 
 
