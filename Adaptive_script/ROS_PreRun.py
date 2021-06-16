@@ -53,26 +53,25 @@ for i in [4, 12, 20]:
     cnt_i = cnt_i + 1
 
 
-#%% Pre run section
-# for i in range(len(depth_obs)):
-#     if i % 2 == 0:
-#         for j in range(F_even.shape[0]):
-#             loc = F_even[j, :] @ coordinates
-#             '''
-#             lat = loc[0]
-#             lon = loc[1]
-#             depth = depth_obs[i]
-#             move (lat, lon, depth)
-#             '''
-#     else:
-#         for j in range(F_odd.shape[0]):
-#             loc = F_odd[j, :] @ coordinates
-#             '''
-#             lat = loc[0]
-#             lon = loc[1]
-#             depth = depth_obs[i]
-#             move (lat, lon, depth)
-#             '''
+Path_PreRun = []
+for i in range(len(depth_obs)):
+    if i % 2 == 0:
+        for j in range(F_even.shape[0]):
+            loc = F_even[j, :] @ coordinates
+            lat = loc[0]
+            lon = loc[1]
+            depth = depth_obs[i]
+            Path_PreRun.append(lat, lon, depth)
+    else:
+        for j in range(F_odd.shape[0]):
+            loc = F_odd[j, :] @ coordinates
+            lat = loc[0]
+            lon = loc[1]
+            depth = depth_obs[i]
+            Path_PreRun.append(lat, lon, depth)
+
+N_steps = len(Path_PreRun)
+print("Total steps is ", N_steps)
 
 # '''
 # Export data to local file named "data.txt" for the later use
@@ -123,23 +122,12 @@ class PreRun:
         while not rospy.is_shutdown():
             if self.init:
                 if self.auv_handler.getState() == "waiting":
-                    for i in range(len(depth_obs)):
-                        if i % 2 == 0:
-                            for j in range(F_even.shape[0]):
-                                loc = F_even[j, :] @ coordinates
-                                lat = loc[0]
-                                lon = loc[1]
-                                depth = depth_obs[i]
-                                print("It moves to depth {:.2f} meter and lat: {:.2f}, lon: {:.2f}".format(depth_obs[i], lat, lon))
-                                self.auv_handler.setWaypoint(deg2rad(lat), deg2rad(lon), depth)
-                        else:
-                            for j in range(F_odd.shape[0]):
-                                loc = F_odd[j, :] @ coordinates
-                                lat = loc[0]
-                                lon = loc[1]
-                                depth = depth_obs[i]
-                                print("It moves to depth {:.2f} meter and lat: {:.2f}, lon: {:.2f}".format(depth_obs[i], lat, lon))
-                                self.auv_handler.setWaypoint(deg2rad(lat), deg2rad(lon), depth)
+                    print("Arrived the current location")
+
+                    if counter < N_steps:
+                        print("Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}".format(Path_PreRun[counter][0], Path_PreRun[counter][1], Path_PreRun[counter][-1]))
+                        counter = counter + 1
+                        self.auv_handler.setWaypoint(Path_PreRun[counter][0], Path_PreRun[counter][1], Path_PreRun[counter][-1])
 
                 self.last_state = self.auv_handler.getState()
                 self.auv_handler.spin()
