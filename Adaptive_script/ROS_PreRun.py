@@ -99,7 +99,7 @@ import numpy as np
 from auv_handler import AuvHandler
 
 import imc_ros_interface
-from imc_ros_interface.msg import Temperature
+from imc_ros_interface.msg import Temperature, Salinity, EstimatedState
 
 class PreRun:
     def __init__(self):
