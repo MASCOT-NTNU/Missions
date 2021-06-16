@@ -90,6 +90,7 @@ if not os.path.exists(datapath):
     os.mkdir(datapath)
     print(datapath + " is constructed successfully")
 
+data_timestamp = []
 data_temperature = []
 data_salinity = []
 data_x = []
@@ -165,6 +166,7 @@ class PreRun:
         timestamp = 0
         while not rospy.is_shutdown():
             if self.init:
+                data_timestamp.append(timestamp)
                 data_temperature.append(self.currentTemperature)
                 data_salinity.append(self.currentSalinity)
                 data_x.append(self.vehicle_pos[0])
@@ -172,10 +174,9 @@ class PreRun:
                 data_z.append(self.vehicle_pos[-1])
                 data_lat.append(lat4)
                 data_lon.append(lon4)
-                print(data_temperature)
-                if counter_datasave >= 100:
+                if counter_datasave >= 10:
                     save_data(datapath, timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
-                    print("data is saved successfully")
+                    print("Data saved {:02d} times".format(counter_total_datasaved))
                     counter_total_datasaved = counter_total_datasaved + 1
                 timestamp = timestamp + 1
                 counter_datasave = counter_datasave + 1
@@ -183,14 +184,13 @@ class PreRun:
                 # print("The salinity is ", self.currentSalinity)
                 # print("The N E D is ", self.vehicle_pos)
                 print("Time stamp is ", timestamp)
-                print("Data saved {:02d} times".format(counter_datasave))
                 
 
                 if self.auv_handler.getState() == "waiting":
                     print("Arrived the current location \n")
                     save_data(datapath, timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
                     counter_total_datasaved = counter_total_datasaved + 1
-                    print("data is saved successfully")
+                    print("Data saved {:02d} times".format(counter_total_datasaved))
                     if counter < N_steps:
                         print("Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}".format(Path_PreRun[counter][0], Path_PreRun[counter][1], Path_PreRun[counter][-1]))
                         self.auv_handler.setWaypoint(Path_PreRun[counter][0], Path_PreRun[counter][1], Path_PreRun[counter][-1])
@@ -205,7 +205,7 @@ class PreRun:
                     else:
                         save_data(datapath, timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
                         counter_total_datasaved = counter_total_datasaved + 1
-                        print("data is saved successfully!")
+                        print("Data saved {:02d} times".format(counter_total_datasaved))
                         rospy.signal_shutdown("Mission completed!!!")
 
 
