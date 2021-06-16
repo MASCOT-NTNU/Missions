@@ -1,5 +1,6 @@
 #!bash/bin
 
 git add .
-git commit -m "new"
+read -p "what to commit:" string
+git commit -m $string
 git push --all
