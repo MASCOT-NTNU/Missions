@@ -138,8 +138,6 @@ class PreRun:
         E = offset_east * circumference * np.cos(deg2rad(lat4)) / (2.0 * np.pi)
         D = msg.z.data
         self.vehicle_pos = [N, E, D]
-        if not self.init:
-            self.init = True
 
     def run(self):
         counter = 0
