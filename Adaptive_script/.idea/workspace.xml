@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="accea8ac-0bd2-452f-bacf-f93761b28ea7" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ROS_PreRun.py" beforeDir="false" afterPath="$PROJECT_DIR$/ROS_PreRun.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -101,7 +102,7 @@
       <workItem from="1623740810517" duration="13254000" />
       <workItem from="1623781628210" duration="2440000" />
       <workItem from="1623828384847" duration="17000" />
-      <workItem from="1623828407866" duration="621000" />
+      <workItem from="1623828407866" duration="2636000" />
     </task>
     <servers />
   </component>
