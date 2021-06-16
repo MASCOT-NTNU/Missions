@@ -143,8 +143,8 @@ class PreRun:
         counter = 0
         while not rospy.is_shutdown():
             if self.init:
-                print("The temperature is ", self.Temperature)
-                print("The salinity is ", self.Salinity)
+                print("The temperature is ", self.currentTemperature)
+                print("The salinity is ", self.currentSalinity)
                 print("The N E D is ", self.vehicle_pos)
                 if self.auv_handler.getState() == "waiting":
                     print("Arrived the current location \n")
