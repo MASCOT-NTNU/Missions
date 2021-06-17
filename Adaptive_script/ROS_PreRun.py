@@ -7,7 +7,7 @@ from usr_func import *
 lat4, lon4 = 63.446905, 10.419426 # right bottom corner
 origin = [lat4, lon4]
 # distance = 100
-distance = 200
+distance = 1000
 depth_obs = [0.5, 1.0, 1.5, 2.0, 2.5] # planned depth to be observed
 box = BBox(lat4, lon4, distance, 60)
 
@@ -144,7 +144,7 @@ class PreRun:
         rospy.Subscriber("/Vehicle/Out/Salinity_filtered", Salinity, self.SalinityCB)
         rospy.Subscriber("/Vehicle/Out/EstimatedState_filtered", EstimatedState, self.EstimatedStateCB)
 
-        self.speed = 2.0 #m/s
+        self.speed = 1.5 #m/s
         self.depth = 0.0 #meters
         self.last_state = "unavailable"
         self.rate.sleep()
