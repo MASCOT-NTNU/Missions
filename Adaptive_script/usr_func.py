@@ -538,7 +538,7 @@ def find_next_EIBV_1D(x_cand, y_cand, z_cand, x_now, y_now, z_now,
     for k in range(M):
         F = np.zeros([1, N])
         F[0, id[k]] = True
-        eibv.append(EIBV(Threshold, mu, Sig, F, R))
+        eibv.append(EIBV_1D(Threshold, mu, Sig, F, R))
     ind_desired = np.argmin(np.array(eibv))
     x_next, y_next, z_next = unravel_index(id[ind_desired], N1, N2, N3)
 

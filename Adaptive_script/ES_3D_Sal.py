@@ -1,8 +1,14 @@
 from Prior import *
-beta0 = np.loadtxt(os.getcwd() + '/data/beta0.txt', delimiter = ",")
-beta1 = np.loadtxt(os.getcwd() + '/data/beta1.txt', delimiter = ",")
-mu_prior_sal = np.loadtxt(os.getcwd() + '/data/mu_prior_sal.txt', delimiter = ",")
-mu_prior_temp = np.loadtxt(os.getcwd() + '/data/mu_prior_temp.txt', delimiter = ",")
+
+today = date.today()
+d1 = today.strftime("%d_%m_%Y")
+datafolder = os.getcwd() + "/" + d1
+datapath = datafolder + "/Data/"
+
+beta0 = np.loadtxt(datapath + 'beta0.txt', delimiter = ",")
+beta1 = np.loadtxt(datapath + 'beta1.txt', delimiter = ",")
+mu_prior_sal = np.loadtxt(datapath + 'mu_prior_sal.txt', delimiter = ",")
+mu_prior_temp = np.loadtxt(datapath + 'mu_prior_temp.txt', delimiter = ",")
 print("Congrats!!! Prior is built successfully!!!")
 print("Fitted beta0: \n", beta0)
 print("Fitted beta1: \n", beta1)
@@ -73,11 +79,11 @@ for j in range(N_steps):
     xcand, ycand, zcand = find_candidates_loc(xnow, ynow, znow, N1, N2, N3)
 
     t1 = time.time()
-    xnext, ynext, znext = find_next_EIBV(xcand, ycand, zcand,
-                                         xnow, ynow, znow,
-                                         xpre, ypre, zpre,
-                                         N1, N2, N3, Sigma_cond,
-                                         mu_cond, tau_sal, Threshold_S)
+    xnext, ynext, znext = find_next_EIBV_1D(xcand, ycand, zcand,
+                                            xnow, ynow, znow,
+                                            xpre, ypre, zpre,
+                                            N1, N2, N3, Sigma_cond,
+                                            mu_cond, tau_sal, Threshold_S)
     t2 = time.time()
     t_elapsed.append(t2 - t1)
     print("It takes {:.2f} seconds to compute the next waypoint".format(t2 - t1))
