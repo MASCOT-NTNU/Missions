@@ -120,6 +120,7 @@ def save_data(datapath, timestamp, data_lat, data_lon, data_x, data_y, data_z, d
     np.savetxt(datapath + "data.txt", data, delimiter=",")
 
 logfile = open(datapath + "log.txt", "w+")
+logfile.write("Everything prepared properly!!!\n")
 
 # =============== ROS SECTION =================
 
