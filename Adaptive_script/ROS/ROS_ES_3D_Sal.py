@@ -3,16 +3,42 @@
 # Adaptive sampling group of NTNU
 
 
-#%% =============== USR SECTION =================
+# %% =============== USR SECTION =================
+
+from usr_func import *
+
+# from Prior import *
 
 
-from Prior import *
+lat4, lon4 = 63.446905, 10.419426  # right bottom corner
+origin = [lat4, lon4]
+distance = 1000
+depth_obs = [0.5, 1.0, 1.5, 2.0, 2.5]  # planned depth to be observed
+box = BBox(lat4, lon4, distance, 60)
+N1 = 25  # number of grid points along north direction
+N2 = 25  # number of grid points along east direction
+N3 = 5  # number of layers in the depth dimension
+N = N1 * N2 * N3  # total number of grid points
+
+XLIM = [0, distance]
+YLIM = [0, distance]
+ZLIM = [0.5, 2.5]
+x = np.linspace(XLIM[0], XLIM[1], N1)
+y = np.linspace(YLIM[0], YLIM[1], N2)
+z = np.array(depth_obs).reshape(-1, 1)
+xm, ym, zm = np.meshgrid(x, y, z)
+xv = xm.reshape(-1, 1)  # sites1v is the vectorised version
+yv = ym.reshape(-1, 1)
+zv = zm.reshape(-1, 1)
+dx = x[1] - x[0]
+dy = y[1] - y[0]
+dz = z[1] - z[0]
 
 today = date.today()
 d1 = today.strftime("%d_%m_%Y")
 datafolder = os.getcwd() + "/" + d1
 datapath = datafolder + "/Data/"
-logfile = open(datapath + "/Data/logES.txt", "w+")
+logfile = open(datapath + "/logES.txt", "w+")
 
 beta0 = np.loadtxt(datapath + 'beta0.txt', delimiter=",")
 beta1 = np.loadtxt(datapath + 'beta1.txt', delimiter=",")
@@ -22,8 +48,8 @@ print("Congrats!!! Prior is built successfully!!!")
 logfile.write("Congrats!!! Prior is built successfully!!!\n")
 print("Fitted beta0: \n", beta0)
 print("Fitted beta1: \n", beta1)
-logfile.write("Fitted beta0: \n", beta0)
-logfile.write("Fitted beta1: \n", beta1)
+# logfile.write("Fitted beta0: \n", beta0)
+# logfile.write("Fitted beta1: \n", beta1)
 
 
 ## Section I: Setup parameters
@@ -38,7 +64,6 @@ Threshold_T = 10.5
 eta = 4.5 / 400  # coef in matern kernel
 ksi = 1000 / 24 / 0.5  # scaling factor in 3D
 N_steps = 10  # number of steps desired to conduct
-
 
 ## Section II: Set up the waypoint and grid
 nx = 25  # number of grid points along x-direction
@@ -60,7 +85,6 @@ H = compute_H(grid, ksi)
 Sigma_prior = Matern_cov(sigma_sal, eta, H)
 
 EP_prior = EP_1D(mu_prior_sal, Sigma_prior, Threshold_S)
-
 
 ## Part II : Path planning
 
@@ -96,8 +120,7 @@ Sigma.append(Sigma_cond)
 noise = tau_sal ** 2
 R = np.diagflat(noise)
 
-
-#%% =============== ROS SECTION =================
+# %% =============== ROS SECTION =================
 
 
 data_timestamp = []
@@ -120,7 +143,8 @@ def save_data(datapath, timestamp, data_lat, data_lon, data_x, data_y, data_z, d
                       np.array(data_z).reshape(-1, 1),
                       np.array(data_salinity).reshape(-1, 1),
                       np.array(data_temperature).reshape(-1, 1)))
-    np.savetxt(datapath + "data_ES3D1.txt", data, delimiter = ",")
+    np.savetxt(datapath + "data_ES3D1.txt", data, delimiter=",")
+
 
 def save_ESdata(datapath, path, path_cand, coords, mu, Sigma, t_elapsed):
     data_path = np.array(path)
@@ -130,7 +154,7 @@ def save_ESdata(datapath, path, path_cand, coords, mu, Sigma, t_elapsed):
     data_Sigma = np.array(Sigma)
     data_perr = np.zeros_like(data_mu)
     for i in range(data_Sigma.shape[0]):
-        data_perr[i, :, :] = np.diag(data_Sigma[i, :, :]).reshape(-1, 1)
+        data_perr[i, :] = np.diag(data_Sigma[i, :, :]).reshape(1, -1)
     data_t_elapsed = np.array(t_elapsed)
 
     shape_path = data_path.shape
@@ -154,8 +178,8 @@ def save_ESdata(datapath, path, path_cand, coords, mu, Sigma, t_elapsed):
     np.savetxt(datapath + "data_perr.txt", data_perr.reshape(-1, 1), delimiter=", ")
     np.savetxt(datapath + "data_t_elapsed.txt", data_t_elapsed.reshape(-1, 1), delimiter=", ")
 
-print("Total number of steps is ", N_steps)
 
+print("Total number of steps is ", N_steps)
 
 import rospy
 import numpy as np
@@ -182,11 +206,15 @@ class ES3D1:
         self.last_state = "unavailable"
         self.rate.sleep()
         # self.auv_handler.setWaypoint(deg2rad(lat4), deg2rad(lon4))
-        self.auv_handler.setWaypoint(lat_start, lon_start, depth_obs[zstart])
+        # self.auv_handler.setWaypoint(deg2rad(lat_start), deg2rad(lon_start))
         self.init = True
         self.currentTemperature = 0.0
         self.currentSalinity = 0.0
         self.vehicle_pos = [0, 0, 0]
+
+        # Move to the starting location
+        print(xstart, ystart, zstart)
+        self.auv_handler.setWaypoint(deg2rad(lat_start), deg2rad(lon_start), depth_obs[zstart])
 
     def TemperatureCB(self, msg):
         self.currentTemperature = msg.value.data
@@ -204,90 +232,108 @@ class ES3D1:
         self.vehicle_pos = [N, E, D]
 
     def run(self):
-            
-            # ====== Setup section =====
-            counter = 0
-            counter_waypoint = 0
-            counter_datasave = 0
-            counter_total_datasaved = 0
-            timestamp = 0
-            # ====== Setup section =====
 
-            while not rospy.is_shutdown():
-                if self.init:
+        # declare global variables ==> needs to be fixed
+        global xstart, ystart, zstart
+        global mu_cond, Sigma_cond
+        global F, xnow, ynow, znow
+        global xpre, ypre, zpre
 
-                    data_timestamp.append(timestamp)
-                    data_temperature.append(self.currentTemperature)
-                    data_salinity.append(self.currentSalinity)
-                    data_x.append(self.vehicle_pos[0])
-                    data_y.append(self.vehicle_pos[1])
-                    data_z.append(self.vehicle_pos[-1])
-                    data_lat.append(lat4)
-                    data_lon.append(lon4)
+        # ====== Setup section =====
+        counter = 0
+        counter_waypoint = 0
+        counter_datasave = 0
+        counter_total_datasaved = 0
+        timestamp = 0
+        # ====== Setup section =====
 
-                    if counter_datasave >= 10:
-                        save_data(datapath, data_timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
-                        print("Data saved {:d} times".format(counter_total_datasaved))
-                        logfile.write("Data saved {:d} times\n".format(counter_total_datasaved))
-                        counter_datasave = 0
-                        counter_total_datasaved = counter_total_datasaved + 1
+        while not rospy.is_shutdown():
+            if self.init:
 
-                    timestamp = timestamp + 1
-                    counter_datasave = counter_datasave + 1
+                data_timestamp.append(timestamp)
+                data_temperature.append(self.currentTemperature)
+                data_salinity.append(self.currentSalinity)
+                data_x.append(self.vehicle_pos[0])
+                data_y.append(self.vehicle_pos[1])
+                data_z.append(self.vehicle_pos[-1])
+                data_lat.append(lat4)
+                data_lon.append(lon4)
 
-                    if self.auv_handler.getState() == "waiting":
-                        print("Arrived the starting location")
-                        logfile.write("Arrived the starting location\n")
-                        save_data(datapath, data_timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity, data_temperature)
-                        counter_total_datasaved = counter_total_datasaved + 1
-                        print("Data saved {:02d} times".format(counter_total_datasaved))
-                        logfile.write("Data saved {:02d} times\n".format(counter_total_datasaved))
-                        print("Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}".format(lat_next, lon_next, depth_next))
-                        logfile.write("Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}\n".format(lat_next, lon_next, depth_next))
-                        sal_sampled = np.mean(data_salinity[-10:]) # take the past ten samples and average
+                if counter_datasave >= 10000:
+                    save_data(datapath, data_timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity,
+                              data_temperature)
+                    print("Data saved {:d} times".format(counter_total_datasaved))
+                    logfile.write("Data saved {:d} times\n".format(counter_total_datasaved))
+                    counter_datasave = 0
+                    counter_total_datasaved = counter_total_datasaved + 1
 
-                        mu_cond, Sigma_cond = GPupd(mu_cond, Sigma_cond, R, F, sal_sampled)
+                timestamp = timestamp + 1
+                counter_datasave = counter_datasave + 1
 
-                        xcand, ycand, zcand = find_candidates_loc(xnow, ynow, znow, N1, N2, N3)
+                if self.auv_handler.getState() == "waiting":
+                    print("Arrived the starting location")
+                    logfile.write("Arrived the starting location\n")
+                    save_data(datapath, data_timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity,
+                              data_temperature)
+                    counter_total_datasaved = counter_total_datasaved + 1
+                    print("Data saved {:02d} times".format(counter_total_datasaved))
 
-                        t1 = time.time()
-                        xnext, ynext, znext = find_next_EIBV_1D(xcand, ycand, zcand,
-                                                                xnow, ynow, znow,
-                                                                xpre, ypre, zpre,
-                                                                N1, N2, N3, Sigma_cond,
-                                                                mu_cond, tau_sal, Threshold_S)
-                        t2 = time.time()
-                        t_elapsed.append(t2 - t1)
-                        print("It takes {:.2f} seconds to compute the next waypoint".format(t2 - t1))
-                        logfile.write("It takes {:.2f} seconds to compute the next waypoint\n".format(t2 - t1))
+                    sal_sampled = np.mean(data_salinity[-10:])  # take the past ten samples and average
 
-                        print("next is ", xnext, ynext, znext)
-                        lat_next, lon_next = xy2latlon(xnext, ynext, origin, distance, alpha)
-                        depth_next = depth_obs[znext]
-                        ind_next = ravel_index([xnext, ynext, znext], N1, N2, N3)
+                    mu_cond, Sigma_cond = GPupd(mu_cond, Sigma_cond, R, F, sal_sampled)
 
-                        F = np.zeros([1, N])
-                        F[0, ind_next] = True
+                    xcand, ycand, zcand = find_candidates_loc(xnow, ynow, znow, N1, N2, N3)
 
-                        xpre, ypre, zpre = xnow, ynow, znow
-                        xnow, ynow, znow = xnext, ynext, znext
+                    t1 = time.time()
+                    xnext, ynext, znext = find_next_EIBV_1D(xcand, ycand, zcand,
+                                                            xnow, ynow, znow,
+                                                            xpre, ypre, zpre,
+                                                            N1, N2, N3, Sigma_cond,
+                                                            mu_cond, tau_sal, Threshold_S)
+                    t2 = time.time()
+                    t_elapsed.append(t2 - t1)
+                    print("It takes {:.2f} seconds to compute the next waypoint".format(t2 - t1))
+                    logfile.write("It takes {:.2f} seconds to compute the next waypoint\n".format(t2 - t1))
 
-                        path.append([xnow, ynow, znow])
-                        path_cand.append([xcand, ycand, zcand])
-                        coords.append([lat_next, lon_next])
-                        mu.append(mu_cond)
-                        Sigma.append(Sigma_cond)
+                    print("next is ", xnext, ynext, znext)
+                    lat_next, lon_next = xy2latlon(xnext, ynext, origin, distance, alpha)
+                    depth_next = depth_obs[znext]
+                    ind_next = ravel_index([xnext, ynext, znext], N1, N2, N3)
 
-                        save_ESdata(datapath, path, path_cand, coords, mu, Sigma, t_elapsed)
+                    F = np.zeros([1, N])
+                    F[0, ind_next] = True
 
-                        # Move to the next waypoint
-                        self.auv_handler.setWaypoint(deg2rad(lat_next), deg2rad(lon_next), depth_next)
+                    xpre, ypre, zpre = xnow, ynow, znow
+                    xnow, ynow, znow = xnext, ynext, znext
+
+                    path.append([xnow, ynow, znow])
+                    path_cand.append([xcand, ycand, zcand])
+                    coords.append([lat_next, lon_next])
+                    mu.append(mu_cond)
+                    Sigma.append(Sigma_cond)
+
+                    # save_ESdata(datapath, path, path_cand, coords, mu, Sigma, t_elapsed)
+                    logfile.write("Data saved {:02d} times\n".format(counter_total_datasaved))
+                    print("Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}".format(lat_next, lon_next,
+                                                                                                  depth_next))
+                    logfile.write(
+                        "Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}\n".format(lat_next, lon_next,
+                                                                                                  depth_next))
+
+                    # Move to the next waypoint
+                    self.auv_handler.setWaypoint(deg2rad(lat_next), deg2rad(lon_next), depth_next)
 
                     counter_waypoint = counter_waypoint + 1
                     print("Waypoint is ", counter_waypoint)
-                if counter_waypoint >= N_steps:
-                    logfile.write("Mission completed!!!\n")
-                    rospy.signal_shutdown("Mission completed!!!")
+
+                self.last_state = self.auv_handler.getState()
+                self.auv_handler.spin()
+
+            if counter_waypoint >= N_steps:
+                logfile.write("Mission completed!!!\n")
+                rospy.signal_shutdown("Mission completed!!!")
+
+            self.rate.sleep()
 
 
 if __name__ == "__main__":

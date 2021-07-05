@@ -38,21 +38,29 @@ data2 = []
 for i in range(len(depth_obs)):
     data_temp = np.loadtxt(datapath + "data_{:02d}.txt".format(i), delimiter=",")
     data2.append(data_temp)
-data2 = np.array(data2)
-size = data2.shape
-data = np.zeros([size[0] * size[1], size[-1]])
-for i in range(size[0]):
-    for j in range(size[1]):
-        data[i * j, :] = data2[i, j, :]
+data2 = np.array(data2, dtype = object)
 
+data = []
+for i in range(len(data2)):
+    for j in range(data2[i].shape[0]):
+        data.append(data2[i][j])
+data = np.array(data)
+
+print(data)
+#%%
 # data2 = np.loadtxt("data.txt", delimiter=",")
 
 fp='samples_2020.05.01.nc'
 nc = netCDF4.Dataset(fp)
 beta0, beta1, sal_residual, temp_residual, x_loc, y_loc = getCoefficients(data, nc, depth_obs)
+print(beta0.shape)
+
 
 for i in range(len(depth_obs)):
+    # print(i)
     sal_sinmod, temp_sinmod = GetSINMODFromCoordinates(nc, coordinates, depth_obs[i])
+    # print(sal_sinmod.shape)
+    # print(temp_sinmod.shape)
     mu_prior_sal.append(beta0[i, 0] + beta1[i, 0] * sal_sinmod) # build the prior based on SINMOD data
     mu_prior_temp.append(beta0[i, 1] + beta1[i, 1] * temp_sinmod)
 

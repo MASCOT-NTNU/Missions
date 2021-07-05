@@ -1,0 +1,170 @@
+Everything prepared properly!!!
+Arrived the current location
+Move to new way point, lat: 1.11, lon: 0.18, depth: 1.50
+Data saved 1 times
+Arrived the current location
+Move to new way point, lat: 1.11, lon: 0.18, depth: 1.50
+Data saved 3 times
+Data saved 4 times
+Arrived the current location
+Move to new way point, lat: 1.11, lon: 0.18, depth: 0.00
+Sleep 0 seconds
+Sleep 1 seconds
+Sleep 2 seconds
+Sleep 3 seconds
+Sleep 4 seconds
+Sleep 5 seconds
+Sleep 6 seconds
+Sleep 7 seconds
+Sleep 8 seconds
+Sleep 9 seconds
+Sleep 10 seconds
+Sleep 11 seconds
+Sleep 12 seconds
+Sleep 13 seconds
+Sleep 14 seconds
+Sleep 15 seconds
+Sleep 16 seconds
+Sleep 17 seconds
+Sleep 18 seconds
+Sleep 19 seconds
+Sleep 20 seconds
+Sleep 21 seconds
+Sleep 22 seconds
+Sleep 23 seconds
+Sleep 24 seconds
+Sleep 25 seconds
+Sleep 26 seconds
+Sleep 27 seconds
+Sleep 28 seconds
+Sleep 29 seconds
+Sleep 30 seconds
+Sleep 31 seconds
+Sleep 32 seconds
+Sleep 33 seconds
+Sleep 34 seconds
+Sleep 35 seconds
+Sleep 36 seconds
+Sleep 37 seconds
+Sleep 38 seconds
+Sleep 39 seconds
+Sleep 40 seconds
+Sleep 41 seconds
+Sleep 42 seconds
+Sleep 43 seconds
+Sleep 44 seconds
+Arrived the current location
+Move to new way point, lat: 1.11, lon: 0.18, depth: 1.50
+Data saved 7 times
+Data saved 8 times
+Arrived the current location
+Move to new way point, lat: 1.11, lon: 0.18, depth: 1.50
+Data saved 10 times
+Data saved 11 times
+Data saved 12 times
+Data saved 13 times
+Arrived the current location
+Move to new way point, lat: 1.11, lon: 0.18, depth: 0.00
+Sleep 0 seconds
+Sleep 1 seconds
+Sleep 2 seconds
+Sleep 3 seconds
+Sleep 4 seconds
+Sleep 5 seconds
+Sleep 6 seconds
+Sleep 7 seconds
+Sleep 8 seconds
+Sleep 9 seconds
+Sleep 10 seconds
+Sleep 11 seconds
+Sleep 12 seconds
+Sleep 13 seconds
+Sleep 14 seconds
+Sleep 15 seconds
+Sleep 16 seconds
+Sleep 17 seconds
+Sleep 18 seconds
+Sleep 19 seconds
+Sleep 20 seconds
+Sleep 21 seconds
+Sleep 22 seconds
+Sleep 23 seconds
+Sleep 24 seconds
+Sleep 25 seconds
+Sleep 26 seconds
+Sleep 27 seconds
+Sleep 28 seconds
+Sleep 29 seconds
+Sleep 30 seconds
+Sleep 31 seconds
+Sleep 32 seconds
+Sleep 33 seconds
+Sleep 34 seconds
+Sleep 35 seconds
+Sleep 36 seconds
+Sleep 37 seconds
+Sleep 38 seconds
+Sleep 39 seconds
+Sleep 40 seconds
+Sleep 41 seconds
+Sleep 42 seconds
+Sleep 43 seconds
+Sleep 44 seconds
+Arrived the current location
+Move to new way point, lat: 1.11, lon: 0.18, depth: 1.50
+Data saved 16 times
+Data saved 17 times
+Arrived the current location
+Move to new way point, lat: 1.11, lon: 0.18, depth: 1.50
+Data saved 19 times
+Arrived the current location
+Move to new way point, lat: 1.11, lon: 0.18, depth: 0.00
+Sleep 0 seconds
+Sleep 1 seconds
+Sleep 2 seconds
+Sleep 3 seconds
+Sleep 4 seconds
+Sleep 5 seconds
+Sleep 6 seconds
+Sleep 7 seconds
+Sleep 8 seconds
+Sleep 9 seconds
+Sleep 10 seconds
+Sleep 11 seconds
+Sleep 12 seconds
+Sleep 13 seconds
+Sleep 14 seconds
+Sleep 15 seconds
+Sleep 16 seconds
+Sleep 17 seconds
+Sleep 18 seconds
+Sleep 19 seconds
+Sleep 20 seconds
+Sleep 21 seconds
+Sleep 22 seconds
+Sleep 23 seconds
+Sleep 24 seconds
+Sleep 25 seconds
+Sleep 26 seconds
+Sleep 27 seconds
+Sleep 28 seconds
+Sleep 29 seconds
+Sleep 30 seconds
+Sleep 31 seconds
+Sleep 32 seconds
+Sleep 33 seconds
+Sleep 34 seconds
+Sleep 35 seconds
+Sleep 36 seconds
+Sleep 37 seconds
+Sleep 38 seconds
+Sleep 39 seconds
+Sleep 40 seconds
+Sleep 41 seconds
+Sleep 42 seconds
+Sleep 43 seconds
+Sleep 44 seconds
+Data saved 21 times
+Arrived the current location
+Data saved 24 times
+Mission completed !!! 

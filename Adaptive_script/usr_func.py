@@ -138,8 +138,12 @@ def getCoefficients(data, SINMOD, depth):
     :return:
     '''
     timestamp = data[:, 0].reshape(-1, 1)
-    lat_auv = rad2deg(data[:, 1].reshape(-1, 1))
-    lon_auv = rad2deg(data[:, 2].reshape(-1, 1))
+    # lat_auv = rad2deg(data[:, 1].reshape(-1, 1))
+    # lon_auv = rad2deg(data[:, 2].reshape(-1, 1))
+    lat_auv = data[:, 1].reshape(-1, 1)
+    lon_auv = data[:, 2].reshape(-1, 1)
+    # print(lat_auv, lon_auv)
+
     xauv = data[:, 3].reshape(-1, 1)
     yauv = data[:, 4].reshape(-1, 1)
     zauv = data[:, 5].reshape(-1, 1)
@@ -152,6 +156,8 @@ def getCoefficients(data, SINMOD, depth):
     depthl = np.array(depth) - err_bound
     depthu = np.array(depth) + err_bound
 
+    # print(depthl, depthu)
+
     beta0 = np.zeros([len(depth), 2])
     beta1 = np.zeros([len(depth), 2])
     sal_residual = []
@@ -159,14 +165,18 @@ def getCoefficients(data, SINMOD, depth):
     x_loc = []
     y_loc = []
 
-
+    # print(depth_auv)
     for i in range(len(depth)):
         ind_obs = (depthl[i] <= depth_auv) & (depth_auv <= depthu[i])
         lat_obs = lat_auv[ind_obs].reshape(-1, 1)
         lon_obs = lon_auv[ind_obs].reshape(-1, 1)
         sal_obs = sal_auv[ind_obs].reshape(-1, 1)
         temp_obs = temp_auv[ind_obs].reshape(-1, 1)
+        # print(lat_obs.shape)
+        # print(lon_obs.shape)
         sal_SINMOD, temp_SINMOD = GetSINMODFromCoordinates(SINMOD, np.hstack((lat_obs, lon_obs)), depth[i])
+        # print(sal_SINMOD.shape)
+        # print(temp_SINMOD.shape)
         if sal_SINMOD.shape[0] != 0:
             model_sal = LinearRegression()
             model_sal.fit(sal_SINMOD, sal_obs)
