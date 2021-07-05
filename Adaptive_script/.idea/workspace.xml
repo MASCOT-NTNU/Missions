@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
+<<<<<<< HEAD
     <list default="true" id="accea8ac-0bd2-452f-bacf-f93761b28ea7" name="Default Changelist" comment="" />
+=======
+    <list default="true" id="accea8ac-0bd2-452f-bacf-f93761b28ea7" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" afterDir="false" />
+    </list>
+>>>>>>> 1f1df9aa05d52f8a4353f2199e3938b2f82195df
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -50,7 +56,11 @@
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
+<<<<<<< HEAD
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+=======
+    <property name="settings.editor.selected.configurable" value="copyright" />
+>>>>>>> 1f1df9aa05d52f8a4353f2199e3938b2f82195df
   </component>
   <component name="RunManager">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
@@ -100,6 +110,7 @@
       <workItem from="1623828384847" duration="17000" />
       <workItem from="1623828407866" duration="5561000" />
       <workItem from="1623910335687" duration="2660000" />
+<<<<<<< HEAD
       <workItem from="1623915257129" duration="4028000" />
       <workItem from="1623950110088" duration="1415000" />
       <workItem from="1624000086410" duration="3422000" />
@@ -113,6 +124,9 @@
       <workItem from="1624694546530" duration="6000" />
       <workItem from="1625475540278" duration="2678000" />
       <workItem from="1625486222496" duration="3441000" />
+=======
+      <workItem from="1623915257129" duration="644000" />
+>>>>>>> 1f1df9aa05d52f8a4353f2199e3938b2f82195df
     </task>
     <servers />
   </component>

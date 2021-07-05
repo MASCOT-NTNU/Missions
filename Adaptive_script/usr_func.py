@@ -5,7 +5,11 @@ from scipy.stats import mvn
 import scipy.spatial.distance as scdist
 import netCDF4
 import os
+<<<<<<< HEAD
 # import gmplot
+=======
+import gmplot
+>>>>>>> 1f1df9aa05d52f8a4353f2199e3938b2f82195df
 from datetime import date
 from skgstat import Variogram, DirectionalVariogram
 from sklearn.linear_model import LinearRegression
@@ -158,7 +162,10 @@ def getCoefficients(data, SINMOD, depth):
     temp_residual = []
     x_loc = []
     y_loc = []
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1f1df9aa05d52f8a4353f2199e3938b2f82195df
     for i in range(len(depth)):
         ind_obs = (depthl[i] <= depth_auv) & (depth_auv <= depthu[i])
         lat_obs = lat_auv[ind_obs].reshape(-1, 1)
@@ -167,6 +174,7 @@ def getCoefficients(data, SINMOD, depth):
         temp_obs = temp_auv[ind_obs].reshape(-1, 1)
         sal_SINMOD, temp_SINMOD = GetSINMODFromCoordinates(SINMOD, np.hstack((lat_obs, lon_obs)), depth[i])
 
+<<<<<<< HEAD
         if sal_SINMOD.shape[0] != 0:
             model_sal = LinearRegression()
             model_sal.fit(sal_SINMOD, sal_obs)
@@ -182,6 +190,22 @@ def getCoefficients(data, SINMOD, depth):
             temp_residual.append(temp_obs - beta0[i, 1] - beta1[i, 1] * temp_SINMOD)
             x_loc.append(xauv[ind_obs])
             y_loc.append(yauv[ind_obs])
+=======
+        model_sal = LinearRegression()
+        model_sal.fit(sal_SINMOD, sal_obs)
+        beta0[i, 0] = model_sal.intercept_
+        beta1[i, 0] = model_sal.coef_
+
+        model_temp = LinearRegression()
+        model_temp.fit(temp_SINMOD, temp_obs)
+        beta0[i, 1] = model_temp.intercept_
+        beta1[i, 1] = model_temp.coef_
+
+        sal_residual.append(sal_obs - beta0[i, 0] - beta1[i, 0] * sal_SINMOD)
+        temp_residual.append(temp_obs - beta0[i, 1] - beta1[i, 1] * temp_SINMOD)
+        x_loc.append(xauv[ind_obs])
+        y_loc.append(yauv[ind_obs])
+>>>>>>> 1f1df9aa05d52f8a4353f2199e3938b2f82195df
 
     return beta0, beta1, sal_residual, temp_residual, x_loc, y_loc
 

@@ -33,8 +33,11 @@ datafolder = os.getcwd() + "/" + d1
 datapath = datafolder + "/Data/"
 
 data = np.loadtxt(datapath + "data.txt", delimiter=",")
+<<<<<<< HEAD
 data2 = np.loadtxt("data.txt", delimiter=",")
 
+=======
+>>>>>>> 1f1df9aa05d52f8a4353f2199e3938b2f82195df
 fp='samples_2020.05.01.nc'
 nc = netCDF4.Dataset(fp)
 beta0, beta1, sal_residual, temp_residual, x_loc, y_loc = getCoefficients(data, nc, depth_obs)
