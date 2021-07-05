@@ -5,13 +5,13 @@
 # =============== USR SECTION =================
 from usr_func import *
 
-No_Script = 0
+No_Script = 1
 Surfacing_time = 45
 lat4, lon4 = 63.446905, 10.419426  # right bottom corner
 origin = [lat4, lon4]
 # distance = 100
 distance = 1000
-depth_obs = 0.5  # planned depth to be observed
+depth_obs = 1.0  # planned depth to be observed
 box = BBox(lat4, lon4, distance, 60)
 
 N1 = 25  # number of grid points along north direction
