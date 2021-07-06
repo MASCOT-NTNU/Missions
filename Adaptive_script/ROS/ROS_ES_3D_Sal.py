@@ -19,6 +19,7 @@ N1 = 25  # number of grid points along north direction
 N2 = 25  # number of grid points along east direction
 N3 = 5  # number of layers in the depth dimension
 N = N1 * N2 * N3  # total number of grid points
+Surfacing_time = 45
 
 XLIM = [0, distance]
 YLIM = [0, distance]
@@ -284,71 +285,76 @@ class ES3D1:
 
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
 
+                    print("Arrived the current location")
+                    logfile.write("Arrived the current location\n")
+                    save_data(datapath, data_timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity,
+                              data_temperature)
+                    counter_total_datasaved = counter_total_datasaved + 1
+                    print("Data saved {:02d} times".format(counter_total_datasaved))
+
+                    sal_sampled = np.mean(data_salinity[-10:])  # take the past ten samples and average
+
+                    mu_cond, Sigma_cond = GPupd(mu_cond, Sigma_cond, R, F, sal_sampled)
+
+                    xcand, ycand, zcand = find_candidates_loc(xnow, ynow, znow, N1, N2, N3)
+
+                    t1 = time.time()
+                    xnext, ynext, znext = find_next_EIBV_1D(xcand, ycand, zcand,
+                                                            xnow, ynow, znow,
+                                                            xpre, ypre, zpre,
+                                                            N1, N2, N3, Sigma_cond,
+                                                            mu_cond, tau_sal, Threshold_S)
+                    t2 = time.time()
+                    t_elapsed.append(t2 - t1)
+                    print("It takes {:.2f} seconds to compute the next waypoint".format(t2 - t1))
+                    logfile.write("It takes {:.2f} seconds to compute the next waypoint\n".format(t2 - t1))
+
+                    print("next is ", xnext, ynext, znext)
+                    lat_next, lon_next = xy2latlon(xnext, ynext, origin, distance, alpha)
+                    depth_next = depth_obs[znext]
+                    ind_next = ravel_index([xnext, ynext, znext], N1, N2, N3)
+
+                    F = np.zeros([1, N])
+                    F[0, ind_next] = True
+
+                    xpre, ypre, zpre = xnow, ynow, znow
+                    xnow, ynow, znow = xnext, ynext, znext
+
+                    path.append([xnow, ynow, znow])
+                    print(xcand.shape)
+
+                    path_cand.append(np.hstack((xcand, ycand, zcand)))
+                    coords.append([lat_next, lon_next])
+                    mu.append(mu_cond)
+                    Sigma.append(Sigma_cond)
+
+                    save_ESdata(datapath, path, path_cand, coords, mu, Sigma, t_elapsed)
+                    logfile.write("Data saved {:02d} times\n".format(counter_total_datasaved))
+                    print("Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}".format(lat_next, lon_next, depth_next))
+                    logfile.write(
+                        "Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}\n".format(lat_next, lon_next, depth_next))
+
+                    # pop up every 10 waypoints
                     if (counter_waypoint + 1) % 10 == 0:
                         print("Now I am poping up")
                         logfile.write("I poped up\n")
                         self.auv_handler.setWaypoint(deg2rad(lat_next), deg2rad(lon_next), 0)
-                    else:
-                        print("Arrived the current location")
-                        logfile.write("Arrived the starting location\n")
-                        save_data(datapath, data_timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity,
-                                  data_temperature)
-                        counter_total_datasaved = counter_total_datasaved + 1
-                        print("Data saved {:02d} times".format(counter_total_datasaved))
+                        for i in range(Surfacing_time):
+                            print(i)
+                            print("Sleep {:d} seconds".format(i))
+                            logfile.write("Sleep {:d} seconds\n".format(i))
+                            self.auv_handler.spin()  # publishes the reference, stay on the surface
+                            self.rate.sleep()  #
 
-                        sal_sampled = np.mean(data_salinity[-10:])  # take the past ten samples and average
+                    # Move to the next waypoint
+                    self.auv_handler.setWaypoint(deg2rad(lat_next), deg2rad(lon_next), depth_next)
 
-                        mu_cond, Sigma_cond = GPupd(mu_cond, Sigma_cond, R, F, sal_sampled)
+                    counter_waypoint = counter_waypoint + 1
+                    print("Waypoint is ", counter_waypoint)
 
-                        xcand, ycand, zcand = find_candidates_loc(xnow, ynow, znow, N1, N2, N3)
-
-                        t1 = time.time()
-                        xnext, ynext, znext = find_next_EIBV_1D(xcand, ycand, zcand,
-                                                                xnow, ynow, znow,
-                                                                xpre, ypre, zpre,
-                                                                N1, N2, N3, Sigma_cond,
-                                                                mu_cond, tau_sal, Threshold_S)
-                        t2 = time.time()
-                        t_elapsed.append(t2 - t1)
-                        print("It takes {:.2f} seconds to compute the next waypoint".format(t2 - t1))
-                        logfile.write("It takes {:.2f} seconds to compute the next waypoint\n".format(t2 - t1))
-
-                        print("next is ", xnext, ynext, znext)
-                        lat_next, lon_next = xy2latlon(xnext, ynext, origin, distance, alpha)
-                        depth_next = depth_obs[znext]
-                        ind_next = ravel_index([xnext, ynext, znext], N1, N2, N3)
-
-                        F = np.zeros([1, N])
-                        F[0, ind_next] = True
-
-                        xpre, ypre, zpre = xnow, ynow, znow
-                        xnow, ynow, znow = xnext, ynext, znext
-
-                        path.append([xnow, ynow, znow])
-                        print(xcand.shape)
-
-                        path_cand.append(np.hstack((xcand, ycand, zcand)))
-                        coords.append([lat_next, lon_next])
-                        mu.append(mu_cond)
-                        Sigma.append(Sigma_cond)
-
-                        save_ESdata(datapath, path, path_cand, coords, mu, Sigma, t_elapsed)
-                        logfile.write("Data saved {:02d} times\n".format(counter_total_datasaved))
-                        print("Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}".format(lat_next, lon_next, depth_next))
-                        logfile.write(
-                            "Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}\n".format(lat_next, lon_next, depth_next))
-
-                        # Move to the next waypoint
-                        self.auv_handler.setWaypoint(deg2rad(lat_next), deg2rad(lon_next), depth_next)
-
-                        counter_waypoint = counter_waypoint + 1
-                        print("Waypoint is ", counter_waypoint)
-                        # time.sleep(2)
-                        # # self.rate.sleep()
-
-                        if counter_waypoint >= N_steps:
-                            logfile.write("Mission completed!!!\n")
-                            rospy.signal_shutdown("Mission completed!!!")
+                    if counter_waypoint >= N_steps:
+                        logfile.write("Mission completed!!!\n")
+                        rospy.signal_shutdown("Mission completed!!!")
 
                 self.last_state = self.auv_handler.getState()
                 self.auv_handler.spin()
