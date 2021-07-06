@@ -63,7 +63,7 @@ Threshold_T = 10.5
 
 eta = 4.5 / 400  # coef in matern kernel
 ksi = 1000 / 24 / 0.5  # scaling factor in 3D
-N_steps = 10  # number of steps desired to conduct
+N_steps = 60  # number of steps desired to conduct
 
 ## Section II: Set up the waypoint and grid
 nx = 25  # number of grid points along x-direction
@@ -148,11 +148,23 @@ def save_data(datapath, timestamp, data_lat, data_lon, data_x, data_y, data_z, d
 
 def save_ESdata(datapath, path, path_cand, coords, mu, Sigma, t_elapsed):
     data_path = np.array(path)
-    data_path_cand = np.array(path_cand)
+    dpath_cand = np.array(path_cand, dtype = object)
+    data_path_cand = []
+    for i in range(len(dpath_cand)):
+        for j in range(dpath_cand[i].shape[0]):
+            data_path_cand.append(dpath_cand[i][j])
+    data_path_cand = np.array(data_path_cand)
     data_coords = np.array(coords)
     data_mu = np.array(mu)
     data_Sigma = np.array(Sigma)
     data_perr = np.zeros_like(data_mu)
+
+    print(data_path.shape)
+    print(data_path_cand.shape)
+    print(data_mu.shape)
+    print(data_Sigma.shape)
+    print(data_coords.shape)
+
     for i in range(data_Sigma.shape[0]):
         data_perr[i, :] = np.diag(data_Sigma[i, :, :]).reshape(1, -1)
     data_t_elapsed = np.array(t_elapsed)
@@ -270,7 +282,7 @@ class ES3D1:
                 timestamp = timestamp + 1
                 counter_datasave = counter_datasave + 1
 
-                if self.auv_handler.getState() == "waiting":
+                if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the starting location")
                     logfile.write("Arrived the starting location\n")
                     save_data(datapath, data_timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity,
@@ -307,31 +319,35 @@ class ES3D1:
                     xnow, ynow, znow = xnext, ynext, znext
 
                     path.append([xnow, ynow, znow])
-                    path_cand.append([xcand, ycand, zcand])
+                    print(xcand.shape)
+
+                    path_cand.append(np.hstack((xcand, ycand, zcand)))
                     coords.append([lat_next, lon_next])
                     mu.append(mu_cond)
                     Sigma.append(Sigma_cond)
 
-                    # save_ESdata(datapath, path, path_cand, coords, mu, Sigma, t_elapsed)
+                    save_ESdata(datapath, path, path_cand, coords, mu, Sigma, t_elapsed)
                     logfile.write("Data saved {:02d} times\n".format(counter_total_datasaved))
-                    print("Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}".format(lat_next, lon_next,
-                                                                                                  depth_next))
+                    print("Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}".format(lat_next, lon_next, depth_next))
                     logfile.write(
-                        "Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}\n".format(lat_next, lon_next,
-                                                                                                  depth_next))
+                        "Move to new way point, lat: {:.2f}, lon: {:.2f}, depth: {:.2f}\n".format(lat_next, lon_next, depth_next))
 
                     # Move to the next waypoint
                     self.auv_handler.setWaypoint(deg2rad(lat_next), deg2rad(lon_next), depth_next)
 
                     counter_waypoint = counter_waypoint + 1
                     print("Waypoint is ", counter_waypoint)
+                    # time.sleep(2)
+                    # # self.rate.sleep()
+
+                    if counter_waypoint >= N_steps:
+                        logfile.write("Mission completed!!!\n")
+                        rospy.signal_shutdown("Mission completed!!!")
 
                 self.last_state = self.auv_handler.getState()
                 self.auv_handler.spin()
 
-            if counter_waypoint >= N_steps:
-                logfile.write("Mission completed!!!\n")
-                rospy.signal_shutdown("Mission completed!!!")
+
 
             self.rate.sleep()
 

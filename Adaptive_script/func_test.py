@@ -1,3 +1,14 @@
+import numpy as np
+a = np.random.rand(3, 1)
+b = np.random.rand(3, 1)
+c = np.random.rand(3, 1)
+d = []
+d.append(np.hstack((a, b, c)))
+d = np.array(d)
+print(d.shape)
+print(d)
+
+
 
 #%%
 # figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/Path/"
