@@ -4,7 +4,6 @@
     <list default="true" id="dbf8f9cc-e116-4368-a651-c7f4abe50ef9" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ROS/ROS_ES_3D_Sal.py" beforeDir="false" afterPath="$PROJECT_DIR$/ROS/ROS_ES_3D_Sal.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/func_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/func_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -71,7 +70,8 @@
       <updated>1625493193470</updated>
       <workItem from="1625493195046" duration="6321000" />
       <workItem from="1625511899139" duration="5297000" />
-      <workItem from="1625550840567" duration="2238000" />
+      <workItem from="1625550840567" duration="2590000" />
+      <workItem from="1625554863231" duration="174000" />
     </task>
     <servers />
   </component>
