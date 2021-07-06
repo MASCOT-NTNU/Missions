@@ -19,7 +19,7 @@ N1 = 25  # number of grid points along north direction
 N2 = 25  # number of grid points along east direction
 N3 = 5  # number of layers in the depth dimension
 N = N1 * N2 * N3  # total number of grid points
-Surfacing_time = 45
+Surfacing_time = 25 # surfacing time, [seconds]
 
 XLIM = [0, distance]
 YLIM = [0, distance]
@@ -224,6 +224,7 @@ class ES3D1:
         self.currentTemperature = 0.0
         self.currentSalinity = 0.0
         self.vehicle_pos = [0, 0, 0]
+        self.surfacing = False
 
         # Move to the starting location
         print(xstart, ystart, zstart)
@@ -285,6 +286,16 @@ class ES3D1:
 
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
 
+                    # Start the counter after it arrives at the surface
+                    if self.surfacing:
+                        for i in range(Surfacing_time):
+                            print(i)
+                            print("Sleep {:d} seconds".format(i))
+                            logfile.write("Sleep {:d} seconds\n".format(i))
+                            self.auv_handler.spin()  # publishes the reference, stay on the surface
+                            self.rate.sleep()  #
+                        self.surfacing = False
+
                     print("Arrived the current location")
                     logfile.write("Arrived the current location\n")
                     save_data(datapath, data_timestamp, data_lat, data_lon, data_x, data_y, data_z, data_salinity,
@@ -339,12 +350,7 @@ class ES3D1:
                         print("Now I am poping up")
                         logfile.write("I poped up\n")
                         self.auv_handler.setWaypoint(deg2rad(lat_next), deg2rad(lon_next), 0)
-                        for i in range(Surfacing_time):
-                            print(i)
-                            print("Sleep {:d} seconds".format(i))
-                            logfile.write("Sleep {:d} seconds\n".format(i))
-                            self.auv_handler.spin()  # publishes the reference, stay on the surface
-                            self.rate.sleep()  #
+                        self.surfacing = True
 
                     # Move to the next waypoint
                     self.auv_handler.setWaypoint(deg2rad(lat_next), deg2rad(lon_next), depth_next)
