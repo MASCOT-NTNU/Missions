@@ -5,10 +5,12 @@ from usr_func import *
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams.update({'font.size': 12})
 plt.rcParams.update({'font.style': 'oblique'})
-figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/fig/"
+# figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/fig/"
+figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/fig/"
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/"
 ## The coordinate system is NED, north, east, down
 
-data = np.loadtxt("data.txt", delimiter=",")
+data = np.loadtxt(datapath + "data.txt", delimiter=",")
 circumference = 40075000
 
 timestamp = data[:, 0]
@@ -20,9 +22,19 @@ z = data[:, 5]
 depth = data[:, 6]
 sal = data[:, 7]
 temp = data[:, 8]
+
+a = depth[depth < 0]
+b = np.min(a)
+depth = depth - b
+plt.figure()
+plt.plot(depth)
+plt.axhline(y = 2.3)
+plt.axhline(y = 2.7)
+plt.show()
+
 #%%
 
-ind_obs = (depth <= 2.1) & (depth >= 1.9)
+ind_obs = (depth <= 2.6) & (depth >= 2.4)
 plt.figure()
 plt.scatter(y[ind_obs], x[ind_obs], c = sal[ind_obs])
 plt.colorbar()
@@ -36,6 +48,37 @@ error = 0.5
 
 ind_surface = depth < error + 0.25
 
+#%%
+
+
+depth_ctd.index = pd.to_datetime((depth_ctd.index * 1e9).astype('int64'), utc=True,).tz_convert('Europe/Oslo')
+depth_dvl.index = pd.to_datetime((depth_dvl.index * 1e9).astype('int64'), utc=True,).tz_convert('Europe/Oslo')
+depth_est.index = pd.to_datetime((depth_est.index * 1e9).astype('int64'), utc=True,).tz_convert('Europe/Oslo')
+
+plt.figure()
+plt.plot(depth_ctd, 'k-', label = "CTD")
+plt.plot(depth_dvl, 'r-', label = "DVL")
+plt.plot(depth_est, 'g-', label = "Estimated State")
+plt.legend(framealpha = 1, frameon = True, loc = 9)
+# plt.xlim([0, len(rawDepth)])/
+plt.axhline(y = 0.4)
+plt.axhline(y = 0.6)
+plt.axhline(y = 1.4)
+plt.axhline(y = 1.6)
+plt.axhline(y = 2.4)
+plt.axhline(y = 2.6)
+# plt.axhline(y = 1.9)
+# plt.axhline(y = 2.1)
+# plt.axhline(y = 0.9)
+# plt.axhline(y = 1.1)
+plt.ylim([-.2, 3])
+plt.title("Depth variation over time")
+plt.savefig(figpath + "Depth.pdf")
+plt.show()
+
+print(np.mean(depth_dvl) - np.mean(depth_ctd))
+print(np.mean(depth_est) - np.mean(depth_dvl))
+print(np.mean(depth_est) - np.mean(depth_ctd))
 
 
 #%%
