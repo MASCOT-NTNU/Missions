@@ -26,11 +26,14 @@ temp = data[:, 8]
 a = depth[depth < 0]
 b = np.min(a)
 depth = depth - b
-plt.figure()
-plt.plot(depth)
-plt.axhline(y = 2.3)
-plt.axhline(y = 2.7)
+# plt.figure()
+# plt.plot(depth)
+# plt.axhline(y = 2.3)
+# plt.axhline(y = 2.7)
+# plt.show()
+plt.scatter(y, x, c = sal)
 plt.show()
+
 
 #%%
 

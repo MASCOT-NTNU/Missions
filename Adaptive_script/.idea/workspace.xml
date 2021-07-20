@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="dbf8f9cc-e116-4368-a651-c7f4abe50ef9" name="Default Changelist" comment="">
+    <list default="true" id="2ebe089d-4a49-4529-831c-672159ddbd40" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Data_extraction.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data_extraction.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Data_manipulation.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data_manipulation.py" afterDir="false" />
@@ -12,28 +13,10 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Python Script" />
-      </list>
-    </option>
-  </component>
-  <component name="FlaskConsoleOptions" custom-start-script="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))">
-    <envs>
-      <env key="FLASK_APP" value="app" />
-    </envs>
-    <option name="myCustomStartScript" value="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))" />
-    <option name="myEnvs">
-      <map>
-        <entry key="FLASK_APP" value="app" />
-      </map>
-    </option>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
-  <component name="ProjectId" id="1utmKHwXeZHls8dlXkXfHV93GuL" />
+  <component name="ProjectId" id="1vG60CFkYfD63yYzEvjQsdSsxmv" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -47,7 +30,6 @@
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
-    <property name="settings.editor.selected.configurable" value="copyright" />
   </component>
   <component name="RunManager">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
@@ -76,34 +58,16 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="dbf8f9cc-e116-4368-a651-c7f4abe50ef9" name="Default Changelist" comment="" />
-      <created>1625493193470</created>
+      <changelist id="2ebe089d-4a49-4529-831c-672159ddbd40" name="Default Changelist" comment="" />
+      <created>1626175853233</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1625493193470</updated>
-      <workItem from="1625493195046" duration="6321000" />
-      <workItem from="1625511899139" duration="5297000" />
-      <workItem from="1625550840567" duration="2590000" />
-      <workItem from="1625554863231" duration="651000" />
-      <workItem from="1625562401619" duration="1760000" />
-      <workItem from="1625575495361" duration="514000" />
-      <workItem from="1625647355688" duration="13312000" />
+      <updated>1626175853233</updated>
+      <workItem from="1626175854929" duration="4426000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State />
-          </value>
-        </entry>
-      </map>
-    </option>
-    <option name="oldMeFiltersMigrated" value="true" />
   </component>
 </project>
