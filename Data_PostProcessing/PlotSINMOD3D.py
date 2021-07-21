@@ -17,6 +17,10 @@ else:
 SINMOD_path = SINMOD_datapath + 'samples_2020.05.01.nc'
 SINMOD = netCDF4.Dataset(SINMOD_path)
 
+
+
+
+
 # COLORSCALE = 'jet'
 COLORSCALE = 'RdBu'
 
