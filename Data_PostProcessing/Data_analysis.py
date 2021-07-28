@@ -9,8 +9,8 @@ from matplotlib import cm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 
 circumference = 40075000
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/Data/"
-figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/fig/'
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Data/"
+figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/fig/'
 SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/"
 
 #% Data extraction from the raw data
@@ -96,7 +96,8 @@ time_mission = np.array(time_mission).reshape(-1, 1)
 datasheet = np.hstack((time_mission, lat_auv, lon_auv, xauv, yauv, zauv, dauv, sal_auv, temp_auv))
 # np.savetxt(os.getcwd() + "data.txt", datasheet, delimiter = ",")
 
-starting_index = 700
+starting_index = 1
+# starting_index = 700
 origin = [lat4, lon4]
 distance = 1000
 depth_obs = [0.5, 1.0, 1.5, 2.0, 2.5]  # planned depth to be observed
@@ -148,8 +149,8 @@ def myround(x, base=1.):
     return base * np.round(x/base)
 
 dauv_new = myround(dauv, base = .5)
-# ind = (dauv_new > 0).squeeze()
-ind = range(starting_index, len(dauv_new))
+ind = (dauv_new > 0).squeeze()
+# ind = range(starting_index, len(dauv_new))
 xauv_new = xauv_new[ind].reshape(-1, 1)
 yauv_new = yauv_new[ind].reshape(-1, 1)
 dauv_new = dauv_new[ind].reshape(-1, 1)
@@ -157,6 +158,7 @@ Xauv_new = myround(xauv_new, base = dx)
 Yauv_new = myround(yauv_new, base = dx)
 sal_auv = sal_auv[ind].reshape(-1, 1)
 coordinates_auv = np.hstack((lat_auv[ind], lon_auv[ind]))
+
 
 SINMOD_path = SINMOD_datapath + 'samples_2020.05.01.nc'
 SINMOD = netCDF4.Dataset(SINMOD_path)
@@ -218,8 +220,8 @@ for i in [len(xauv_new)]:
         ind = (zv == np.unique(zv)[j])
         fig.add_trace(
             go.Isosurface(x=xv[ind], y=yv[ind], z=-zv[ind],
-                          # value=mu_cond[ind], colorscale=newcmp),
-                          value=EP[ind], coloraxis = "coloraxis"),
+                          value=mu_cond[ind], colorscale="coloraxis"),
+                          # value=EP[ind], coloraxis = "coloraxis"),
                           # value=mu_cond[ind], coloraxis="coloraxis"),
             row=1, col=1
         )
