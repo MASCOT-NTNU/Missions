@@ -7,7 +7,7 @@ The updated salinity field is shown in the following figure.
 [Updated salinity](Report/sal_mu_cond.html)
 
 The updated excursion probability field is shown in the following figure. 
-[Updated Excursion Probability](Report/sal_ep.html)
+[Updated Excursion Probability](Report/sal_EP.html)
 
 
 ---
