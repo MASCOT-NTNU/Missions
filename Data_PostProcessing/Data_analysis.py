@@ -107,6 +107,27 @@ datasheet = np.hstack((time_mission, lat_auv, lon_auv, xauv, yauv, zauv, dauv, s
 # np.savetxt(os.getcwd() + "data.txt", datasheet, delimiter = ",")
 
 
+figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Report/fig/"
+# plt.figure(figsize = (15, 15))
+# plt.subplot(311)
+# plt.plot(dauv, 'k', linewidth = 2)
+# plt.xlabel("Samples")
+# plt.ylabel("Depth [m]")
+# plt.title("Measurement time series samples")
+# plt.xlim([0, len(dauv)])
+# plt.subplot(312)
+# plt.plot(sal_auv, 'k', linewidth = 2)
+# plt.xlabel("Samples")
+# plt.ylabel("Salinity [ppt]")
+# plt.xlim([0, len(depth)])
+# plt.subplot(313)
+# plt.plot(temp_auv, 'k', linewidth = 2)
+# plt.xlabel("Samples")
+# plt.ylabel("Temperature [deg]")
+# plt.xlim([0, len(depth)])
+# plt.savefig(figpath + "timeseries.pdf")
+# plt.show()
+
 # starting_index = 1
 starting_index = 700
 origin = [lat4, lon4]
@@ -251,92 +272,49 @@ for i in [len(xauv_new)]:
     Sigma_cond = Sigma_cond - Sigma_grid_obs @ np.linalg.solve(Sigma_obs, Sigma_grid_obs.T)
     perr = np.diag(Sigma_cond).reshape(-1, 1)
     EP = EP_1D(mu_cond, Sigma_cond, Threshold)
-#%%
-    # fig = make_subplots(rows=1, cols=, specs=[[{'type': 'scene'}, {'type': 'scene'}]],
-    #                     subplot_titles=("SINMOD data", "Prior"))
-    fig = make_subplots(specs=[[{'type': 'scene'}]])
 
-    for i in [0]:
-    # for i in range(len(np.unique(zv))):
-        # sal_sinmod, temp_sinmod = GetSINMODFromCoordinates(SINMOD, coordinates, depth_obs[i])
-        ind = (zv == np.unique(zv)[i])
+    # Make 3D plot # #
+    fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
+
+    for j in range(len(np.unique(zv))):
+        ind = (zv == np.unique(zv)[j])
         fig.add_trace(
-            go.Isosurface(x=xv[ind], y=yv[ind], z=-zv[ind], value=mu_cond[ind], coloraxis='coloraxis'),
-            # go.Isosurface(x=xv[ind], y=yv[ind], z=-zv[ind], value=sal_sinmod, coloraxis='coloraxis'),
+            go.Isosurface(x=xv[ind], y=yv[ind], z=-zv[ind],
+                          # value=mu_prior[ind], coloraxis="coloraxis"),
+                          value=EP[ind], coloraxis = "coloraxis"),
+                          # value=mu_cond[ind], coloraxis="coloraxis"),
             row=1, col=1
         )
-    fig.update_coloraxes(colorscale="jet")
+
+    fig.add_trace(
+        go.Scatter3d(
+            x=XAUV.squeeze(), y=YAUV.squeeze(), z=np.array(-DAUV.squeeze()),
+            marker=dict(
+                size=4,
+                color="black",
+                showscale=False
+            ),
+            line=dict(
+                color='darkblue',
+                width=2
+            )
+        ),
+        row=1, col=1
+    )
+    fig.update_coloraxes(colorscale = "gnbu")
+    # fig.update_coloraxes(colorscale = "jet")
+    # fig.update_coloraxes(colorscale = newcmp)
+    xe, ye, ze = rotate_z(x_eye, y_eye, z_eye, -i * .005)
+    fig.update_layout(
+        scene={
+            'aspectmode': 'manual',
+            'aspectratio': dict(x=1, y=1, z=.5),
+        },
+        showlegend=False,
+        scene_camera_eye=dict(x=xe, y=ye, z=ze),
+        title="AUV explores the field"
+    )
     plotly.offline.plot(fig)
-
-    # fig = plt.figure(figsize=(25, 5))
-    # gs = GridSpec(nrows=1, ncols=5)
-    #
-    # kk = 0
-    # axes = fig.add_subplot(gs[kk])
-    # im = axes.imshow(np.rot90(mu_cond[(kk * N1 * N2):(kk + 1) * N1 * N2].reshape(N1, N2)),
-    #                  cmap = "jet", interpolation="gaussian", vmin = np.min(mu_cond),
-    #                  vmax = np.max(mu_cond), extent = [np.min(box[:, 1]), np.max(box[:, 1]),
-    #                                                    np.min(box[:, 0]), np.max(box[:, 0])])
-    # plt.title("Realised field at depth {:.2f} m".format((kk + 1) * .5))
-    # plt.plot(pathlon[kk], pathlat[kk], 'k.-', linewidth=2)
-    # # plt.xlabel("y")
-    # # plt.ylabel("x")
-    # plt.colorbar(im, fraction=0.045, pad=0.04)
-
-    # kk = 1
-    # axes = fig.add_subplot(gs[kk])
-    # im = axes.imshow(mu_cond[(kk * N1 * N2):(kk + 1) * N1 * N2].reshape(N1, N2),
-    #                  cmap="jet", interpolation="gaussian", vmin = np.min(mu_cond),
-    #                  vmax = np.max(mu_cond), extent = [np.min(Y), np.max(Y),
-    #                                                    np.min(X), np.max(X)])
-    # plt.title("Realised field at depth {:.2f} m".format((kk + 1) * .5))
-    # plt.plot(XAUV, YAUV, 'r.-', linewidth=2)
-    # plt.xlabel("y")
-    # plt.ylabel("x")
-    # plt.colorbar(im, fraction=0.045, pad=0.04)
-
-
-    # # Make 3D plot # #
-    # fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
-    #
-    # for j in range(len(np.unique(zv))):
-    #     ind = (zv == np.unique(zv)[j])
-    #     fig.add_trace(
-    #         go.Isosurface(x=xv[ind], y=yv[ind], z=-zv[ind],
-    #                       value=mu_cond[ind], colorscale="coloraxis"),
-    #                       # value=EP[ind], coloraxis = "coloraxis"),
-    #                       # value=mu_cond[ind], coloraxis="coloraxis"),
-    #         row=1, col=1
-    #     )
-    #
-    # fig.add_trace(
-    #     go.Scatter3d(
-    #         x=XAUV.squeeze(), y=YAUV.squeeze(), z=np.array(-DAUV.squeeze()),
-    #         marker=dict(
-    #             size=4,
-    #             color="black",
-    #             showscale=False
-    #         ),
-    #         line=dict(
-    #             color='darkblue',
-    #             width=2
-    #         )
-    #     ),
-    #     row=1, col=1
-    # )
-    # fig.update_coloraxes(colorscale = "gnbu")
-    # # fig.update_coloraxes(colorscale = newcmp)
-    # xe, ye, ze = rotate_z(x_eye, y_eye, z_eye, -i * .005)
-    # fig.update_layout(
-    #     scene={
-    #         'aspectmode': 'manual',
-    #         'aspectratio': dict(x=1, y=1, z=.5),
-    #     },
-    #     showlegend=False,
-    #     scene_camera_eye=dict(x=xe, y=ye, z=ze),
-    #     title="AUV explores the field"
-    # )
-    # plotly.offline.plot(fig)
     # # End of Making 3D plot # #
     # fig.write_image(figpath + "3D/4/T_{:04d}.png".format(i), width=1980, height=1080)
 
