@@ -4,7 +4,8 @@ import pandas as pd
 from datetime import datetime
 import os
 import scipy.spatial.distance as scdist
-from Data_PostProcessing.usr_func import *
+from usr_func import *
+# from Data_PostProcessing.usr_func import *
 from matplotlib import cm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 import plotly.graph_objects as go
@@ -18,8 +19,11 @@ circumference = 40075000
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/fig/'
 
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/Data/"
-figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/fig/'
+# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/Data/"
+# figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/fig/'
+
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/"
+# figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Adaptive/fig/'
 
 SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/"
 
@@ -106,8 +110,8 @@ time_mission = np.array(time_mission).reshape(-1, 1)
 datasheet = np.hstack((time_mission, lat_auv, lon_auv, xauv, yauv, zauv, dauv, sal_auv, temp_auv))
 # np.savetxt(os.getcwd() + "data.txt", datasheet, delimiter = ",")
 
-
 figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Report/fig/"
+
 # plt.figure(figsize = (15, 15))
 # plt.subplot(311)
 # plt.plot(dauv, 'k', linewidth = 2)
@@ -125,11 +129,77 @@ figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Report/fig/"
 # plt.xlabel("Samples")
 # plt.ylabel("Temperature [deg]")
 # plt.xlim([0, len(depth)])
-# plt.savefig(figpath + "timeseries.pdf")
+# plt.savefig(figpath + "timeseries_May27.pdf")
 # plt.show()
 
+#%% Dedicated section for May27
+time_auv = np.array(time_mission.squeeze())
+jumps = np.diff(time_auv)
+sections = jumps[jumps > 1]
+ind_section_start = []
+ind_section_end = []
+ind_section_start.append(0)
+for t in sections:
+    ind = np.where(jumps == t)[0][0]
+    ind_section_end.append(ind + 1)
+    ind_section_start.append(ind + 1)
+ind_section_end.append(-1)
+
+
+print(ind_section_start)
+print(ind_section_end)
+
+
+#%%
+for i in range(len(ind_section_start)):
+    fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
+    fig.add_trace(
+        go.Scatter3d(
+            x=lon_auv[ind_section_start[i]:ind_section_end[i]].squeeze(),
+            y=lat_auv[ind_section_start[i]:ind_section_end[i]].squeeze(),
+            z=np.array(-dauv[ind_section_start[i]:ind_section_end[i]].squeeze()),
+            marker=dict(
+                size=4,
+                color=sal_auv[ind_section_start[i]:ind_section_end[i]].squeeze(),
+                # colorscale = "jet",
+                coloraxis = "coloraxis",
+                showscale=False
+            ),
+            line=dict(
+                color='darkblue',
+                width=.1
+            ),
+        ),
+        row=1, col=1,
+
+    )
+
+    # fig.update_traces(showscale=False)
+    fig.update_coloraxes(colorscale = "jet")
+    # fig.update(layout_coloraxis_showscale=False)
+    fig.update_layout(
+        scene={
+            'aspectmode': 'manual',
+            'xaxis_title': 'Lon [deg]',
+            'yaxis_title': 'Lat [deg]',
+            'zaxis_title': 'Depth [m]',
+            'aspectratio': dict(x=1, y=1, z=.5),
+        },
+        showlegend=False,
+        title="AUV explores the field",
+        scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
+    )
+    plotly.offline.plot(fig, filename=figpath + "May27/Missions_{:02d}.html".format(i), auto_open=False)
+
+
+
+
+
+
+
+#%%
 # starting_index = 1
-starting_index = 700
+# starting_index = 700
 origin = [lat4, lon4]
 distance = 1000
 depth_obs = [0.5, 1.0, 1.5, 2.0, 2.5]  # planned depth to be observed
