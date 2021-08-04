@@ -2,15 +2,18 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="0ef00dc0-114d-4f0b-894c-42d2291a6f29" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/rSettings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Map.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/Data_PostProcessing.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Data_PostProcessing.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Adaptive_script/Prior.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Adaptive_script/Prior.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Data_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/Data_analysis.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/temp-plot.html" beforeDir="false" afterPath="$PROJECT_DIR$/temp-plot.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Report/fig/May27/Missions_00.html" beforeDir="false" afterPath="$PROJECT_DIR$/../Report/fig/May27/Missions_00.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Report/fig/May27/Missions_01.html" beforeDir="false" afterPath="$PROJECT_DIR$/../Report/fig/May27/Missions_01.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Report/fig/May27/Missions_02.html" beforeDir="false" afterPath="$PROJECT_DIR$/../Report/fig/May27/Missions_02.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Report/fig/May27/Missions_03.html" beforeDir="false" afterPath="$PROJECT_DIR$/../Report/fig/May27/Missions_03.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Report/fig/May27/Missions_04.html" beforeDir="false" afterPath="$PROJECT_DIR$/../Report/fig/May27/Missions_04.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Report/fig/May27/Missions_05.html" beforeDir="false" afterPath="$PROJECT_DIR$/../Report/fig/May27/Missions_05.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Report/fig/May27/Missions_06.html" beforeDir="false" afterPath="$PROJECT_DIR$/../Report/fig/May27/Missions_06.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Report/fig/May27/Missions_07.html" beforeDir="false" afterPath="$PROJECT_DIR$/../Report/fig/May27/Missions_07.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,7 +91,8 @@
       <option name="presentableId" value="Default" />
       <updated>1627977992868</updated>
       <workItem from="1627977994695" duration="1849000" />
-      <workItem from="1627979971518" duration="9622000" />
+      <workItem from="1627979971518" duration="13645000" />
+      <workItem from="1628060305322" duration="1089000" />
     </task>
     <servers />
   </component>
@@ -105,5 +109,6 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
 </project>

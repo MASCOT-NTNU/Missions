@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import netCDF4
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -22,7 +23,10 @@ circumference = 40075000
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/fig/'
 
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/"
+# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/"
+# # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Adaptive/fig/'
+
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/June17/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Adaptive/fig/'
 
 SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/"
@@ -145,7 +149,8 @@ for t in sections:
     ind_section_start.append(ind + 1)
 ind_section_end.append(-1)
 
-
+ind_section_start.append(0)
+ind_section_end.append(-1)
 print(ind_section_start)
 print(ind_section_end)
 
@@ -186,20 +191,55 @@ for i in range(len(ind_section_start)):
             'aspectratio': dict(x=1, y=1, z=.5),
         },
         showlegend=False,
-        title="AUV explores the field",
+        title="Mission data analysis on May27",
         scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
     )
     plotly.offline.plot(fig, filename=figpath + "May27/Missions_{:02d}.html".format(i), auto_open=False)
 
+#%% cross plot SINMOD data
+fp = SINMOD_datapath + "samples_2020.05.01.nc"
+nc = netCDF4.Dataset(fp)
+
+#%%
+def extractDataFromDepth(depth, depth_extract, error):
+    depth_lower = depth_extract - error
+    depth_upper = depth_extract + error
+    ind = np.where((depth >= depth_lower) & (depth <= depth_upper))
+    return ind
+
+a = extractDataFromDepth(dauv, .5, .2)
+fig = plt.figure(figsize=(30, 30))
+gs = GridSpec(nrows=3, ncols=3)
+depth_OBS = [0.5, 2, 5]
+for i in range(len(depth_OBS)):
+    ax = fig.add_subplot(gs[i, 0])
+    ind = extractDataFromDepth(dauv, depth_OBS[i], .2)
+    im = ax.scatter(lon_auv[ind], lat_auv[ind], c = sal_auv[ind])
+    ax.set(title = "AUV salinity data at {:.1f} metre".format(depth_OBS[i]))
+    plt.colorbar(im)
 
 
+    ax = fig.add_subplot(gs[i, 1])
+    coordinates = np.hstack((lat_auv[ind].reshape(-1, 1), lon_auv[ind].reshape(-1, 1)))
+    sal_temp, temp_temp = GetSINMODFromCoordinates(nc, coordinates, depth_OBS[i])
+    im = ax.scatter(lon_auv[ind], lat_auv[ind], c = sal_temp)
+    ax.set(title = "SINMOD salinity data at {:.1f} metre".format(depth_OBS[i]))
+    plt.colorbar(im)
+
+    ax = fig.add_subplot(gs[i, 2])
+    ax.plot(sal_temp, sal_auv[ind], 'k.')
+    ax.set(title = "SINMOD salinity data versus SINMOD data at {:.1f} metre".format(depth_OBS[i]))
+    ax.set_xlabel("SINMOD")
+    ax.set_ylabel("AUV data")
+plt.savefig(figpath + "crossplot.pdf")
+plt.show()
 
 
 
 
 #%%
 # starting_index = 1
-# starting_index = 700
+starting_index = 700
 origin = [lat4, lon4]
 distance = 1000
 depth_obs = [0.5, 1.0, 1.5, 2.0, 2.5]  # planned depth to be observed
@@ -231,13 +271,13 @@ XY = (Rc @ np.hstack((xv, yv)).T).T
 X = XY[:, 0]
 Y = XY[:, 1]
 
-mu_prior = np.loadtxt("Data_PostProcessing/mu_prior_sal.txt").reshape(-1, 1)
-beta0 = np.loadtxt("Data_PostProcessing/beta0.txt", delimiter = ",")
-beta1 = np.loadtxt("Data_PostProcessing/beta1.txt", delimiter = ",")
+# mu_prior = np.loadtxt("Data_PostProcessing/mu_prior_sal.txt").reshape(-1, 1)
+# beta0 = np.loadtxt("Data_PostProcessing/beta0.txt", delimiter = ",")
+# beta1 = np.loadtxt("Data_PostProcessing/beta1.txt", delimiter = ",")
 
-# mu_prior = np.loadtxt("mu_prior_sal.txt").reshape(-1, 1)
-# beta0 = np.loadtxt("beta0.txt", delimiter = ",")
-# beta1 = np.loadtxt("beta1.txt", delimiter = ",")
+mu_prior = np.loadtxt("mu_prior_sal.txt").reshape(-1, 1)
+beta0 = np.loadtxt("beta0.txt", delimiter = ",")
+beta1 = np.loadtxt("beta1.txt", delimiter = ",")
 
 sigma = np.sqrt(4) # coef
 tau = np.sqrt(.3)
@@ -264,6 +304,7 @@ ind = range(starting_index, len(dauv_new))
 Xauv_new = xauv_new[ind].reshape(-1, 1)
 Yauv_new = yauv_new[ind].reshape(-1, 1)
 Dauv_new = dauv_new[ind].reshape(-1, 1)
+DAuv_new = dauv[ind].reshape(-1, 1)
 Lat_auv = lat_auv[ind].reshape(-1, 1)
 Lon_auv = lon_auv[ind].reshape(-1, 1)
 # Xauv_new = myround(xauv_new, base = dx)
@@ -331,7 +372,9 @@ for i in [len(xauv_new)]:
         mu_sal_est.append(beta0[k, 0] + beta1[k, 0] * sal_sinmod[j, 0])
     mu_sal_est = np.array(mu_sal_est).reshape(-1, 1)
 
-    obs = np.hstack((XAUV, YAUV, DAUV))
+    DAuv = DAuv_new[:i + 1]
+    # obs = np.hstack((XAUV, YAUV, DAUV))
+    obs = np.hstack((XAUV, YAUV, DAuv))
     H_obs = compute_H(obs, obs, ksi)
     Sigma_obs = Matern_cov(sigma, eta, H_obs) + tau ** 2 * np.identity(H_obs.shape[0])
 
@@ -358,7 +401,7 @@ for i in [len(xauv_new)]:
 
     fig.add_trace(
         go.Scatter3d(
-            x=XAUV.squeeze(), y=YAUV.squeeze(), z=np.array(-DAUV.squeeze()),
+            x=XAUV.squeeze(), y=YAUV.squeeze(), z=np.array(-DAuv.squeeze()),
             marker=dict(
                 size=4,
                 color="black",
@@ -384,7 +427,7 @@ for i in [len(xauv_new)]:
         scene_camera_eye=dict(x=xe, y=ye, z=ze),
         title="AUV explores the field"
     )
-    plotly.offline.plot(fig)
+    plotly.offline.plot(fig, filename = figpath + "updatedEP.html", auto_open=True)
     # # End of Making 3D plot # #
     # fig.write_image(figpath + "3D/4/T_{:04d}.png".format(i), width=1980, height=1080)
 
