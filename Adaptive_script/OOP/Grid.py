@@ -46,10 +46,10 @@ class Grid:
     def __init__(self):
         Grid.generateBox(self)
         Grid.generateGrid(self)
-        Grid.print_var(self)
+        Grid.print_grid(self)
         print("Grid is generated successfully!\n\n")
 
-    def print_var(self):
+    def print_grid(self):
         print("circumference: ", self.circumference)
         print("alpha: ", self.alpha)
         print("N1: ", self.N1)
