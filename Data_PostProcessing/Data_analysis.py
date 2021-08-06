@@ -110,33 +110,40 @@ dauv = np.array(dauv).reshape(-1, 1)
 sal_auv = np.array(sal_auv).reshape(-1, 1)
 temp_auv = np.array(temp_auv).reshape(-1, 1)
 time_mission = np.array(time_mission).reshape(-1, 1)
-
+# string_time = []
+# for i in range(len(time_mission)):
+#     string_time.append(datetime.fromtimestamp(int(time_mission[i])).strftime("%H:%M:%S"))
 datasheet = np.hstack((time_mission, lat_auv, lon_auv, xauv, yauv, zauv, dauv, sal_auv, temp_auv))
 # np.savetxt(os.getcwd() + "data.txt", datasheet, delimiter = ",")
 
 figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Report/fig/"
 
-# plt.figure(figsize = (15, 15))
-# plt.subplot(311)
-# plt.plot(dauv, 'k', linewidth = 2)
-# plt.xlabel("Samples")
-# plt.ylabel("Depth [m]")
-# plt.title("Measurement time series samples")
-# plt.xlim([0, len(dauv)])
-# plt.subplot(312)
-# plt.plot(sal_auv, 'k', linewidth = 2)
-# plt.xlabel("Samples")
-# plt.ylabel("Salinity [ppt]")
-# plt.xlim([0, len(depth)])
-# plt.subplot(313)
-# plt.plot(temp_auv, 'k', linewidth = 2)
-# plt.xlabel("Samples")
-# plt.ylabel("Temperature [deg]")
-# plt.xlim([0, len(depth)])
-# plt.savefig(figpath + "timeseries_May27.pdf")
-# plt.show()
+plt.figure(figsize = (15, 15))
+plt.subplot(311)
+plt.plot(dauv, 'k', linewidth = 2)
+plt.xlabel("Samples")
+plt.ylabel("Depth [m]")
+plt.title("Measurement time series samples on July06")
+plt.xlim([0, len(dauv)])
+plt.subplot(312)
+plt.plot(sal_auv, 'k', linewidth = 2)
+plt.xlabel("Samples")
+plt.ylabel("Salinity [ppt]")
+plt.xlim([0, len(sal_auv)])
+plt.subplot(313)
+plt.plot(temp_auv, 'k', linewidth = 2)
+plt.xlabel("Samples")
+plt.ylabel("Temperature [deg]")
+plt.xlim([0, len(temp_auv)])
+plt.savefig(figpath + "timeseries_July06.pdf")
+plt.show()
+#%%
+plt.plot(sal_auv, dauv, 'k.')
+plt.show()
 
-#%% Dedicated section for May27
+
+
+ #%% Dedicated section for May27 / June17
 time_auv = np.array(time_mission.squeeze())
 jumps = np.diff(time_auv)
 sections = jumps[jumps > 1]
@@ -191,10 +198,10 @@ for i in range(len(ind_section_start)):
             'aspectratio': dict(x=1, y=1, z=.5),
         },
         showlegend=False,
-        title="Mission data analysis on May27",
+        title="Mission data analysis on July06",
         scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
     )
-    plotly.offline.plot(fig, filename=figpath + "May27/Missions_{:02d}.html".format(i), auto_open=False)
+    plotly.offline.plot(fig, filename=figpath + "July06/Mission_{:02d}.html".format(i), auto_open=False)
 
 #%% cross plot SINMOD data
 fp = SINMOD_datapath + "samples_2020.05.01.nc"
