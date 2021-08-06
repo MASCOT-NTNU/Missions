@@ -28,18 +28,18 @@ class GaussianProcess(Grid):
         Grid.__init__(self)
         self.compute_DistanceMatrix()
         self.compute_Sigma()
-        self.print_var()
+        self.print_gaussianprocess()
         print("Parameters are set up correctly\n\n")
 
-    def print_var(self):
-        print("sigma_sal: ", GaussianProcess.sigma_sal)
-        print("tau_sal: ", GaussianProcess.tau_sal)
-        print("Threshold_S: ", GaussianProcess.Threshold_S)
-        print("sigma_temp: ", GaussianProcess.sigma_temp)
-        print("tau_temp: ", GaussianProcess.tau_temp)
-        print("Threshold_T: ", GaussianProcess.Threshold_T)
-        print("eta: ", GaussianProcess.eta)
-        print("ksi: ", GaussianProcess.ksi)
+    def print_gaussianprocess(self):
+        print("sigma_sal: ", self.sigma_sal)
+        print("tau_sal: ", self.tau_sal)
+        print("Threshold_S: ", self.Threshold_S)
+        print("sigma_temp: ", self.sigma_temp)
+        print("tau_temp: ", self.tau_temp)
+        print("Threshold_T: ", self.Threshold_T)
+        print("eta: ", self.eta)
+        print("ksi: ", self.ksi)
 
     def set_sigma_sal(self, value):
         GaussianProcess.sigma_sal = value

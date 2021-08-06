@@ -49,7 +49,7 @@ for i in range(len(depth_obs)):
     lon_sinmod = np.array(SINMOD_Data['gridLons'][:, :]).reshape(-1, 1)  # lon from SINMOD
     sal_sinmod = np.zeros([sal_obs.shape[0], 1])
     temp_sinmod = np.zeros([temp_obs.shape[0], 1])
-
+    a = []
     for j in range(sal_obs.shape[0]):
         # print(depth_obs[i])
         ind_depth = np.where(np.array(depth_sinmod) == depth_obs[i])[0][0]
@@ -62,4 +62,5 @@ for i in range(len(depth_obs)):
     X = np.hstack((np.ones_like(sal_sinmod), sal_sinmod))
     Beta = np.linalg.solve((X.T @ X), X.T @ sal_obs)
     print(Beta)
+    a.append(Beta[0] + Beta[1] * sal_sinmod)
 

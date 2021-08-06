@@ -1,7 +1,4 @@
 
-
-from GP import GaussianProcess
-from sklearn.linear_model import LinearRegression
 # a = Grid()
 # a.print_var()
 # a.checkGrid()
@@ -9,180 +6,126 @@ from sklearn.linear_model import LinearRegression
 # a.checkBox()
 
 # b = GaussianProcess()
+# from Prior import Prior
+# a = Prior()
+
+# class PathPlanner:
+
+
+import rospy
 import numpy as np
-class Prior(GaussianProcess):
-    AUVdata = None
-    mu_sal_prior = None
-    mu_temp_prior = None
-    Sigma_sal_prior = None
-    Sigma_temp_prior = None
-    lat_grid = np.zeros([GaussianProcess.N1, GaussianProcess.N2])
-    lon_grid = np.zeros([GaussianProcess.N1, GaussianProcess.N2])
-    coord_grid = np.zeros([GaussianProcess.N1 * GaussianProcess.N2, 2])
-    depth_tolerance = 0.25 # tolerance +/- in depth, 0.5 m == [0.25 ~ 0.75]m
+from auv_handler import AuvHandler
 
-    SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/samples_2020.05.01.nc"
-    SINMOD_Data = None
+import imc_ros_interface
+from imc_ros_interface.msg import Temperature, Salinity, EstimatedState
+from Grid import Grid
 
-    beta0 = None
-    beta1 = None
-    mu_prior_sal = None
-    mu_prior_temp = None
+class AUV(Grid):
+    def __init__(self):
+        Grid.__init__(self)
+        self.node_name = 'LAUV-Roald'
+        rospy.init_node(self.node_name, anonymous=True)
+        self.rate = rospy.Rate(1)  # 1Hz
+        self.auv_handler = AuvHandler(self.node_name, "LAUV-Roald")
+
+        rospy.Subscriber("/Vehicle/Out/Temperature_filtered", Temperature, self.TemperatureCB)
+        rospy.Subscriber("/Vehicle/Out/Salinity_filtered", Salinity, self.SalinityCB)
+        rospy.Subscriber("/Vehicle/Out/EstimatedState_filtered", EstimatedState, self.EstimatedStateCB)
+
+        self.speed = 1.6  # m/s
+        self.depth = 0.0  # meters
+        self.last_state = "unavailable"
+        self.rate.sleep()
+        # self.auv_handler.setWaypoint(deg2rad(lat4), deg2rad(lon4))
+        # self.auv_handler.setWaypoint(deg2rad(lat_start), deg2rad(lon_start))
+        self.init = True
+        self.currentTemperature = 0.0
+        self.currentSalinity = 0.0
+        self.vehicle_pos = [0, 0, 0]
+        self.surfacing = False
+        self.surfacing_time = 25 # surface time, [sec]
+        print("finished initialisation")
+
+    def TemperatureCB(self, msg):
+        self.currentTemperature = msg.value.data
+
+    def SalinityCB(self, msg):
+        self.currentSalinity = msg.value.data
+
+    def EstimatedStateCB(self, msg):
+        offset_north = msg.lat.data - self.deg2rad(self.lat_origin)
+        offset_east = msg.lon.data - self.deg2rad(self.lon_origin)
+        N = offset_north * self.circumference / (2.0 * np.pi)
+        E = offset_east * self.circumference * np.cos(self.deg2rad(self.lat_origin)) / (2.0 * np.pi)
+        D = msg.z.data
+        self.vehicle_pos = [N, E, D]
+
+class PathPlanner(AUV):
 
     def __init__(self):
-        GaussianProcess.__init__(self)
-        self.generateCoordinates()
-        self.getAUVData()
-        self.getSINMODData()
-        self.getCoefficients()
-        self.saveCoef()
+        AUV.__init__(self)
+        print("AUV is set up correctly")
+        self.run()
 
-        # print(Prior.beta0)
-        # print(Prior.beta1)
-        print(Prior.mu_prior_sal.shape)
-        # print(Prior.AUVdata.shape)
-        # self.print_var()
+    def run(self):
+        while not rospy.is_shutdown():
+            if self.init:
+                if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
+                    # if self.surfacing:
+                    #     for i in range(self.surfacing_time):
+                    #         print("Sleep {:d} seconds".format(i))
+                    #         self.auv_handler.spin()  # publishes the reference, stay on the surface
+                    #         self.rate.sleep()  #
+                    #     self.surfacing = False
 
-    # def print_var(self):
-    #     print("lat_grid: ", Prior.lat_grid.shape)
-    #     print("lon_grid: ", Prior.lon_grid.shape)
-    #     print("coord_grid: ", Prior.coord_grid.shape)
-    #     # print("mu_sal_prior: ", Prior.mu_sal_prior.shape)
-    #     # print("mu_temp_prior: ", Prior.mu_temp_prior.shape)
-    #     # print(GaussianProcess.N2)
-    #     # print(GaussianProcess.grid.shape)
-    #     # print(Prior.coord_grid)
-    #     print("data is ", Prior.AUVdata)
+                    print("Arrived the current location")
+                    self.auv_handler.setWaypoint(self.deg2rad(self.lat_origin), self.deg2rad(self.lon_origin), 0)
 
-    def generateCoordinates(self):
-        for i in range(GaussianProcess.N1):
-            for j in range(GaussianProcess.N2):
-                xnew, ynew = GaussianProcess.R @ np.vstack((GaussianProcess.x[i], GaussianProcess.y[j]))
+            #         sal_sampled = np.mean(data_salinity[-10:])  # take the past ten samples and average
+            #
+            #         mu_cond, Sigma_cond = GPupd(mu_cond, Sigma_cond, R, F, sal_sampled)
+            #
+            #         xcand, ycand, zcand = find_candidates_loc(xnow, ynow, znow, N1, N2, N3)
+            #
+            #         t1 = time.time()
+            #         xnext, ynext, znext = find_next_EIBV_1D(xcand, ycand, zcand,
+            #                                                 xnow, ynow, znow,
+            #                                                 xpre, ypre, zpre,
+            #                                                 N1, N2, N3, Sigma_cond,
+            #                                                 mu_cond, tau_sal, Threshold_S)
+            #         t2 = time.time()
+            #         t_elapsed.append(t2 - t1)
+            #         print("It takes {:.2f} seconds to compute the next waypoint".format(t2 - t1))
+            #         logfile.write("It takes {:.2f} seconds to compute the next waypoint\n".format(t2 - t1))
+            #
+            #         print("next is ", xnext, ynext, znext)
+            #         lat_next, lon_next = xy2latlon(xnext, ynext, origin, distance, alpha)
+            #         depth_next = depth_obs[znext]
+            #         ind_next = ravel_index([xnext, ynext, znext], N1, N2, N3)
+            #
+            #         F = np.zeros([1, N])
+            #         F[0, ind_next] = True
+            #
+            #         xpre, ypre, zpre = xnow, ynow, znow
+            #         xnow, ynow, znow = xnext, ynext, znext
+            #
+            #         path.append([xnow, ynow, znow])
+            #         print(xcand.shape)
+            #
+            #         # Move to the next waypoint
+            #         self.auv_handler.setWaypoint(deg2rad(lat_next), deg2rad(lon_next), depth_next)
+            #
+            #         if counter_waypoint >= N_steps:
+            #             logfile.write("Mission completed!!!\n")
+            #             rospy.signal_shutdown("Mission completed!!!")
+            #     self.last_state = self.auv_handler.getState()
+            #     self.auv_handler.spin()
+            # self.rate.sleep()
+    pass
 
-                Prior.lat_grid[i, j] = GaussianProcess.lat_origin + \
-                            GaussianProcess.rad2deg(self, xnew * np.pi * 2.0 /
-                                                    GaussianProcess.circumference)
-                Prior.lon_grid[i, j] = GaussianProcess.lon_origin + \
-                            GaussianProcess.rad2deg(self, ynew * np.pi * 2.0 /
-                                                    (GaussianProcess.circumference *
-                                                     np.cos(GaussianProcess.deg2rad(self, Prior.lat_grid[i, j]))))
-        Prior.coord_grid = np.hstack((Prior.lat_grid.reshape(-1, 1), Prior.lon_grid.reshape(-1, 1)))
+a = PathPlanner()
 
-    def getAUVData(self):
-        Prior.AUVdata = np.loadtxt('data.txt', delimiter = ",")
 
-    def getSINMODData(self):
-        import netCDF4
-        Prior.SINMOD_Data = netCDF4.Dataset(Prior.SINMOD_datapath)
-
-    def getCoefficients(self):
-        # timestamp = Prior.AUVdata[:, 0].reshape(-1, 1)
-        lat_auv_origin = self.rad2deg(Prior.AUVdata[:, 1]).reshape(-1, 1)
-        lon_auv_origin = self.rad2deg(Prior.AUVdata[:, 2]).reshape(-1, 1)
-        xauv = Prior.AUVdata[:, 3].reshape(-1, 1)
-        yauv = Prior.AUVdata[:, 4].reshape(-1, 1)
-        # zauv = Prior.AUVdata[:, 5].reshape(-1, 1)
-        depth_auv = Prior.AUVdata[:, 6].reshape(-1, 1)
-        sal_auv = Prior.AUVdata[:, 7].reshape(-1, 1)
-        temp_auv = Prior.AUVdata[:, 8].reshape(-1, 1)
-        lat_auv = lat_auv_origin + self.rad2deg(xauv * np.pi * 2.0 / self.circumference)
-        lon_auv = lon_auv_origin + self.rad2deg(yauv * np.pi * 2.0 / (self.circumference * np.cos(self.deg2rad(lat_auv))))
-
-        depthl = np.array(self.depth_obs) - self.depth_tolerance
-        depthu = np.array(self.depth_obs) + self.depth_tolerance
-
-        Prior.beta0 = np.zeros([len(self.depth_obs), 2])
-        Prior.beta1 = np.zeros([len(self.depth_obs), 2])
-        sal_residual = []
-        temp_residual = []
-
-        Prior.mu_prior_sal = []
-        Prior.mu_prior_temp = []
-        for i in range(len(self.depth_obs)):
-            # sort out AUV data
-            ind_obs = (depthl[i] <= depth_auv) & (depth_auv <= depthu[i])
-            lat_obs = lat_auv[ind_obs].reshape(-1, 1)
-            lon_obs = lon_auv[ind_obs].reshape(-1, 1)
-            sal_obs = sal_auv[ind_obs].reshape(-1, 1)
-            temp_obs = temp_auv[ind_obs].reshape(-1, 1)
-
-            # sort out SINMOD data
-            salinity = np.mean(Prior.SINMOD_Data['salinity'][:, :, :, :], axis=0)  # time averaging of salinity
-            temperature = np.mean(Prior.SINMOD_Data['temperature'][:, :, :, :], axis=0) - 273.15  # time averaging of temperature
-            depth_sinmod = np.array(Prior.SINMOD_Data['zc'])  # depth from SINMOD
-            lat_sinmod = np.array(Prior.SINMOD_Data['gridLats'][:, :]).reshape(-1, 1)  # lat from SINMOD
-            lon_sinmod = np.array(Prior.SINMOD_Data['gridLons'][:, :]).reshape(-1, 1)  # lon from SINMOD
-            sal_sinmod = np.zeros([sal_obs.shape[0], 1])
-            temp_sinmod = np.zeros([temp_obs.shape[0], 1])
-
-            for j in range(sal_obs.shape[0]):
-                ind_depth = np.where(np.array(depth_sinmod) == self.depth_obs[i])[0][0]
-                idx = np.argmin((lat_sinmod - lat_obs[j]) ** 2 + (lon_sinmod - lon_obs[j]) ** 2)
-                sal_sinmod[j] = salinity[ind_depth].reshape(-1, 1)[idx]
-                temp_sinmod[j] = temperature[ind_depth].reshape(-1, 1)[idx]
-
-            # compute the coef for salinity
-            sal_modelX = np.hstack((np.ones_like(sal_sinmod), sal_sinmod))
-            sal_modelY = sal_obs
-            Beta_sal = np.linalg.solve((sal_modelX.T @ sal_modelX), (sal_modelX.T @ sal_modelY))
-            # compute the coef for temperature
-            temp_modelX = np.hstack((np.ones_like(temp_sinmod), temp_sinmod))
-            temp_modelY = temp_obs
-            Beta_temp = np.linalg.solve((temp_modelX.T @ temp_modelX), (temp_modelX.T @ temp_modelY))
-
-            Prior.beta0[i, :] = np.hstack((Beta_sal[0], Beta_temp[0]))
-            Prior.beta1[i, :] = np.hstack((Beta_sal[1], Beta_temp[1]))
-            Prior.mu_prior_sal.append(Prior.beta0[i, 0] + Prior.beta1[i, 0] * sal_sinmod)
-            Prior.mu_prior_temp.append(Prior.beta0[i, 1] + Prior.beta1[i, 1] * temp_sinmod)
-
-            sal_residual.append(sal_obs - Beta_sal[0] - Beta_sal[1] * sal_sinmod)
-            temp_residual.append(temp_obs - Beta_temp[0] - Beta_temp[1] * temp_sinmod)
-
-        Prior.mu_prior_sal = np.array(Prior.mu_prior_sal).reshape(-1, 1)
-        Prior.mu_prior_temp = np.array(Prior.mu_prior_temp).reshape(-1, 1)
-
-    def saveCoef(self):
-        np.savetxt("beta0.txt", Prior.beta0, delimiter=",")
-        np.savetxt("beta1.txt", Prior.beta1, delimiter=",")
-        np.savetxt("mu_prior_sal.txt", Prior.mu_prior_sal, delimiter=",")
-        np.savetxt("mu_prior_temp.txt", Prior.mu_prior_temp, delimiter=",")
-
-    def checkCoords(self):
-        from gmplot import GoogleMapPlotter
-        initial_zoom = 12
-        apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
-        gmap = GoogleMapPlotter(self.lat_origin, self.lon_origin, initial_zoom, map_type='satellite', apikey=apikey)
-        # gmap.scatter(self.coord_grid[:, 0], self.coord_grid[:, 1])
-        gmap.scatter(self.coord_grid[:, 0], self.coord_grid[:, 1], color='#99ff00', size=20, marker=False)
-        # print(self.coo)
-        gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
-
-c = Prior()
-# c.checkCoords()
-
-#%%
-import numpy as np
-from sklearn.linear_model import LinearRegression
-print("hello")
-x = np.arange(10).reshape(-1, 1)
-y = (np.arange(10) + 2 * np.random.rand(10)).reshape(-1, 1)
-
-import matplotlib.pyplot as plt
- X = np.hstack((np.ones_like(x), x))
-
-beta = np.linalg.solve((X.T @ X), X.T @ y)
-Y = beta[0] + beta[1] * x
-model = LinearRegression()
-model.fit(x, y)
-print(model.intercept_, model.coef_)
-plt.plot(x, y, 'k.')
-plt.plot(x, Y, 'r-')
-
-plt.show()
-print(beta)
-
-#%%
-a = np.loadtxt("data.txt", delimiter = ",")
 
 #%%
 # class PathPlanner(Grid, GP):
