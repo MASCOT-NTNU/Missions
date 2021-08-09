@@ -6,8 +6,9 @@ from auv_handler import AuvHandler
 import imc_ros_interface
 from imc_ros_interface.msg import Temperature, Salinity, EstimatedState
 from Grid import Grid
+from GP import GaussianProcess
 
-class AUV(GP):
+class AUV(Grid):
     def __init__(self):
         Grid.__init__(self)
         self.node_name = 'MASCOT'
@@ -44,12 +45,13 @@ class AUV(GP):
         D = msg.z.data
         self.vehicle_pos = [N, E, D]
 
-class DataAssimilator(GP):
+class DataAssimilator(GaussianProcess):
     salinity = []
     temperature = []
     path = []
     timestamp = []
     def __init__(self):
+        GaussianProcess.__init__(self)
         print("Data collector is initialised correctly")
 
     def append_salinity(self, value):
@@ -89,6 +91,7 @@ class PathPlanner(AUV, DataAssimilator):
     xnow, ynow, znow = [None, None, None]
     xpre, ypre, zpre = [None, None, None]
     xcand, ycand, zcand = [None, None, None]
+    xnext, ynext, znext = [None, None, None]
     mu_cond, Sigma_cond, F = [None, None, None]
     mu_prior, Sigma_prior = [None, None]
     lat_next, lon_next, depth_next = [None, None, None]
@@ -101,18 +104,21 @@ class PathPlanner(AUV, DataAssimilator):
         print("AUV is set up correctly")
         self.travelled_waypoints = 0
         self.load_prior()
-        self.find_starting_loc()
-        # self.auv_handler.setWaypoint(self.deg2rad(self.lat_origin), self.deg2rad(self.lon_origin), 0)
+        self.move_to_starting_loc()
         self.run()
 
     def load_prior(self):
-        mu_prior_sal = np.loadtxt('mu_prior_sal.txt', delimiter=",")
+        mu_prior_sal = np.loadtxt('mu_prior_sal.txt', delimiter=",").reshape(-1, 1)
         mu_prior_temp = np.loadtxt('mu_prior_temp.txt', delimiter=",")
         print("Prior for salinity is loaded correctly!!!")
         self.mu_prior = mu_prior_sal
         self.Sigma_prior = self.Sigma_sal
+        self.mu_cond = self.mu_prior
+        self.Sigma_cond = self.Sigma_prior
         print("mu_prior shape is: ", self.mu_prior.shape)
         print("Sigma_prior shape is: ", self.Sigma_prior.shape)
+        print("mu_cond shape is: ", self.mu_cond.shape)
+        print("Sigma_cond shape is: ", self.Sigma_cond.shape)
 
     def ravel_index(self, loc):
         x, y, z = loc
@@ -137,17 +143,18 @@ class PathPlanner(AUV, DataAssimilator):
             EP[i] = norm.cdf(Threshold, mu[i], Sigma[i, i])
         return EP
 
-    def find_starting_loc(self):
+    def move_to_starting_loc(self):
         EP_Prior = self.EP_1D(self.mu_prior, self.Sigma_prior, self.Threshold_S)
         ep_criterion = 0.5 # excursion probability close to 0.5
         ind = (np.abs(EP_Prior - ep_criterion)).argmin()
         loc = self.unravel_index(ind)
         self.xstart, self.ystart, self.zstart = loc
-        print(self.xstart, self.ystart, self.zstart)
-        print(loc)
-        print(np.where(self.F == 1))
         self.updateF(ind)
-        print(np.where(self.F == 1))
+        self.xnext, self.ynext, self.znext = self.xstart, self.ystart, self.zstart
+        self.getNextWaypoint()
+        self.auv_handler.setWaypoint(self.deg2rad(self.lat_next), self.deg2rad(self.lon_next), self.depth_next)
+        self.updateWaypoint()
+        self.updateWaypoint()
 
     def find_candidates_loc(self):
         x_ind_l = [self.xnow - 1 if self.xnow > 0 else self.xnow]
@@ -162,9 +169,9 @@ class PathPlanner(AUV, DataAssimilator):
         z_ind_v = np.unique(np.vstack((z_ind_l, self.znow, z_ind_u)))
 
         self.xcand, self.ycand, self.zcand = np.meshgrid(x_ind_v, y_ind_v, z_ind_v)
-        self.xcand.reshape(-1, 1)
-        self.ycand.reshape(-1, 1)
-        self.zcand.reshape(-1, 1)
+        self.xcand = self.xcand.reshape(-1, 1)
+        self.ycand = self.ycand.reshape(-1, 1)
+        self.zcand = self.zcand.reshape(-1, 1)
 
     def GPupd(self, y_sampled):
         C = self.F @ self.Sigma_cond @ self.F.T + self.R_sal
@@ -204,6 +211,7 @@ class PathPlanner(AUV, DataAssimilator):
                     else:
                         continue
         id = np.unique(np.array(id))
+        print(id)
 
         M = len(id)
         eibv = []
@@ -211,13 +219,15 @@ class PathPlanner(AUV, DataAssimilator):
             F = np.zeros([1, self.N])
             F[0, id[k]] = True
             eibv.append(self.EIBV_1D(self.Threshold_S, mu, Sig, F, self.R_sal))
+            print(eibv)
         ind_desired = np.argmin(np.array(eibv))
-        self.x_next, self.y_next, self.z_next = self.unravel_index(id[ind_desired])
+        print(ind_desired)
+        self.xnext, self.ynext, self.znext = self.unravel_index(id[ind_desired])
 
     def getNextWaypoint(self):
         x_loc, y_loc = self.R @ np.vstack((self.xnext * self.dx, self.ynext * self.dy))  # converted xp/yp with distance inside
         self.lat_next = self.lat_origin + self.rad2deg(x_loc * np.pi * 2.0 / self.circumference)
-        self.lon_next = self.lon_origin + self.rad2deg(y_loc * np.pi * 2.0 / (self.circumference * np.cos(self.deg2rad(lat))))
+        self.lon_next = self.lon_origin + self.rad2deg(y_loc * np.pi * 2.0 / (self.circumference * np.cos(self.deg2rad(self.lat_next))))
         self.depth_next = self.depth_obs[self.znext]
         print("Next way point: ", self.lat_next, self.lon_next, self.depth_next)
 
@@ -231,43 +241,40 @@ class PathPlanner(AUV, DataAssimilator):
                 self.append_salinity(self.currentSalinity)
                 self.append_temperature(self.currentTemperature)
                 lat_temp, lon_temp = self.vehpos2latlon(self.vehicle_pos[0], self.vehicle_pos[1], self.lat_origin, self.lon_origin)
-                print(lat_temp, lon_temp, self.vehicle_pos[2])
-                print([lat_temp, lon_temp, self.vehicle_pos[2]])
                 self.append_path([lat_temp, lon_temp, self.vehicle_pos[2]])
-
                 print(self.auv_handler.getState())
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
-                    # if self.surfacing:
-                    #     for i in range(self.surfacing_time):
-                    #         print("Sleep {:d} seconds".format(i))
-                    #         self.auv_handler.spin()  # publishes the reference, stay on the surface
-                    #         self.rate.sleep()  #
-                    #     self.surfacing = False
-
                     print("Arrived the current location")
-                    # self.auv_handler.setWaypoint(self.deg2rad(self.lat_origin), self.deg2rad(self.lon_origin), 2)
-
+                    print(self.salinity[-10:])
                     sal_sampled = np.mean(self.salinity[-10:])  # take the past ten samples and average
+                    print(sal_sampled)
                     self.GPupd(sal_sampled)
                     self.find_candidates_loc()
                     self.find_next_EIBV_1D(self.mu_cond, self.Sigma_cond)
                     self.getNextWaypoint()
 
                     ind_next = self.ravel_index([self.xnext, self.ynext, self.znext])
+                    print(self.xstart, self.ystart, self.zstart)
+                    print(self.xnow, self.ynow, self.znow)
+                    print(self.xpre, self.ypre, self.zpre)
+                    print(self.xnext, self.ynext, self.znext)
                     self.updateF(ind_next)
                     self.updateWaypoint()
                     self.travelled_waypoints += 1
+
                     # Move to the next waypoint
                     self.auv_handler.setWaypoint(self.deg2rad(self.lat_next), self.deg2rad(self.lon_next), self.depth_next)
-                    if self.travelled_waypoints >= self.Total_steps:
-            #             logfile.write("Mission completed!!!\n")
+
+                    if self.travelled_waypoints >= self.Total_waypoints:
                         rospy.signal_shutdown("Mission completed!!!")
                 self.last_state = self.auv_handler.getState()
                 self.auv_handler.spin()
             self.rate.sleep()
     pass
 
-a = PathPlanner()
+if __name__ == "__main__":
+    a = PathPlanner()
+    print("Mission complete!!!")
 
 
 
