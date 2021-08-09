@@ -5,14 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0ef00dc0-114d-4f0b-894c-42d2291a6f29" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../Adaptive_script/OOP/Prior.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Adaptive_script/OOP/GP.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Adaptive_script/OOP/GP.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Adaptive_script/OOP/Grid.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Adaptive_script/OOP/Grid.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Adaptive_script/OOP/beta0.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../Adaptive_script/OOP/beta0.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Adaptive_script/OOP/beta1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../Adaptive_script/OOP/beta1.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Adaptive_script/OOP/func_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Adaptive_script/OOP/func_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Adaptive_script/OOP/grid.html" beforeDir="false" afterPath="$PROJECT_DIR$/../Adaptive_script/OOP/grid.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Adaptive_script/OOP/mu_prior_sal.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../Adaptive_script/OOP/mu_prior_sal.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Adaptive_script/OOP/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Adaptive_script/OOP/test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" afterDir="false" />

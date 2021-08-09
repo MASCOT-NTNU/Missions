@@ -14,15 +14,16 @@
 
 import rospy
 import numpy as np
+from scipy.stats import mvn
 from auv_handler import AuvHandler
 
 import imc_ros_interface
 from imc_ros_interface.msg import Temperature, Salinity, EstimatedState
 from Grid import Grid
 
-class AUV(Grid):
+class AUV(Prior):
     def __init__(self):
-        Grid.__init__(self)
+        Prior.__init__(self)
         self.node_name = 'LAUV-Roald'
         rospy.init_node(self.node_name, anonymous=True)
         self.rate = rospy.Rate(1)  # 1Hz
@@ -62,14 +63,99 @@ class AUV(Grid):
 
 class PathPlanner(AUV):
 
+    xstart, ystart, zstart = [None, None, None]
+    xnow, ynow, znow = [None, None, None]
+    xpre, ypre, zpre = [None, None, None]
+    xcand, ycand, zcand = [None, None, None]
+    mu_cond, Sigma_cond, F = [None, None, None]
+
+
     def __init__(self):
         AUV.__init__(self)
         print("AUV is set up correctly")
+        self.auv_handler.setWaypoint(self.deg2rad(self.lat_origin), self.deg2rad(self.lon_origin), 0)
         self.run()
 
+    def ravel_index(self, loc):
+        x, y, z = loc
+        ind = int(z * self.N1 * self.N2 + y * self.N1 + x)
+        return ind
+
+    def unravel_index(self, ind):
+        zind = np.floor(ind / (self.N1 * self.N2))
+        residual = ind - zind * (self.N1 * self.N2)
+        yind = np.floor(residual / self.N1)
+        xind = residual - yind * self.N1
+        loc = [int(xind), int(yind), int(zind)]
+        return loc
+
+    def find_candidates_loc(self):
+        x_ind_l = [self.xnow - 1 if self.xnow > 0 else self.xnow]
+        x_ind_u = [self.xnow + 1 if self.xnow < self.N1 - 1 else self.xnow]
+        y_ind_l = [self.ynow - 1 if self.ynow > 0 else self.ynow]
+        y_ind_u = [self.ynow + 1 if self.ynow < self.N2 - 1 else self.ynow]
+        z_ind_l = [self.znow - 1 if self.znow > 0 else self.znow]
+        z_ind_u = [self.znow + 1 if self.znow < self.N3 - 1 else self.znow]
+
+        x_ind_v = np.unique(np.vstack((x_ind_l, self.xnow, x_ind_u)))
+        y_ind_v = np.unique(np.vstack((y_ind_l, self.ynow, y_ind_u)))
+        z_ind_v = np.unique(np.vstack((z_ind_l, self.znow, z_ind_u)))
+
+        self.xcand, self.ycand, self.zcand = np.meshgrid(x_ind_v, y_ind_v, z_ind_v)
+        self.xcand.reshape(-1, 1)
+        self.ycand.reshape(-1, 1)
+        self.zcand.reshape(-1, 1)
+
+    def EIBV_1D(self, threshold, mu, Sig, F, R):
+        Sigxi = Sig @ F.T @ np.linalg.solve(F @ Sig @ F.T + R, F @ Sig)
+        V = Sig - Sigxi
+        sa2 = np.diag(V).reshape(-1, 1)  # the corresponding variance term for each location
+        IntA = 0.0
+        for i in range(len(mu)):
+            sn2 = sa2[i]
+            m = mu[i]
+            IntA = IntA + mvn.mvnun(-np.inf, threshold, m, sn2)[0] - mvn.mvnun(-np.inf, threshold, m, sn2)[0] ** 2
+        return IntA
+
+    def find_next_EIBV_1D(self, mu, Sig):
+
+        id = []
+        dx1 = self.xnow - self.xpre
+        dy1 = self.ynow - self.ypre
+        dz1 = self.znow - self.zpre
+        vec1 = np.array([dx1, dy1, dz1])
+        for i in self.xcand:
+            for j in self.ycand:
+                for z in self.zcand:
+                    if i == self.xnow and j == self.ynow and z == self.znow:
+                        continue
+                    dx2 = i - self.xnow
+                    dy2 = j - self.ynow
+                    dz2 = z - self.znow
+                    vec2 = np.array([dx2, dy2, dz2])
+                    if np.dot(vec1, vec2) >= 0:
+                        id.append(self.ravel_index([i, j, z]))
+                    else:
+                        continue
+        id = np.unique(np.array(id))
+
+        M = len(id)
+        eibv = []
+        for k in range(M):
+            F = np.zeros([1, self.N])
+            F[0, id[k]] = True
+            eibv.append(self.EIBV_1D(self.Threshold_S, mu, Sig, F, self.R_sal))
+        ind_desired = np.argmin(np.array(eibv))
+        x_next, y_next, z_next = self.unravel_index(id[ind_desired])
+
+        return x_next, y_next, z_next
+
     def run(self):
+        print("get into run")
         while not rospy.is_shutdown():
+            print("not shut down")
             if self.init:
+                print(self.auv_handler.getState())
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     # if self.surfacing:
                     #     for i in range(self.surfacing_time):
@@ -79,7 +165,7 @@ class PathPlanner(AUV):
                     #     self.surfacing = False
 
                     print("Arrived the current location")
-                    self.auv_handler.setWaypoint(self.deg2rad(self.lat_origin), self.deg2rad(self.lon_origin), 0)
+                    self.auv_handler.setWaypoint(self.deg2rad(self.lat_origin), self.deg2rad(self.lon_origin), 2)
 
             #         sal_sampled = np.mean(data_salinity[-10:])  # take the past ten samples and average
             #
@@ -118,9 +204,9 @@ class PathPlanner(AUV):
             #         if counter_waypoint >= N_steps:
             #             logfile.write("Mission completed!!!\n")
             #             rospy.signal_shutdown("Mission completed!!!")
-            #     self.last_state = self.auv_handler.getState()
-            #     self.auv_handler.spin()
-            # self.rate.sleep()
+                self.last_state = self.auv_handler.getState()
+                self.auv_handler.spin()
+            self.rate.sleep()
     pass
 
 a = PathPlanner()

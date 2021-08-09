@@ -24,6 +24,11 @@ class GaussianProcess(Grid):
     Sigma_sal = None
     Sigma_temp = None
 
+    noise_sal = tau_sal ** 2
+    R_sal = np.diagflat(noise_sal)  # diag not anymore support constructing matrix from vector
+    noise_temp = tau_temp ** 2
+    R_temp = np.diagflat(noise_temp)
+
     def __init__(self):
         Grid.__init__(self)
         self.compute_DistanceMatrix()
