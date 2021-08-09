@@ -1,7 +1,6 @@
-
 import numpy as np
+import os
 from GP import GaussianProcess
-
 
 class Prior(GaussianProcess):
     AUVdata = None
@@ -14,9 +13,12 @@ class Prior(GaussianProcess):
     lat_grid = np.zeros([GaussianProcess.N1, GaussianProcess.N2])
     lon_grid = np.zeros([GaussianProcess.N1, GaussianProcess.N2])
     coord_grid = np.zeros([GaussianProcess.N1 * GaussianProcess.N2, 2])
-    depth_tolerance = 0.25 # tolerance +/- in depth, 0.5 m == [0.25 ~ 0.75]m
 
     SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/samples_2020.05.01.nc"
+    if os.path.exists(SINMOD_datapath):
+        pass
+    else:
+        SINMOD_datapath = "/home/yaoling/MASCOT/adaframe/catkin_ws/src/adaframe_examples/scripts/samples_2020.05.01.nc"
     SINMOD_Data = None
 
     def __init__(self):
@@ -38,9 +40,6 @@ class Prior(GaussianProcess):
         print("mu_sal_prior: ", self.mu_prior_sal.shape)
         print("mu_temp_prior: ", self.mu_prior_temp.shape)
         print("Prior is setup successfully!\n\n")
-
-    def set_depth_tolerance(self, value):
-        Prior.depth_tolerance = value
 
     def generateCoordinates(self):
         for i in range(GaussianProcess.N1):
@@ -151,3 +150,7 @@ class Prior(GaussianProcess):
         gmap = GoogleMapPlotter(self.lat_origin, self.lon_origin, initial_zoom, map_type='satellite', apikey=apikey)
         gmap.scatter(self.coord_grid[:, 0], self.coord_grid[:, 1], color='#99ff00', size=20, marker=False)
         gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
+
+if __name__ == "__main__":
+    prior = Prior()
+    print("Ferdig med prior")

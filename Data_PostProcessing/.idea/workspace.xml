@@ -5,7 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0ef00dc0-114d-4f0b-894c-42d2291a6f29" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../Adaptive_script/OOP/GP.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Adaptive_script/OOP/GP.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Adaptive_script/OOP/Grid.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Adaptive_script/OOP/Grid.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Adaptive_script/OOP/Prior.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Adaptive_script/OOP/Prior.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Adaptive_script/OOP/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Adaptive_script/OOP/test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/../Nidelva/May27/fig/Variogram.pdf" afterDir="false" />
@@ -92,6 +93,7 @@
       <workItem from="1628145955740" duration="219000" />
       <workItem from="1628150997008" duration="1219000" />
       <workItem from="1628234664036" duration="862000" />
+      <workItem from="1628494933942" duration="316000" />
     </task>
     <servers />
   </component>

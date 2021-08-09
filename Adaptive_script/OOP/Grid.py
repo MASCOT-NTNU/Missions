@@ -27,6 +27,7 @@ class Grid:
     depth_obs = [0.5, 1.0, 1.5, 2.0, 2.5]  # planned depth to be observed
     alpha = 60  # angle to be tilted
     circumference = 40075000  # circumference of the earth, [m]
+    depth_tolerance = 0.25  # tolerance +/- in depth, 0.5 m == [0.25 ~ 0.75]m
 
     N1 = 25  # number of grid points along north direction
     N2 = 25  # number of grid points along east direction
@@ -38,6 +39,8 @@ class Grid:
     x = np.linspace(XLIM[0], XLIM[-1], N1)  # x coordinates
     y = np.linspace(YLIM[0], YLIM[-1], N1)  # y coordinates
     z = np.array(depth_obs).reshape(-1, 1)  # z coordinates
+    dx = x[1] - x[0]
+    dy = y[1] - y[0]
 
     R = None # rotational matrix
     box = None # bounding box
@@ -51,6 +54,7 @@ class Grid:
 
     def print_grid(self):
         print("circumference: ", self.circumference)
+        print("depth tolerance: ", self.depth_tolerance)
         print("alpha: ", self.alpha)
         print("N1: ", self.N1)
         print("N2: ", self.N2)
@@ -64,6 +68,9 @@ class Grid:
 
     def set_distance(self, value):
         Grid.distance = value
+
+    def set_depth_tolerance(self, value):
+        Grid.depth_tolerance = value
 
     def set_origin(self, lat, lon):
         Grid.lat_origin = lat
