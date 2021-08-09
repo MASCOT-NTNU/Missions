@@ -9,6 +9,9 @@ GP
 Prior
 - set up prior
 
+AUV
+- set up the AUV
+
 Path planner
 - find starting loc
 - find candidates
