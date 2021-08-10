@@ -116,30 +116,31 @@ time_mission = np.array(time_mission).reshape(-1, 1)
 datasheet = np.hstack((time_mission, lat_auv, lon_auv, xauv, yauv, zauv, dauv, sal_auv, temp_auv))
 # np.savetxt(os.getcwd() + "data.txt", datasheet, delimiter = ",")
 
-figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Report/fig/"
-
-plt.figure(figsize = (15, 15))
-plt.subplot(311)
-plt.plot(dauv, 'k', linewidth = 2)
-plt.xlabel("Samples")
-plt.ylabel("Depth [m]")
-plt.title("Measurement time series samples on July06")
-plt.xlim([0, len(dauv)])
-plt.subplot(312)
-plt.plot(sal_auv, 'k', linewidth = 2)
-plt.xlabel("Samples")
-plt.ylabel("Salinity [ppt]")
-plt.xlim([0, len(sal_auv)])
-plt.subplot(313)
-plt.plot(temp_auv, 'k', linewidth = 2)
-plt.xlabel("Samples")
-plt.ylabel("Temperature [deg]")
-plt.xlim([0, len(temp_auv)])
-plt.savefig(figpath + "timeseries_July06.pdf")
-plt.show()
 #%%
-plt.plot(sal_auv, dauv, 'k.')
-plt.show()
+# figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Report/fig/"
+#
+# plt.figure(figsize = (15, 15))
+# plt.subplot(311)
+# plt.plot(dauv, 'k', linewidth = 2)
+# plt.xlabel("Samples")
+# plt.ylabel("Depth [m]")
+# plt.title("Measurement time series samples on July06")
+# plt.xlim([0, len(dauv)])
+# plt.subplot(312)
+# plt.plot(sal_auv, 'k', linewidth = 2)
+# plt.xlabel("Samples")
+# plt.ylabel("Salinity [ppt]")
+# plt.xlim([0, len(sal_auv)])
+# plt.subplot(313)
+# plt.plot(temp_auv, 'k', linewidth = 2)
+# plt.xlabel("Samples")
+# plt.ylabel("Temperature [deg]")
+# plt.xlim([0, len(temp_auv)])
+# plt.savefig(figpath + "timeseries_July06.pdf")
+# plt.show()
+#%%
+# plt.plot(sal_auv, dauv, 'k.')
+# plt.show()
 
 
 
@@ -669,85 +670,6 @@ class plot3D():
         plotly.offline.plot(fig)
         # fig.write_image(figpath + "sal.png".format(j), width=1980, height=1080)
 
-
-
 data3d = np.hstack((xv, yv, -zv, mu_prior))
-# data3d = np.hstack((xv, yv, -zv, mu_cond))
-# data3d = np.hstack((xv, yv, -zv, EP_prior))
-# data3d = np.hstack((xv, yv, -zv, perr))
-# data3d = np.hstack((XS, YS, ZS, Sal))
 plot3d = plot3D(data3d)
-# plot3d.draw3DVolume(surface_count = 100)
 plot3d.draw3DSurface()
-    # fig.add_trace(
-    #     go.Scatter3d(
-    #         x=path_x, y=path_y, z=path_z,
-    #         marker=dict(
-    #             size=4,
-    #             color=path_z,
-    #             colorscale='Viridis',
-    #             showscale=False
-    #         ),
-    #         line=dict(
-    #             color='darkblue',
-    #             width=2
-    #         )
-    #     ),
-    #     row=1, col=1
-    # )
-    #
-    # u = [xv[ind_now][0] - xv[ind_pre][0]]
-    # v = [yv[ind_now][0] - yv[ind_pre][0]]
-    # w = [zv[ind_now][0] - zv[ind_pre][0]]
-    #
-    # fig.add_trace(
-    #     go.Cone(x=xv[ind_pre], y=yv[ind_pre], z=zv[ind_pre], u=u, v=v, w=w, showscale=False),
-    #     row=1, col=2
-    # )
-    # fig.add_trace(
-    #     go.Scatter3d(
-    #         x=xv[ID].squeeze(), y=yv[ID].squeeze(), z=zv[ID].squeeze(),
-    #         mode='markers',
-    #         marker=dict(
-    #             size=10,
-    #             color=data_EIBV * 1000,
-    #             colorscale='ylgnbu',
-    #             colorbar=dict(len=0.5, x=1),
-    #         ),
-    #
-    #     ),
-    #     row=1, col=2
-    # )
-    # fig.update_layout(
-    #     scene={
-    #         # ...
-    #         'aspectmode': 'cube',
-    #         'xaxis': {'range': [0, 1], 'rangemode': 'tozero', 'tickmode': "linear", 'tick0': 0, 'dtick': 0.5},
-    #         'yaxis': {'range': [0, 1], 'rangemode': 'tozero', 'tickmode': "linear", 'tick0': 0, 'dtick': 0.5},
-    #         'zaxis': {'range': [0, 1], 'rangemode': 'tozero', 'tickmode': "linear", 'tick0': 0, 'dtick': 0.5},
-    #
-    #     },
-    #     scene2={
-    #         'aspectmode': 'cube',
-    #         'xaxis': {'range': [0, 1], 'rangemode': 'tozero', 'tickmode': "linear", 'tick0': 0, 'dtick': 0.5},
-    #         'yaxis': {'range': [0, 1], 'rangemode': 'tozero', 'tickmode': "linear", 'tick0': 0, 'dtick': 0.5},
-    #         'zaxis': {'range': [0, 1], 'rangemode': 'tozero', 'tickmode': "linear", 'tick0': 0, 'dtick': 0.5},
-    #     },
-    #     margin={'autoexpand': False},
-    #     autosize=False
-    #     # scene=dict(
-    #     #     xaxis=dict(nticks=4, range=[0, 1], ),
-    #     #     yaxis=dict(nticks=4, range=[0, 1], ),
-    #     #     zaxis=dict(nticks=4, range=[0, 1], ), )
-    # )
-    # fig.write_image(figpath + "3D/T_{:03d}.png".format(j), width=1980, height=1080)
-
-# initial_zoom = 12
-# # apikey = 'AIzaSyDkWNSq_EKnrV9qP6thJe5Y8a5kVLKEjUI'
-# apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
-# gmap = CustomGoogleMapPlotter(lat[0, 0], lon[0, 0], initial_zoom, map_type='satellite', apikey = apikey)
-# gmap.color_scatter(lat[:, 0].tolist(), lon[:, 0].tolist(), sal.squeeze(), size = 10, colormap='hsv')
-# gmap.draw(figpath + "sal.html")
-#
-# gmap.color_scatter(lat[:, 0].tolist(), lon[:, 0].tolist(), temp.squeeze(), size = 10, colormap='hsv')
-# gmap.draw(figpath + "temp.html")
