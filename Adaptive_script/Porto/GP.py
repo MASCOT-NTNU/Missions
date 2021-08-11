@@ -1,5 +1,5 @@
 import numpy as np
-from Grid import Grid
+from Adaptive_script.Porto.Grid import Grid
 class GaussianProcess(Grid):
     '''
     Gaussian Process

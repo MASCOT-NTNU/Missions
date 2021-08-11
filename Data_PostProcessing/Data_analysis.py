@@ -1,23 +1,150 @@
-import matplotlib.pyplot as plt
-import netCDF4
-import numpy as np
-import pandas as pd
-from datetime import datetime
-import os
-import scipy.spatial.distance as scdist
-from usr_func import *
-# from Data_PostProcessing.usr_func import *
-from matplotlib import cm
-from matplotlib.colors import ListedColormap, LinearSegmentedColormap
+# import matplotlib.pyplot as plt
+# import netCDF4
+# import os
+# import scipy.spatial.distance as scdist
+# from usr_func import *
+# # from Data_PostProcessing.usr_func import *
+# from matplotlib import cm
+# from matplotlib.colors import ListedColormap, LinearSegmentedColormap
+from matplotlib.gridspec import GridSpec
 import plotly.graph_objects as go
 import plotly
 plotly.io.orca.config.executable = '/Users/yaoling/anaconda3/bin/orca/'
 plotly.io.orca.config.save()
 from plotly.subplots import make_subplots
+from datetime import datetime
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+from Adaptive_script.Porto.Prior import Prior
+
+class Data_analyser(Prior):
+    circumference = 4007500
+    lat4, lon4 = 63.446905, 10.419426  # right bottom corner
+    string_date = None
+    coefpath = None
+    figpath = None
+    def __init__(self, datapath, sinmod_path):
+        Prior.__init__(self)
+        self.datapath = datapath
+        self.SINMOD_datapath = sinmod_path
+        coef_path_ind = self.datapath.find('Data/')
+        date_ind = self.datapath.find('Nidelva')
+        basepath = self.datapath[:coef_path_ind]
+        self.coefpath = basepath + "coef/"
+        self.figpath = basepath + "fig/"
+        self.string_date = self.datapath[date_ind + 8:coef_path_ind - 1]
+        self.makepath(self.coefpath)
+        self.makepath(self.figpath)
+        # Data extraction from the raw data
+        rawTemp = pd.read_csv(datapath + "Temperature.csv", delimiter=', ', header=0, engine='python')
+        rawLoc = pd.read_csv(datapath + "EstimatedState.csv", delimiter=', ', header=0, engine='python')
+        rawSal = pd.read_csv(datapath + "Salinity.csv", delimiter=', ', header=0, engine='python')
+        rawDepth = pd.read_csv(datapath + "Depth.csv", delimiter=', ', header=0, engine='python')
+        # To group all the time stamp together, since only second accuracy matters
+        rawSal.iloc[:, 0] = np.ceil(rawSal.iloc[:, 0])  # ceil the timestamp, [:, 0] to group them together
+        rawTemp.iloc[:, 0] = np.ceil(rawTemp.iloc[:, 0])
+        rawCTDTemp = rawTemp[rawTemp.iloc[:, 2] == 'SmartX']
+        rawLoc.iloc[:, 0] = np.ceil(rawLoc.iloc[:, 0])
+        rawDepth.iloc[:, 0] = np.ceil(rawDepth.iloc[:, 0])
+        rawDepth.iloc[:, 0] = np.ceil(rawDepth.iloc[:, 0])
+        # depth measurement estimation
+        # depth_ctd = rawDepth[rawDepth.iloc[:, 2] == 'SmartX']["value (m)"].groupby(rawDepth["timestamp"]).mean()
+        # depth_dvl = rawDepth[rawDepth.iloc[:, 2] == 'DVL']["value (m)"].groupby(rawDepth["timestamp"]).mean()
+        # depth_est = rawLoc["depth (m)"].groupby(rawLoc["timestamp"]).mean()
+        # indices used to extract data
+        lat_origin = rawLoc["lat (rad)"].groupby(rawLoc["timestamp"]).mean()
+        lon_origin = rawLoc["lon (rad)"].groupby(rawLoc["timestamp"]).mean()
+        x_loc = rawLoc["x (m)"].groupby(rawLoc["timestamp"]).mean()
+        y_loc = rawLoc["y (m)"].groupby(rawLoc["timestamp"]).mean()
+        z_loc = rawLoc["z (m)"].groupby(rawLoc["timestamp"]).mean()
+        depth = rawLoc["depth (m)"].groupby(rawLoc["timestamp"]).mean()
+        time_loc = rawLoc["timestamp"].groupby(rawLoc["timestamp"]).mean()
+        time_sal = rawSal["timestamp"].groupby(rawSal["timestamp"]).mean()
+        time_temp = rawCTDTemp["timestamp"].groupby(rawCTDTemp["timestamp"]).mean()
+        dataSal = rawSal["value (psu)"].groupby(rawSal["timestamp"]).mean()
+        dataTemp = rawCTDTemp.iloc[:, -1].groupby(rawCTDTemp["timestamp"]).mean()
+        # Rearrange data according to their timestamp
+        data = []
+        time_mission = []
+        xauv = []
+        yauv = []
+        zauv = []
+        dauv = []
+        sal_auv = []
+        temp_auv = []
+        lat_auv = []
+        lon_auv = []
+        for i in range(len(time_loc)): # find the data at the same timestamp
+            if np.any(time_sal.isin([time_loc.iloc[i]])) and np.any(time_temp.isin([time_loc.iloc[i]])):
+                time_mission.append(time_loc.iloc[i])
+                xauv.append(x_loc.iloc[i])
+                yauv.append(y_loc.iloc[i])
+                zauv.append(z_loc.iloc[i])
+                dauv.append(depth.iloc[i])
+                lat_temp = self.rad2deg(lat_origin.iloc[i]) + self.rad2deg(x_loc.iloc[i] * np.pi * 2.0 / self.circumference)
+                lat_auv.append(lat_temp)
+                lon_auv.append(self.rad2deg(lon_origin.iloc[i]) + self.rad2deg(
+                    y_loc.iloc[i] * np.pi * 2.0 / (self.circumference * np.cos(self.deg2rad(lat_temp)))))
+                sal_auv.append(dataSal[time_sal.isin([time_loc.iloc[i]])].iloc[0])
+                temp_auv.append(dataTemp[time_temp.isin([time_loc.iloc[i]])].iloc[0])
+            else:
+                print(datetime.fromtimestamp(time_loc.iloc[i]))
+                continue
+
+        self.lat_auv = np.array(lat_auv).reshape(-1, 1)
+        self.lon_auv = np.array(lon_auv).reshape(-1, 1)
+        Dx = self.deg2rad(self.lat_auv - self.lat4) / 2 / np.pi * self.circumference
+        Dy = self.deg2rad(self.lon_auv - self.lon4) / 2 / np.pi * self.circumference * np.cos(self.deg2rad(self.lat_auv))
+
+        self.xauv = np.array(xauv).reshape(-1, 1)
+        self.yauv = np.array(yauv).reshape(-1, 1)
+        alpha = self.deg2rad(60)
+        Rc = np.array([[np.cos(alpha), -np.sin(alpha)], [np.sin(alpha), np.cos(alpha)]])
+        TT = (Rc @ np.hstack((Dx, Dy)).T).T
+        xauv_new = TT[:, 0].reshape(-1, 1)
+        yauv_new = TT[:, 1].reshape(-1, 1)
+
+        self.zauv = np.array(zauv).reshape(-1, 1)
+        self.dauv = np.array(dauv).reshape(-1, 1)
+        self.sal_auv = np.array(sal_auv).reshape(-1, 1)
+        self.temp_auv = np.array(temp_auv).reshape(-1, 1)
+        self.time_mission = np.array(time_mission).reshape(-1, 1)
+        self.datasheet = np.hstack((self.time_mission, self.lat_auv, self.lon_auv, self.xauv,
+                                    self.yauv, self.zauv, self.dauv, self.sal_auv, self.temp_auv))
+
+    def plot_timeseries(self):
+        plt.figure(figsize=(15, 15))
+        plt.subplot(311);plt.plot(self.dauv, 'k', linewidth=2);plt.xlabel("Samples");plt.ylabel("Depth [m]")
+        plt.title("Measurement time series samples on July06");plt.xlim([0, len(self.dauv)])
+        plt.subplot(312);plt.plot(self.sal_auv, 'k', linewidth=2);plt.xlabel("Samples");plt.ylabel("Salinity [ppt]")
+        plt.xlim([0, len(self.sal_auv)])
+        plt.subplot(313);plt.plot(self.temp_auv, 'k', linewidth=2);plt.xlabel("Samples");plt.ylabel("Temperature [deg]")
+        plt.xlim([0, len(self.temp_auv)])
+        plt.show()
+        # plt.savefig(figpath + "timeseries_July06.pdf")
+
+    def makepath(self, path):
+        import os
+        if os.path.exists(path):
+            print(path + " is already existing, no need to create!!!")
+            pass
+        else:
+            os.mkdir(path)
+            print(path + " is created successfully!!!")
+
+    def deg2rad(self, deg):
+        return deg / 180 * np.pi
+
+    def rad2deg(self, rad):
+        return rad / np.pi * 180
+
+    def krige(self):
+        print("hello world")
 
 
-circumference = 40075000
-# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Data/"
+SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/"
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/fig/'
 
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/Data/"
@@ -26,224 +153,116 @@ circumference = 40075000
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/"
 # # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Adaptive/fig/'
 
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/June17/Data/"
+# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/June17/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Adaptive/fig/'
 
-SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/"
-
-#% Data extraction from the raw data
-rawTemp = pd.read_csv(datapath + "Temperature.csv", delimiter=', ', header=0, engine='python')
-rawLoc = pd.read_csv(datapath + "EstimatedState.csv", delimiter=', ', header=0, engine='python')
-rawSal = pd.read_csv(datapath + "Salinity.csv", delimiter=', ', header=0, engine='python')
-rawDepth = pd.read_csv(datapath + "Depth.csv", delimiter=', ', header=0, engine='python')
-
-# To group all the time stamp together, since only second accuracy matters
-rawSal.iloc[:, 0] = np.ceil(rawSal.iloc[:, 0]) # ceil the timestamp, [:, 0] to group them together
-rawTemp.iloc[:, 0] = np.ceil(rawTemp.iloc[:, 0])
-rawCTDTemp = rawTemp[rawTemp.iloc[:, 2] == 'SmartX']
-rawLoc.iloc[:, 0] = np.ceil(rawLoc.iloc[:, 0])
-rawDepth.iloc[:, 0] = np.ceil(rawDepth.iloc[:, 0])
-rawDepth.iloc[:, 0] = np.ceil(rawDepth.iloc[:, 0])
-
-depth_ctd = rawDepth[rawDepth.iloc[:, 2] == 'SmartX']["value (m)"].groupby(rawDepth["timestamp"]).mean()
-depth_dvl = rawDepth[rawDepth.iloc[:, 2] == 'DVL']["value (m)"].groupby(rawDepth["timestamp"]).mean()
-depth_est = rawLoc["depth (m)"].groupby(rawLoc["timestamp"]).mean()
-
-# indices used to extract data
-lat_origin = rawLoc["lat (rad)"].groupby(rawLoc["timestamp"]).mean()
-lon_origin = rawLoc["lon (rad)"].groupby(rawLoc["timestamp"]).mean()
-x_loc = rawLoc["x (m)"].groupby(rawLoc["timestamp"]).mean()
-y_loc = rawLoc["y (m)"].groupby(rawLoc["timestamp"]).mean()
-z_loc = rawLoc["z (m)"].groupby(rawLoc["timestamp"]).mean()
-depth = rawLoc["depth (m)"].groupby(rawLoc["timestamp"]).mean()
-time_loc = rawLoc["timestamp"].groupby(rawLoc["timestamp"]).mean()
-time_sal= rawSal["timestamp"].groupby(rawSal["timestamp"]).mean()
-time_temp = rawCTDTemp["timestamp"].groupby(rawCTDTemp["timestamp"]).mean()
-dataSal = rawSal["value (psu)"].groupby(rawSal["timestamp"]).mean()
-dataTemp = rawCTDTemp.iloc[:, -1].groupby(rawCTDTemp["timestamp"]).mean()
-
-#% Rearrange data according to their timestamp
-data = []
-time_mission = []
-xauv = []
-yauv = []
-zauv = []
-dauv = []
-sal_auv = []
-temp_auv = []
-lat_auv = []
-lon_auv = []
-
-for i in range(len(time_loc)):
-    if np.any(time_sal.isin([time_loc.iloc[i]])) and np.any(time_temp.isin([time_loc.iloc[i]])):
-        time_mission.append(time_loc.iloc[i])
-        xauv.append(x_loc.iloc[i])
-        yauv.append(y_loc.iloc[i])
-        zauv.append(z_loc.iloc[i])
-        dauv.append(depth.iloc[i])
-        lat_temp = rad2deg(lat_origin.iloc[i]) + rad2deg(x_loc.iloc[i] * np.pi * 2.0 / circumference)
-        lat_auv.append(lat_temp)
-        lon_auv.append(rad2deg(lon_origin.iloc[i]) + rad2deg(y_loc.iloc[i] * np.pi * 2.0 / (circumference * np.cos(deg2rad(lat_temp)))))
-        sal_auv.append(dataSal[time_sal.isin([time_loc.iloc[i]])].iloc[0])
-        temp_auv.append(dataTemp[time_temp.isin([time_loc.iloc[i]])].iloc[0])
-    else:
-        print(datetime.fromtimestamp(time_loc.iloc[i]))
-        continue
-
-lat4, lon4 = 63.446905, 10.419426  # right bottom corner
-lat_auv = np.array(lat_auv).reshape(-1, 1)
-lon_auv = np.array(lon_auv).reshape(-1, 1)
-Dx = deg2rad(lat_auv - lat4) / 2 / np.pi * circumference
-Dy = deg2rad(lon_auv - lon4) / 2 / np.pi * circumference * np.cos(deg2rad(lat_auv))
-
-xauv = np.array(xauv).reshape(-1, 1)
-yauv = np.array(yauv).reshape(-1, 1)
-
-alpha = deg2rad(60)
-Rc = np.array([[np.cos(alpha), -np.sin(alpha)], [np.sin(alpha), np.cos(alpha)]])
-TT = (Rc @ np.hstack((Dx, Dy)).T).T
-xauv_new = TT[:, 0].reshape(-1, 1)
-yauv_new = TT[:, 1].reshape(-1, 1)
-
-zauv = np.array(zauv).reshape(-1, 1)
-dauv = np.array(dauv).reshape(-1, 1)
-sal_auv = np.array(sal_auv).reshape(-1, 1)
-temp_auv = np.array(temp_auv).reshape(-1, 1)
-time_mission = np.array(time_mission).reshape(-1, 1)
-# string_time = []
-# for i in range(len(time_mission)):
-#     string_time.append(datetime.fromtimestamp(int(time_mission[i])).strftime("%H:%M:%S"))
-datasheet = np.hstack((time_mission, lat_auv, lon_auv, xauv, yauv, zauv, dauv, sal_auv, temp_auv))
-# np.savetxt(os.getcwd() + "data.txt", datasheet, delimiter = ",")
-
-#%%
-# figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Report/fig/"
-#
-# plt.figure(figsize = (15, 15))
-# plt.subplot(311)
-# plt.plot(dauv, 'k', linewidth = 2)
-# plt.xlabel("Samples")
-# plt.ylabel("Depth [m]")
-# plt.title("Measurement time series samples on July06")
-# plt.xlim([0, len(dauv)])
-# plt.subplot(312)
-# plt.plot(sal_auv, 'k', linewidth = 2)
-# plt.xlabel("Samples")
-# plt.ylabel("Salinity [ppt]")
-# plt.xlim([0, len(sal_auv)])
-# plt.subplot(313)
-# plt.plot(temp_auv, 'k', linewidth = 2)
-# plt.xlabel("Samples")
-# plt.ylabel("Temperature [deg]")
-# plt.xlim([0, len(temp_auv)])
-# plt.savefig(figpath + "timeseries_July06.pdf")
-# plt.show()
-#%%
-# plt.plot(sal_auv, dauv, 'k.')
-# plt.show()
+# a = Data_analyser(datapath, SINMOD_datapath)
 
 
+class Plotter(Data_analyser):
+    def __init__(self):
+        Data_analyser.__init__(self, datapath, SINMOD_datapath)
 
- #%% Dedicated section for May27 / June17
-time_auv = np.array(time_mission.squeeze())
-jumps = np.diff(time_auv)
-sections = jumps[jumps > 1]
-ind_section_start = []
-ind_section_end = []
-ind_section_start.append(0)
-for t in sections:
-    ind = np.where(jumps == t)[0][0]
-    ind_section_end.append(ind + 1)
-    ind_section_start.append(ind + 1)
-ind_section_end.append(-1)
+    def plotabline(self, slope, intercept):
+        """Plot a line from slope and intercept"""
+        axes = plt.gca()
+        x_vals = np.array(axes.get_xlim())
+        y_vals = intercept + slope * x_vals
+        plt.plot(x_vals, y_vals, '--')
 
-ind_section_start.append(0)
-ind_section_end.append(-1)
-print(ind_section_start)
-print(ind_section_end)
+    def plotCrossPlot(self):
+        nlayers = len(self.depth_obs)
+        fig = plt.figure(figsize=(nlayers * 7, 30))
+        gs = GridSpec(nrows=nlayers, ncols=3)
+        for i in range(len(self.depth_obs)):
+            depth_lower = self.depth_obs[i] - self.depth_tolerance
+            depth_upper = self.depth_obs[i] + self.depth_tolerance
+            ind = np.where((self.depth_obs[i] >= depth_lower) & (self.depth_obs[i] <= depth_upper))
+            colormin = np.amin(self.sal_auv)
+            colormax = np.amax(self.sal_auv)
+
+            ax = fig.add_subplot(gs[i, 0])
+            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=self.sal_auv[ind], vmin=colormin, vmax=colormax)
+            ax.set(title="AUV salinity data at {:.1f} metre".format(self.depth_obs[i]))
+            ax.set_xlabel("Lon [deg]")
+            ax.set_ylabel("Lat [deg]")
+            plt.colorbar(im)
+
+            ax = fig.add_subplot(gs[i, 1])
+            coordinates = np.hstack((self.lat_auv[ind].reshape(-1, 1), self.lon_auv[ind].reshape(-1, 1)))
+            sal_temp, temp_temp = self.getSINMODFromCoordsDepth(coordinates, self.depth_obs[i])
+            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=sal_temp, vmin=colormin, vmax=colormax)
+            ax.set(title="SINMOD salinity data at {:.1f} metre".format(self.depth_obs[i]))
+            ax.set_xlabel("Lon [deg]")
+            ax.set_ylabel("Lat [deg]")
+            plt.colorbar(im)
+
+            ax = fig.add_subplot(gs[i, 2])
+            ax.plot(sal_temp, self.sal_auv[ind], 'k.')
+            self.plotabline(1, np.vmin(sal_auv[ind]))
+            ax.set(title="SINMOD salinity data versus SINMOD data at {:.1f} metre".format(self.depth_obs[i]))
+            ax.set_xlabel("SINMOD")
+            ax.set_ylabel("AUV data")
+        plt.savefig(self.figpath + "crossplot.pdf")
+        plt.show()
+
+    def separate_data(self):
+        time_auv = np.array(self.time_mission.squeeze())
+        jumps = np.diff(time_auv)
+        sections = jumps[jumps > 1]
+        self.ind_section_start = []
+        self.ind_section_end = []
+        self.ind_section_start.append(0)
+        for t in sections:
+            ind = np.where(jumps == t)[0][0]
+            self.ind_section_end.append(ind + 1)
+            self.ind_section_start.append(ind + 1)
+        self.ind_section_end.append(-1)
+
+        self.ind_section_start.append(0)
+        self.ind_section_end.append(-1)
+        print(self.ind_section_start)
+        print(self.ind_section_end)
+
+    def plot3dscatter(self):
+        self.separate_data()
+        for i in range(len(self.ind_section_start)):
+            fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
+            fig.add_trace(
+                go.Scatter3d(
+                    x=self.lon_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
+                    y=self.lat_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
+                    z=np.array(-self.dauv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze()),
+                    marker=dict(
+                        size=4,
+                        color=self.sal_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
+                        coloraxis="coloraxis",
+                        showscale=False
+                    ),
+                    line=dict(
+                        color='darkblue',
+                        width=.1
+                    ),
+                ),
+                row=1, col=1,
+            )
+            fig.update_coloraxes(colorscale="jet")
+            fig.update_layout(
+                scene={
+                    'aspectmode': 'manual',
+                    'xaxis_title': 'Lon [deg]',
+                    'yaxis_title': 'Lat [deg]',
+                    'zaxis_title': 'Depth [m]',
+                    'aspectratio': dict(x=1, y=1, z=.5),
+                },
+                showlegend=False,
+                title="Mission data analysis on " + self.string_date,
+                scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
+            )
+            plotly.offline.plot(fig, filename=self.figpath + "Mission_{:02d}.html".format(i), auto_open=False)
 
 
-#%%
-for i in range(len(ind_section_start)):
-    fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
-    fig.add_trace(
-        go.Scatter3d(
-            x=lon_auv[ind_section_start[i]:ind_section_end[i]].squeeze(),
-            y=lat_auv[ind_section_start[i]:ind_section_end[i]].squeeze(),
-            z=np.array(-dauv[ind_section_start[i]:ind_section_end[i]].squeeze()),
-            marker=dict(
-                size=4,
-                color=sal_auv[ind_section_start[i]:ind_section_end[i]].squeeze(),
-                # colorscale = "jet",
-                coloraxis = "coloraxis",
-                showscale=False
-            ),
-            line=dict(
-                color='darkblue',
-                width=.1
-            ),
-        ),
-        row=1, col=1,
-
-    )
-
-    # fig.update_traces(showscale=False)
-    fig.update_coloraxes(colorscale = "jet")
-    # fig.update(layout_coloraxis_showscale=False)
-    fig.update_layout(
-        scene={
-            'aspectmode': 'manual',
-            'xaxis_title': 'Lon [deg]',
-            'yaxis_title': 'Lat [deg]',
-            'zaxis_title': 'Depth [m]',
-            'aspectratio': dict(x=1, y=1, z=.5),
-        },
-        showlegend=False,
-        title="Mission data analysis on July06",
-        scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
-    )
-    plotly.offline.plot(fig, filename=figpath + "July06/Mission_{:02d}.html".format(i), auto_open=False)
-
-#%% cross plot SINMOD data
-fp = SINMOD_datapath + "samples_2020.05.01.nc"
-nc = netCDF4.Dataset(fp)
-
-#%%
-def extractDataFromDepth(depth, depth_extract, error):
-    depth_lower = depth_extract - error
-    depth_upper = depth_extract + error
-    ind = np.where((depth >= depth_lower) & (depth <= depth_upper))
-    return ind
-
-a = extractDataFromDepth(dauv, .5, .2)
-fig = plt.figure(figsize=(30, 30))
-gs = GridSpec(nrows=3, ncols=3)
-depth_OBS = [0.5, 2, 5]
-for i in range(len(depth_OBS)):
-    ax = fig.add_subplot(gs[i, 0])
-    ind = extractDataFromDepth(dauv, depth_OBS[i], .2)
-    im = ax.scatter(lon_auv[ind], lat_auv[ind], c = sal_auv[ind])
-    ax.set(title = "AUV salinity data at {:.1f} metre".format(depth_OBS[i]))
-    plt.colorbar(im)
-
-
-    ax = fig.add_subplot(gs[i, 1])
-    coordinates = np.hstack((lat_auv[ind].reshape(-1, 1), lon_auv[ind].reshape(-1, 1)))
-    sal_temp, temp_temp = GetSINMODFromCoordinates(nc, coordinates, depth_OBS[i])
-    im = ax.scatter(lon_auv[ind], lat_auv[ind], c = sal_temp)
-    ax.set(title = "SINMOD salinity data at {:.1f} metre".format(depth_OBS[i]))
-    plt.colorbar(im)
-
-    ax = fig.add_subplot(gs[i, 2])
-    ax.plot(sal_temp, sal_auv[ind], 'k.')
-    ax.set(title = "SINMOD salinity data versus SINMOD data at {:.1f} metre".format(depth_OBS[i]))
-    ax.set_xlabel("SINMOD")
-    ax.set_ylabel("AUV data")
-plt.savefig(figpath + "crossplot.pdf")
-plt.show()
-
-
-
+b = Plotter()
 
 #%%
 # starting_index = 1
