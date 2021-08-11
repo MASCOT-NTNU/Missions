@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from GP import GaussianProcess
+from Adaptive_script.Porto.GP import GaussianProcess
 
 class Prior(GaussianProcess):
     AUVdata = None
@@ -56,7 +56,7 @@ class Prior(GaussianProcess):
         Prior.coord_grid = np.hstack((Prior.lat_grid.reshape(-1, 1), Prior.lon_grid.reshape(-1, 1)))
 
     def getAUVData(self):
-        Prior.AUVdata = np.loadtxt('data.txt', delimiter = ",")
+        Prior.AUVdata = np.loadtxt('Adaptive_script/Porto/data.txt', delimiter = ",")
 
     def getSINMODData(self):
         import netCDF4
