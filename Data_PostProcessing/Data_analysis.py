@@ -199,7 +199,7 @@ class Plotter(Data_analyser):
 
             ax = fig.add_subplot(gs[i, 2])
             ax.plot(sal_temp, self.sal_auv[ind], 'k.')
-            self.plotabline(1, np.vmin(sal_auv[ind]))
+            self.plotabline(1, np.amin(sal_auv[ind]))
             ax.set(title="SINMOD salinity data versus SINMOD data at {:.1f} metre".format(self.depth_obs[i]))
             ax.set_xlabel("SINMOD")
             ax.set_ylabel("AUV data")
