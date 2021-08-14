@@ -1,9 +1,3 @@
-# import os
-# import scipy.spatial.distance as scdist
-# from usr_func import *
-# # from Data_PostProcessing.usr_func import *
-# from matplotlib import cm
-# from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 from matplotlib.gridspec import GridSpec
 import plotly.graph_objects as go
 import plotly
@@ -17,12 +11,9 @@ plt.rcParams.update({'font.size': 12})
 plt.rcParams.update({'font.style': 'oblique'})
 import pandas as pd
 import numpy as np
-# from Adaptive_script.Porto.Prior import Prior
 from Adaptive_script.Porto.Grid import Grid
 
-class Data_analyser(Grid):
-    circumference = 4007500
-    lat4, lon4 = 63.446905, 10.419426  # right bottom corner
+class AUVData(Grid):
     string_date = None
     coefpath = None
     figpath = None
@@ -51,13 +42,13 @@ class Data_analyser(Grid):
         # To group all the time stamp together, since only second accuracy matters
         rawSal.iloc[:, 0] = np.ceil(rawSal.iloc[:, 0])  # ceil the timestamp, [:, 0] to group them together
         rawTemp.iloc[:, 0] = np.ceil(rawTemp.iloc[:, 0])
-        rawCTDTemp = rawTemp[rawTemp.iloc[:, 2] == 'SmartX']
+        rawCTDTemp = rawTemp[rawTemp.iloc[:, 2] == 'SmartX'] # extract the CTD temperature, not the CPU things
         rawLoc.iloc[:, 0] = np.ceil(rawLoc.iloc[:, 0])
         rawDepth.iloc[:, 0] = np.ceil(rawDepth.iloc[:, 0])
-        rawDepth.iloc[:, 0] = np.ceil(rawDepth.iloc[:, 0])
+        # rawDepth.iloc[:, 0] = np.ceil(rawDepth.iloc[:, 0])
         # indices used to extract data
-        lat_origin = rawLoc["lat (rad)"].groupby(rawLoc["timestamp"]).mean()
-        lon_origin = rawLoc["lon (rad)"].groupby(rawLoc["timestamp"]).mean()
+        lat_auv_origin = rawLoc["lat (rad)"].groupby(rawLoc["timestamp"]).mean()
+        lon_auv_origin = rawLoc["lon (rad)"].groupby(rawLoc["timestamp"]).mean()
         x_loc = rawLoc["x (m)"].groupby(rawLoc["timestamp"]).mean()
         y_loc = rawLoc["y (m)"].groupby(rawLoc["timestamp"]).mean()
         z_loc = rawLoc["z (m)"].groupby(rawLoc["timestamp"]).mean()
@@ -85,10 +76,10 @@ class Data_analyser(Grid):
                 yauv.append(y_loc.iloc[i])
                 zauv.append(z_loc.iloc[i])
                 dauv.append(depth.iloc[i])
-                lat_temp = self.rad2deg(lat_origin.iloc[i]) + self.rad2deg(
+                lat_temp = self.rad2deg(lat_auv_origin.iloc[i]) + self.rad2deg(
                     x_loc.iloc[i] * np.pi * 2.0 / self.circumference)
                 lat_auv.append(lat_temp)
-                lon_auv.append(self.rad2deg(lon_origin.iloc[i]) + self.rad2deg(
+                lon_auv.append(self.rad2deg(lon_auv_origin.iloc[i]) + self.rad2deg(
                     y_loc.iloc[i] * np.pi * 2.0 / (self.circumference * np.cos(self.deg2rad(lat_temp)))))
                 sal_auv.append(dataSal[time_sal.isin([time_loc.iloc[i]])].iloc[0])
                 temp_auv.append(dataTemp[time_temp.isin([time_loc.iloc[i]])].iloc[0])
@@ -98,18 +89,8 @@ class Data_analyser(Grid):
 
         self.lat_auv = np.array(lat_auv).reshape(-1, 1)
         self.lon_auv = np.array(lon_auv).reshape(-1, 1)
-        Dx = self.deg2rad(self.lat_auv - self.lat4) / 2 / np.pi * self.circumference
-        Dy = self.deg2rad(self.lon_auv - self.lon4) / 2 / np.pi * self.circumference * np.cos(
-            self.deg2rad(self.lat_auv))
-
         self.xauv = np.array(xauv).reshape(-1, 1)
         self.yauv = np.array(yauv).reshape(-1, 1)
-        alpha = self.deg2rad(60)
-        Rc = np.array([[np.cos(alpha), -np.sin(alpha)], [np.sin(alpha), np.cos(alpha)]])
-        TT = (Rc @ np.hstack((Dx, Dy)).T).T
-        xauv_new = TT[:, 0].reshape(-1, 1)
-        yauv_new = TT[:, 1].reshape(-1, 1)
-
         self.zauv = np.array(zauv).reshape(-1, 1)
         self.dauv = np.array(dauv).reshape(-1, 1)
         self.sal_auv = np.array(sal_auv).reshape(-1, 1)
@@ -117,6 +98,7 @@ class Data_analyser(Grid):
         self.time_mission = np.array(time_mission).reshape(-1, 1)
         self.datasheet = np.hstack((self.time_mission, self.lat_auv, self.lon_auv, self.xauv,
                                     self.yauv, self.zauv, self.dauv, self.sal_auv, self.temp_auv))
+        print("Finished AUV data extraction")
 
     def setpath(self, datapath, sinmodpath):
         self.datapath = datapath
@@ -143,20 +125,11 @@ class Data_analyser(Grid):
             os.mkdir(path)
             print(path + " is created successfully!!!")
 
-    def deg2rad(self, deg):
-        return deg / 180 * np.pi
 
-    def rad2deg(self, rad):
-        return rad / np.pi * 180
-
-    def krige(self):
-        print("hello world")
-
-
-class SINMOD(Data_analyser):
+class SINMOD(AUVData):
     SINMOD_Data = None
     def __init__(self):
-        Data_analyser.__init__(self)
+        AUVData.__init__(self)
 
     def load_sinmod(self):
         import netCDF4
@@ -182,7 +155,7 @@ class SINMOD(Data_analyser):
 
 class Plotter(SINMOD):
     def __init__(self):
-        Data_analyser.__init__(self)
+        SINMOD.__init__(self)
 
     def plotabline(self, slope, intercept):
         """Plot a line from slope and intercept"""
@@ -205,7 +178,7 @@ class Plotter(SINMOD):
             colormax = np.amax(self.sal_auv)
 
             ax = fig.add_subplot(gs[i, 0])
-            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=self.sal_auv[ind])
+            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=self.sal_auv[ind], vmin = colormin, vmax = colormax)
             ax.set(title="AUV salinity data at {:.1f} metre".format(self.depth_obs[i]))
             ax.set_box_aspect(1)
             ax.set_xlabel("Lon [deg]")
@@ -215,7 +188,7 @@ class Plotter(SINMOD):
             ax = fig.add_subplot(gs[i, 1])
             coordinates = np.hstack((self.lat_auv[ind].reshape(-1, 1), self.lon_auv[ind].reshape(-1, 1)))
             sal_temp, temp_temp = self.getSINMODFromCoordsDepth(coordinates, self.depth_obs[i])
-            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=sal_temp)
+            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=sal_temp, vmin = colormin, vmax = colormax)
             ax.set(title="SINMOD salinity data at {:.1f} metre".format(self.depth_obs[i]))
             ax.set_box_aspect(1)
             ax.set_xlabel("Lon [deg]")
@@ -231,74 +204,19 @@ class Plotter(SINMOD):
             ax.set(title="SINMOD salinity data versus SINMOD data at {:.1f} metre".format(self.depth_obs[i]))
             ax.set_xlabel("SINMOD")
             ax.set_ylabel("AUV data")
+        fig.suptitle('Cross Plot for the mission on ' + self.string_date)
         plt.savefig(self.figpath + "crossplot.pdf")
         plt.show()
 
-    def separate_data(self):
-        time_auv = np.array(self.time_mission.squeeze())
-        jumps = np.diff(time_auv)
-        sections = jumps[jumps > 1]
-        self.ind_section_start = []
-        self.ind_section_end = []
-        self.ind_section_start.append(0)
-        for t in sections:
-            ind = np.where(jumps == t)[0][0]
-            self.ind_section_end.append(ind + 1)
-            self.ind_section_start.append(ind + 1)
-        self.ind_section_end.append(-1)
-
-        self.ind_section_start.append(0)
-        self.ind_section_end.append(-1)
-        print(self.ind_section_start)
-        print(self.ind_section_end)
-
-    def plot3dscatter(self):
-        self.separate_data()
-        for i in range(len(self.ind_section_start)):
-            fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
-            fig.add_trace(
-                go.Scatter3d(
-                    x=self.lon_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
-                    y=self.lat_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
-                    z=np.array(-self.dauv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze()),
-                    marker=dict(
-                        size=4,
-                        color=self.sal_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
-                        coloraxis="coloraxis",
-                        showscale=False
-                    ),
-                    line=dict(
-                        color='darkblue',
-                        width=.1
-                    ),
-                ),
-                row=1, col=1,
-            )
-            fig.update_coloraxes(colorscale="jet")
-            fig.update_layout(
-                scene={
-                    'aspectmode': 'manual',
-                    'xaxis_title': 'Lon [deg]',
-                    'yaxis_title': 'Lat [deg]',
-                    'zaxis_title': 'Depth [m]',
-                    'aspectratio': dict(x=1, y=1, z=.5),
-                },
-                showlegend=False,
-                title="Mission data analysis on " + self.string_date,
-                scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
-            )
-            plotly.offline.plot(fig, filename=self.figpath + "Mission_{:02d}.html".format(i), auto_open=False)
-
-
 
 SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/samples_2020.05.01.nc"
-# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Data/"
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/fig/'
 
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/fig/'
 
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/"
+# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/"
 # # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Adaptive/fig/'
 
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/June17/Data/"
@@ -313,12 +231,7 @@ b.plotCrossPlot()
 
 #%%
 
-import netCDF4
-a = netCDF4.Dataset(SINMOD_datapath)
-
-
 #%%
-
 
 # starting_index = 1
 starting_index = 700
