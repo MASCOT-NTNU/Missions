@@ -1,5 +1,3 @@
-# import matplotlib.pyplot as plt
-# import netCDF4
 # import os
 # import scipy.spatial.distance as scdist
 # from usr_func import *
@@ -14,20 +12,29 @@ plotly.io.orca.config.save()
 from plotly.subplots import make_subplots
 from datetime import datetime
 import matplotlib.pyplot as plt
+plt.rcParams["font.family"] = "Times New Roman"
+plt.rcParams.update({'font.size': 12})
+plt.rcParams.update({'font.style': 'oblique'})
 import pandas as pd
 import numpy as np
-from Adaptive_script.Porto.Prior import Prior
+# from Adaptive_script.Porto.Prior import Prior
+from Adaptive_script.Porto.Grid import Grid
 
-class Data_analyser(Prior):
+class Data_analyser(Grid):
     circumference = 4007500
     lat4, lon4 = 63.446905, 10.419426  # right bottom corner
     string_date = None
     coefpath = None
     figpath = None
-    def __init__(self, datapath, sinmod_path):
-        Prior.__init__(self)
-        self.datapath = datapath
-        self.SINMOD_datapath = sinmod_path
+    datapath = None
+    SINMOD_datapath = None
+
+    def __init__(self):
+        Grid.__init__(self)
+        print(self.datapath)
+        print(self.SINMOD_datapath)
+
+    def extractData(self):
         coef_path_ind = self.datapath.find('Data/')
         date_ind = self.datapath.find('Nidelva')
         basepath = self.datapath[:coef_path_ind]
@@ -48,10 +55,6 @@ class Data_analyser(Prior):
         rawLoc.iloc[:, 0] = np.ceil(rawLoc.iloc[:, 0])
         rawDepth.iloc[:, 0] = np.ceil(rawDepth.iloc[:, 0])
         rawDepth.iloc[:, 0] = np.ceil(rawDepth.iloc[:, 0])
-        # depth measurement estimation
-        # depth_ctd = rawDepth[rawDepth.iloc[:, 2] == 'SmartX']["value (m)"].groupby(rawDepth["timestamp"]).mean()
-        # depth_dvl = rawDepth[rawDepth.iloc[:, 2] == 'DVL']["value (m)"].groupby(rawDepth["timestamp"]).mean()
-        # depth_est = rawLoc["depth (m)"].groupby(rawLoc["timestamp"]).mean()
         # indices used to extract data
         lat_origin = rawLoc["lat (rad)"].groupby(rawLoc["timestamp"]).mean()
         lon_origin = rawLoc["lon (rad)"].groupby(rawLoc["timestamp"]).mean()
@@ -75,14 +78,15 @@ class Data_analyser(Prior):
         temp_auv = []
         lat_auv = []
         lon_auv = []
-        for i in range(len(time_loc)): # find the data at the same timestamp
+        for i in range(len(time_loc)):  # find the data at the same timestamp
             if np.any(time_sal.isin([time_loc.iloc[i]])) and np.any(time_temp.isin([time_loc.iloc[i]])):
                 time_mission.append(time_loc.iloc[i])
                 xauv.append(x_loc.iloc[i])
                 yauv.append(y_loc.iloc[i])
                 zauv.append(z_loc.iloc[i])
                 dauv.append(depth.iloc[i])
-                lat_temp = self.rad2deg(lat_origin.iloc[i]) + self.rad2deg(x_loc.iloc[i] * np.pi * 2.0 / self.circumference)
+                lat_temp = self.rad2deg(lat_origin.iloc[i]) + self.rad2deg(
+                    x_loc.iloc[i] * np.pi * 2.0 / self.circumference)
                 lat_auv.append(lat_temp)
                 lon_auv.append(self.rad2deg(lon_origin.iloc[i]) + self.rad2deg(
                     y_loc.iloc[i] * np.pi * 2.0 / (self.circumference * np.cos(self.deg2rad(lat_temp)))))
@@ -95,7 +99,8 @@ class Data_analyser(Prior):
         self.lat_auv = np.array(lat_auv).reshape(-1, 1)
         self.lon_auv = np.array(lon_auv).reshape(-1, 1)
         Dx = self.deg2rad(self.lat_auv - self.lat4) / 2 / np.pi * self.circumference
-        Dy = self.deg2rad(self.lon_auv - self.lon4) / 2 / np.pi * self.circumference * np.cos(self.deg2rad(self.lat_auv))
+        Dy = self.deg2rad(self.lon_auv - self.lon4) / 2 / np.pi * self.circumference * np.cos(
+            self.deg2rad(self.lat_auv))
 
         self.xauv = np.array(xauv).reshape(-1, 1)
         self.yauv = np.array(yauv).reshape(-1, 1)
@@ -112,6 +117,11 @@ class Data_analyser(Prior):
         self.time_mission = np.array(time_mission).reshape(-1, 1)
         self.datasheet = np.hstack((self.time_mission, self.lat_auv, self.lon_auv, self.xauv,
                                     self.yauv, self.zauv, self.dauv, self.sal_auv, self.temp_auv))
+
+    def setpath(self, datapath, sinmodpath):
+        self.datapath = datapath
+        self.SINMOD_datapath = sinmodpath
+        print("Path is set up properly!!!")
 
     def plot_timeseries(self):
         plt.figure(figsize=(15, 15))
@@ -143,25 +153,36 @@ class Data_analyser(Prior):
         print("hello world")
 
 
-SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/"
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Data/"
-# figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/fig/'
-
-# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/Data/"
-# figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/fig/'
-
-# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/"
-# # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Adaptive/fig/'
-
-# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/June17/Data/"
-# figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Adaptive/fig/'
-
-# a = Data_analyser(datapath, SINMOD_datapath)
-
-
-class Plotter(Data_analyser):
+class SINMOD(Data_analyser):
+    SINMOD_Data = None
     def __init__(self):
-        Data_analyser.__init__(self, datapath, SINMOD_datapath)
+        Data_analyser.__init__(self)
+
+    def load_sinmod(self):
+        import netCDF4
+        self.SINMOD_Data = netCDF4.Dataset(self.SINMOD_datapath)
+
+    def getSINMODFromCoordsDepth(self, coordinates, depth):
+        salinity = np.mean(self.SINMOD_Data['salinity'][:, :, :, :], axis=0)
+        temperature = np.mean(self.SINMOD_Data['temperature'][:, :, :, :], axis=0) - 273.15
+        depth_sinmod = np.array(self.SINMOD_Data['zc'])
+        lat_sinmod = np.array(self.SINMOD_Data['gridLats'][:, :]).reshape(-1, 1)
+        lon_sinmod = np.array(self.SINMOD_Data['gridLons'][:, :]).reshape(-1, 1)
+        sal_sinmod = np.zeros([coordinates.shape[0], 1])
+        temp_sinmod = np.zeros([coordinates.shape[0], 1])
+
+        for i in range(coordinates.shape[0]):
+            lat, lon = coordinates[i]
+            ind_depth = np.where(np.array(depth_sinmod) == depth)[0][0]
+            idx = np.argmin((lat_sinmod - lat) ** 2 + (lon_sinmod - lon) ** 2)
+            sal_sinmod[i] = salinity[ind_depth].reshape(-1, 1)[idx]
+            temp_sinmod[i] = temperature[ind_depth].reshape(-1, 1)[idx]
+        return sal_sinmod, temp_sinmod
+
+
+class Plotter(SINMOD):
+    def __init__(self):
+        Data_analyser.__init__(self)
 
     def plotabline(self, slope, intercept):
         """Plot a line from slope and intercept"""
@@ -175,15 +196,18 @@ class Plotter(Data_analyser):
         fig = plt.figure(figsize=(nlayers * 7, 30))
         gs = GridSpec(nrows=nlayers, ncols=3)
         for i in range(len(self.depth_obs)):
+            print(i)
             depth_lower = self.depth_obs[i] - self.depth_tolerance
             depth_upper = self.depth_obs[i] + self.depth_tolerance
-            ind = np.where((self.depth_obs[i] >= depth_lower) & (self.depth_obs[i] <= depth_upper))
+            ind = ((self.dauv >= depth_lower) & (self.dauv <= depth_upper))
+
             colormin = np.amin(self.sal_auv)
             colormax = np.amax(self.sal_auv)
 
             ax = fig.add_subplot(gs[i, 0])
-            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=self.sal_auv[ind], vmin=colormin, vmax=colormax)
+            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=self.sal_auv[ind])
             ax.set(title="AUV salinity data at {:.1f} metre".format(self.depth_obs[i]))
+            ax.set_box_aspect(1)
             ax.set_xlabel("Lon [deg]")
             ax.set_ylabel("Lat [deg]")
             plt.colorbar(im)
@@ -191,15 +215,19 @@ class Plotter(Data_analyser):
             ax = fig.add_subplot(gs[i, 1])
             coordinates = np.hstack((self.lat_auv[ind].reshape(-1, 1), self.lon_auv[ind].reshape(-1, 1)))
             sal_temp, temp_temp = self.getSINMODFromCoordsDepth(coordinates, self.depth_obs[i])
-            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=sal_temp, vmin=colormin, vmax=colormax)
+            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=sal_temp)
             ax.set(title="SINMOD salinity data at {:.1f} metre".format(self.depth_obs[i]))
+            ax.set_box_aspect(1)
             ax.set_xlabel("Lon [deg]")
             ax.set_ylabel("Lat [deg]")
             plt.colorbar(im)
 
             ax = fig.add_subplot(gs[i, 2])
             ax.plot(sal_temp, self.sal_auv[ind], 'k.')
-            self.plotabline(1, np.amin(sal_auv[ind]))
+            ax.plot([0, 40], [0, 40], 'r-.')
+            ax.set_xlim([0, 40])
+            ax.set_ylim([0, 40])
+            ax.set_aspect('equal', adjustable="box")
             ax.set(title="SINMOD salinity data versus SINMOD data at {:.1f} metre".format(self.depth_obs[i]))
             ax.set_xlabel("SINMOD")
             ax.set_ylabel("AUV data")
@@ -262,9 +290,36 @@ class Plotter(Data_analyser):
             plotly.offline.plot(fig, filename=self.figpath + "Mission_{:02d}.html".format(i), auto_open=False)
 
 
+
+SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/samples_2020.05.01.nc"
+# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Data/"
+# figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/fig/'
+
+# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/Data/"
+# figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/fig/'
+
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/"
+# # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Adaptive/fig/'
+
+# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/June17/Data/"
+# figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Adaptive/fig/'
+
 b = Plotter()
+b.setpath(datapath, SINMOD_datapath)
+b.extractData()
+b.load_sinmod()
+b.plotCrossPlot()
+# a = SINMOD(datapath, SINMOD_datapath)
 
 #%%
+
+import netCDF4
+a = netCDF4.Dataset(SINMOD_datapath)
+
+
+#%%
+
+
 # starting_index = 1
 starting_index = 700
 origin = [lat4, lon4]
