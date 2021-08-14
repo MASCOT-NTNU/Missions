@@ -208,15 +208,70 @@ class Plotter(SINMOD):
         plt.savefig(self.figpath + "crossplot.pdf")
         plt.show()
 
+    def separate_data(self):
+        time_auv = np.array(self.time_mission.squeeze())
+        jumps = np.diff(time_auv)
+        sections = jumps[jumps > 1]
+        self.ind_section_start = []
+        self.ind_section_end = []
+        self.ind_section_start.append(0)
+        for t in sections:
+            ind = np.where(jumps == t)[0][0]
+            self.ind_section_end.append(ind + 1)
+            self.ind_section_start.append(ind + 1)
+        self.ind_section_end.append(-1)
+
+        self.ind_section_start.append(0)
+        self.ind_section_end.append(-1)
+        print(self.ind_section_start)
+        print(self.ind_section_end)
+
+    def plot3dscatter(self):
+        self.separate_data()
+        for i in range(len(self.ind_section_start)):
+            fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
+            fig.add_trace(
+                go.Scatter3d(
+                    x=self.lon_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
+                    y=self.lat_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
+                    z=np.array(-self.dauv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze()),
+                    marker=dict(
+                        size=4,
+                        color=self.sal_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
+                        coloraxis="coloraxis",
+                        showscale=False
+                    ),
+                    line=dict(
+                        color='darkblue',
+                        width=.1
+                    ),
+                ),
+                row=1, col=1,
+            )
+            fig.update_coloraxes(colorscale="jet")
+            fig.update_layout(
+                scene={
+                    'aspectmode': 'manual',
+                    'xaxis_title': 'Lon [deg]',
+                    'yaxis_title': 'Lat [deg]',
+                    'zaxis_title': 'Depth [m]',
+                    'aspectratio': dict(x=1, y=1, z=.5),
+                },
+                showlegend=False,
+                title="Mission data analysis on " + self.string_date,
+                scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
+            )
+            plotly.offline.plot(fig, filename=self.figpath + "Mission_{:02d}.html".format(i), auto_open=False)
+
 
 SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/samples_2020.05.01.nc"
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Data/"
+# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/fig/'
 
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/fig/'
 
-# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/"
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/"
 # # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Adaptive/fig/'
 
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/June17/Data/"
@@ -228,8 +283,6 @@ b.extractData()
 b.load_sinmod()
 b.plotCrossPlot()
 # a = SINMOD(datapath, SINMOD_datapath)
-
-#%%
 
 #%%
 
