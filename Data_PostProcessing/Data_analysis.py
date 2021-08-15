@@ -12,18 +12,20 @@ plt.rcParams.update({'font.style': 'oblique'})
 import pandas as pd
 import numpy as np
 from Adaptive_script.Porto.Grid import Grid
+from Adaptive_script.Porto.Prior import Prior
 
-class AUVData(Grid):
+class AUVData:
+    '''
+    Import AUV data and sort it out
+    '''
     string_date = None
     coefpath = None
     figpath = None
     datapath = None
-    SINMOD_datapath = None
+    circumference = 40075000 # [m]
 
     def __init__(self):
-        Grid.__init__(self)
         print(self.datapath)
-        print(self.SINMOD_datapath)
 
     def extractData(self):
         coef_path_ind = self.datapath.find('Data/')
@@ -100,9 +102,14 @@ class AUVData(Grid):
                                     self.yauv, self.zauv, self.dauv, self.sal_auv, self.temp_auv))
         print("Finished AUV data extraction")
 
-    def setpath(self, datapath, sinmodpath):
+    def deg2rad(self, deg):
+        return deg / 180 * np.pi
+
+    def rad2deg(self, rad):
+        return rad / np.pi * 180
+
+    def setpath_AUVdata(self, datapath):
         self.datapath = datapath
-        self.SINMOD_datapath = sinmodpath
         print("Path is set up properly!!!")
 
     def plot_timeseries(self):
@@ -126,10 +133,17 @@ class AUVData(Grid):
             print(path + " is created successfully!!!")
 
 
-class SINMOD(AUVData):
+class SINMOD:
+    '''
+    Import SINMOD data
+    '''
     SINMOD_Data = None
+    SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/samples_2020.05.01.nc"
     def __init__(self):
-        AUVData.__init__(self)
+        print("Import SINMOD data module is loaded")
+
+    def setpath_SINMOD(self, sinmod_datapath):
+        self.SINMOD_datapath = sinmod_datapath
 
     def load_sinmod(self):
         import netCDF4
@@ -153,136 +167,109 @@ class SINMOD(AUVData):
         return sal_sinmod, temp_sinmod
 
 
-class Plotter(SINMOD):
+
+class Kriger(AUVData, SINMOD, Prior):
     def __init__(self):
+        AUVData.__init__(self)
         SINMOD.__init__(self)
+        Prior.__init__(self)
 
-    def plotabline(self, slope, intercept):
-        """Plot a line from slope and intercept"""
-        axes = plt.gca()
-        x_vals = np.array(axes.get_xlim())
-        y_vals = intercept + slope * x_vals
-        plt.plot(x_vals, y_vals, '--')
+    def latlon2xy(self, lat, lon):
+        x = self.deg2rad(lat - self.lat_origin) / 2 / np.pi * self.circumference
+        y = self.deg2rad(lon - self.lon_origin) / 2 / np.pi * self.circumference * np.cos(self.deg2rad(lat))
+        # x_, y_ = self.R.T @ np.vstack(x, y) # convert it back
+        return x, y
 
-    def plotCrossPlot(self):
-        nlayers = len(self.depth_obs)
-        fig = plt.figure(figsize=(nlayers * 7, 30))
-        gs = GridSpec(nrows=nlayers, ncols=3)
-        for i in range(len(self.depth_obs)):
-            print(i)
-            depth_lower = self.depth_obs[i] - self.depth_tolerance
-            depth_upper = self.depth_obs[i] + self.depth_tolerance
-            ind = ((self.dauv >= depth_lower) & (self.dauv <= depth_upper))
+    def myround(self, value, base = 1.):
+        return base * np.round(value / base)
 
-            colormin = np.amin(self.sal_auv)
-            colormax = np.amax(self.sal_auv)
+    def Matern_cov(self, sigma, eta, H):
+        return sigma ** 2 * (1 + eta * H) * np.exp(-eta * H)
 
-            ax = fig.add_subplot(gs[i, 0])
-            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=self.sal_auv[ind], vmin = colormin, vmax = colormax)
-            ax.set(title="AUV salinity data at {:.1f} metre".format(self.depth_obs[i]))
-            ax.set_box_aspect(1)
-            ax.set_xlabel("Lon [deg]")
-            ax.set_ylabel("Lat [deg]")
-            plt.colorbar(im)
+    def compute_H(self, grid1, grid2, ksi):
+        X1 = grid1[:, 0].reshape(-1, 1)
+        Y1 = grid1[:, 1].reshape(-1, 1)
+        Z1 = grid1[:, -1].reshape(-1, 1)
+        X2 = grid2[:, 0].reshape(-1, 1)
+        Y2 = grid2[:, 1].reshape(-1, 1)
+        Z2 = grid2[:, -1].reshape(-1, 1)
 
-            ax = fig.add_subplot(gs[i, 1])
-            coordinates = np.hstack((self.lat_auv[ind].reshape(-1, 1), self.lon_auv[ind].reshape(-1, 1)))
-            sal_temp, temp_temp = self.getSINMODFromCoordsDepth(coordinates, self.depth_obs[i])
-            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=sal_temp, vmin = colormin, vmax = colormax)
-            ax.set(title="SINMOD salinity data at {:.1f} metre".format(self.depth_obs[i]))
-            ax.set_box_aspect(1)
-            ax.set_xlabel("Lon [deg]")
-            ax.set_ylabel("Lat [deg]")
-            plt.colorbar(im)
+        distX = X1 @ np.ones([1, X2.shape[0]]) - np.ones([X1.shape[0], 1]) @ X2.T
+        distY = Y1 @ np.ones([1, Y2.shape[0]]) - np.ones([Y1.shape[0], 1]) @ Y2.T
+        distXY = distX ** 2 + distY ** 2
+        distZ = Z1 @ np.ones([1, Z2.shape[0]]) - np.ones([Z1.shape[0], 1]) @ Z2.T
+        dist = np.sqrt(distXY + (ksi * distZ) ** 2)
+        return dist
 
-            ax = fig.add_subplot(gs[i, 2])
-            ax.plot(sal_temp, self.sal_auv[ind], 'k.')
-            ax.plot([0, 40], [0, 40], 'r-.')
-            ax.set_xlim([0, 40])
-            ax.set_ylim([0, 40])
-            ax.set_aspect('equal', adjustable="box")
-            ax.set(title="SINMOD salinity data versus SINMOD data at {:.1f} metre".format(self.depth_obs[i]))
-            ax.set_xlabel("SINMOD")
-            ax.set_ylabel("AUV data")
-        fig.suptitle('Cross Plot for the mission on ' + self.string_date)
-        plt.savefig(self.figpath + "crossplot.pdf")
-        plt.show()
+    def compute_obs(self):
+        xobs, yobs = self.latlon2xy(self.lat_auv, self.lon_auv)
+        zobs = self.myround(self.dauv, base = .5)
+        xobs = xobs.reshape(-1, 1)
+        yobs = yobs.reshape(-1, 1)
+        zobs = zobs.reshape(-1, 1)
+        self.obs = np.hstack((xobs, yobs, zobs))
+        H_obs = self.compute_H(self.obs, self.obs, self.ksi)
+        self.Sigma_obs = self.Matern_cov(self.sigma_sal, self.eta, H_obs) + self.tau_sal ** 2 * np.identity(H_obs.shape[0])
 
-    def separate_data(self):
-        time_auv = np.array(self.time_mission.squeeze())
-        jumps = np.diff(time_auv)
-        sections = jumps[jumps > 1]
-        self.ind_section_start = []
-        self.ind_section_end = []
-        self.ind_section_start.append(0)
-        for t in sections:
-            ind = np.where(jumps == t)[0][0]
-            self.ind_section_end.append(ind + 1)
-            self.ind_section_start.append(ind + 1)
-        self.ind_section_end.append(-1)
+    def compute_grid_obs(self):
+        H_grid_obs = self.compute_H(self.grid, self.obs, self.ksi)
+        self.Sigma_grid_obs = self.Matern_cov(self.sigma_sal, self.eta, H_grid_obs)
 
-        self.ind_section_start.append(0)
-        self.ind_section_end.append(-1)
-        print(self.ind_section_start)
-        print(self.ind_section_end)
+    def getObsData(self):
+        self.coordinates_obs = np.hstack((self.lat_auv, self.lon_auv))
+        print(self.coordinates_obs)
+        print(self.coordinates_obs.shape)
 
-    def plot3dscatter(self):
-        self.separate_data()
-        for i in range(len(self.ind_section_start)):
-            fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
-            fig.add_trace(
-                go.Scatter3d(
-                    x=self.lon_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
-                    y=self.lat_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
-                    z=np.array(-self.dauv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze()),
-                    marker=dict(
-                        size=4,
-                        color=self.sal_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
-                        coloraxis="coloraxis",
-                        showscale=False
-                    ),
-                    line=dict(
-                        color='darkblue',
-                        width=.1
-                    ),
-                ),
-                row=1, col=1,
-            )
-            fig.update_coloraxes(colorscale="jet")
-            fig.update_layout(
-                scene={
-                    'aspectmode': 'manual',
-                    'xaxis_title': 'Lon [deg]',
-                    'yaxis_title': 'Lat [deg]',
-                    'zaxis_title': 'Depth [m]',
-                    'aspectratio': dict(x=1, y=1, z=.5),
-                },
-                showlegend=False,
-                title="Mission data analysis on " + self.string_date,
-                scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
-            )
-            plotly.offline.plot(fig, filename=self.figpath + "Mission_{:02d}.html".format(i), auto_open=False)
+        d_obs = self.myround(self.dauv, base = .5)
+        sal_sinmod, temp_sinmod = self.getSINMODFromCoordsDepth(self.coordinates_obs, d_obs)
+        obs_data = []
+        for i in range(len(sal_sinmod)):
+            k = np.where(depth_obs == d_obs[i])[0][0]
+            obs_data.append(self.beta0[k, 0] + self.beta1[k, 0] * sal_sinmod[i, 0])
+        self.obs_data = np.array(obs_data).reshape(-1, 1)
+
+    def GPupd(self):
+        self.mu_cond = self.mu_prior_sal + self.Sigma_grid_obs @ np.linalg.solve(self.Sigma_obs, (self.sal_auv - self.obs_data))
+        self.Sigma_cond = self.Sigma_prior_sal - self.Sigma_grid_obs @ np.linalg.solve(self.Sigma_obs, self.Sigma_grid_obs.T)
+
+    def krige(self):
+        print("Now it is kriging the field!!!")
+
+        # First compute the distance for the obs
+        self.compute_obs()
+        self.compute_grid_obs()
+        self.getObsData()
+        self.GPupd()
+        print("Finished kriging")
+
+
 
 
 SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/samples_2020.05.01.nc"
-# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Data/"
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/fig/'
 
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/fig/'
 
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/"
+# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/"
 # # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Adaptive/fig/'
 
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/June17/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Adaptive/fig/'
 
-b = Plotter()
-b.setpath(datapath, SINMOD_datapath)
-b.extractData()
-b.load_sinmod()
-b.plotCrossPlot()
-# a = SINMOD(datapath, SINMOD_datapath)
+# b = Plotter()
+a = Kriger()
+a.setpath_AUVdata(datapath)
+a.setpath_SINMOD(SINMOD_datapath)
+a.extractData()
+a.load_sinmod()
+a.krige()
+# b.plotCrossPlot()
+# b.plot3dscatter()
+
+
+
 
 #%%
 

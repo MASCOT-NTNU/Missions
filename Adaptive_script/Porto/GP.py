@@ -1,3 +1,13 @@
+#! /usr/bin/env python3
+__author__ = "Yaolin Ge"
+__copyright__ = "Copyright 2021, The MASCOT Project, NTNU (https://wiki.math.ntnu.no/mascot)"
+__credits__ = ["Yaolin Ge"]
+__license__ = "MIT"
+__version__ = "1.0.1"
+__maintainer__ = "Yaolin Ge"
+__email__ = "yaolin.ge@ntnu.no"
+__status__ = "UnderDevelopment"
+
 import numpy as np
 from Adaptive_script.Porto.Grid import Grid
 class GaussianProcess(Grid):
@@ -47,61 +57,59 @@ class GaussianProcess(Grid):
         print("ksi: ", self.ksi)
 
     def set_sigma_sal(self, value):
-        GaussianProcess.sigma_sal = value
+        self.sigma_sal = value
 
     def set_sigma_temp(self, value):
-        GaussianProcess.sigma_temp = value
+        self.sigma_temp = value
 
     def set_tau_sal(self, value):
-        GaussianProcess.tau_sal = value
+        self.tau_sal = value
 
     def set_tau_temp(self, value):
-        GaussianProcess.tau_temp = value
+        self.tau_temp = value
 
     def set_Threshold_S(self, value):
-        GaussianProcess.Threshold_S = value
+        self.Threshold_S = value
 
     def set_Threshold_T(self, value):
-        GaussianProcess.Threshold_T = value
+        self.Threshold_T = value
 
     def set_eta(self, value):
-        GaussianProcess.sigma_sal = value
+        self.sigma_sal = value
 
     def set_ksi(self, value):
-        GaussianProcess.sigma_sal = value
+        self.sigma_sal = value
 
     def DistanceMatrix(self):
         '''
         :return: Distance matrix with scaling the depth direction
         '''
-        X = Grid.grid[:, 0].reshape(-1, 1)
-        Y = Grid.grid[:, 1].reshape(-1, 1)
-        Z = Grid.grid[:, -1].reshape(-1, 1)
+        X = self.grid[:, 0].reshape(-1, 1)
+        Y = self.grid[:, 1].reshape(-1, 1)
+        Z = self.grid[:, -1].reshape(-1, 1)
 
         distX = X @ np.ones([1, X.shape[0]]) - np.ones([X.shape[0], 1]) @ X.T
         distY = Y @ np.ones([1, Y.shape[0]]) - np.ones([Y.shape[0], 1]) @ Y.T
         distXY = distX ** 2 + distY ** 2
         distZ = Z @ np.ones([1, Z.shape[0]]) - np.ones([Z.shape[0], 1]) @ Z.T
-        dist = np.sqrt(distXY + (GaussianProcess.ksi * distZ) ** 2)
+        dist = np.sqrt(distXY + (self.ksi * distZ) ** 2)
         return dist
 
     def Matern_cov_sal(self):
         '''
         :return: Covariance matrix for salinity only
         '''
-        return GaussianProcess.sigma_sal ** 2 * (1 + GaussianProcess.eta * GaussianProcess.distanceMatrix) * \
-               np.exp(-GaussianProcess.eta * GaussianProcess.distanceMatrix)
+        return self.sigma_sal ** 2 * (1 + self.eta * self.distanceMatrix) * np.exp(-self.eta * self.distanceMatrix)
 
     def Matern_cov_temp(self):
         '''
         :return: Covariance matrix for temperature only
         '''
-        return GaussianProcess.sigma_temp ** 2 * (1 + GaussianProcess.eta * GaussianProcess.distanceMatrix) * \
-               np.exp(-GaussianProcess.eta * GaussianProcess.distanceMatrix)
+        return self.sigma_temp ** 2 * (1 + self.eta * self.distanceMatrix) * np.exp(-self.eta * self.distanceMatrix)
 
     def compute_DistanceMatrix(self):
-        GaussianProcess.distanceMatrix = self.DistanceMatrix()
+        self.distanceMatrix = self.DistanceMatrix()
 
     def compute_Sigma(self):
-        GaussianProcess.Sigma_sal = self.Matern_cov_sal()
-        GaussianProcess.Sigma_temp = self.Matern_cov_temp()
+        self.Sigma_sal = self.Matern_cov_sal()
+        self.Sigma_temp = self.Matern_cov_temp()
