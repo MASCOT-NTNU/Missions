@@ -63,6 +63,7 @@ class Prior(GaussianProcess):
 
         for i in range(coordinates.shape[0]):
             lat, lon = coordinates[i]
+            print(np.where(np.array(depth_sinmod) == depth)[0][0])
             ind_depth = np.where(np.array(depth_sinmod) == depth)[0][0]
             idx = np.argmin((lat_sinmod - lat) ** 2 + (lon_sinmod - lon) ** 2)
             sal_sinmod[i] = salinity[ind_depth].reshape(-1, 1)[idx]

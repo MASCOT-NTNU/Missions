@@ -216,16 +216,16 @@ class Kriger(AUVData, SINMOD, Prior):
         self.Sigma_grid_obs = self.Matern_cov(self.sigma_sal, self.eta, H_grid_obs)
 
     def getObsData(self):
-        self.coordinates_obs = np.hstack((self.lat_auv, self.lon_auv))
-        print(self.coordinates_obs)
-        print(self.coordinates_obs.shape)
-
         d_obs = self.myround(self.dauv, base = .5)
-        sal_sinmod, temp_sinmod = self.getSINMODFromCoordsDepth(self.coordinates_obs, d_obs)
+        d_obs[d_obs < .5] = .5
         obs_data = []
-        for i in range(len(sal_sinmod)):
-            k = np.where(depth_obs == d_obs[i])[0][0]
-            obs_data.append(self.beta0[k, 0] + self.beta1[k, 0] * sal_sinmod[i, 0])
+        for i in range(len(d_obs)):
+            print(i)
+            sal_sinmod, temp_sinmod = self.getSINMODFromCoordsDepth(np.array((self.lat_auv[i], self.lon_auv[i])).reshape(1, -1), d_obs[i])
+            k = np.where(self.depth_obs == d_obs[i])[0][0]
+            print(k)
+            print(sal_sinmod)
+            obs_data.append(self.beta0[k, 0] + self.beta1[k, 0] * sal_sinmod)
         self.obs_data = np.array(obs_data).reshape(-1, 1)
 
     def GPupd(self):

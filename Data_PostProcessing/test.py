@@ -57,4 +57,11 @@ import matplotlib.pyplot as plt
 plt.plot(np.random.rand(10))
 plt.show()
 
+#%%
+def foo(a):
+    print(a)
+    print(a.shape)
 
+a = np.random.rand(10, 2)
+print(a)
+foo(a)
