@@ -211,6 +211,20 @@ class DataHandler_Delft3D:
         id = len(speeds[speeds < wind_speed]) - 1
         return self.levels[id]
 
+    def windangle2directionRough(self, wind_angle):
+        self.ROUGH = True
+        # print("Rough mode is activated!")
+        angles = np.arange(4) * 90 + 45
+        self.directions = ['East', 'South', 'West', 'North']
+        id = len(angles[angles < wind_angle]) - 1
+        return self.directions[id]
+
+    def windspeed2levelRough(self, wind_speed):
+        speeds = np.array([0, 2.5])
+        self.levels = ['Calm', 'Windy']
+        id = len(speeds[speeds < wind_speed]) - 1
+        return self.levels[id]
+
     def merge_data(self):
         self.wind_v = []
         self.wind_dir = []
@@ -218,8 +232,10 @@ class DataHandler_Delft3D:
         for i in range(len(self.timestamp_data)):
             id_wind = (np.abs(self.timestamp_wind - self.timestamp_data[i])).argmin()
             self.wind_v.append(self.wind_speed[id_wind])
-            self.wind_dir.append(self.windangle2direction(self.wind_angle[id_wind]))
-            self.wind_level.append(self.windspeed2level(self.wind_speed[id_wind]))
+            # self.wind_dir.append(self.windangle2direction(self.wind_angle[id_wind]))
+            # self.wind_level.append(self.windspeed2level(self.wind_speed[id_wind]))
+            self.wind_dir.append(self.windangle2directionRough(self.wind_angle[id_wind])) # here one can choose whether
+            self.wind_level.append(self.windspeed2levelRough(self.wind_speed[id_wind])) # to use rough or not
         print("Data is merged correctly!!")
         print("wind levels: ", len(np.unique(self.wind_level)), np.unique(self.wind_level))
         print("wind directions: ", len(np.unique(self.wind_dir)), np.unique(self.wind_dir))
@@ -258,10 +274,10 @@ class DataHandler_Delft3D:
                     sal_ave = np.mean(sal_total, axis=0)
                     if sal_ave.shape[0] != self.x.shape[0]:
                         sal_ave = self.refill_unmatched_data(sal_ave)
-                    im = ax.scatter(x[:, :, 0], y[:, :, 0], c=sal_ave, cmap = 'RdBu')
+                    im = ax.scatter(self.x[:, :, 0], self.y[:, :, 0], c=sal_ave, cmap = 'RdBu')
                     plt.colorbar(im)
                 else:
-                    ax.scatter(x[:, :, 0], y[:, :, 0], c='w')
+                    ax.scatter(self.x[:, :, 0], self.y[:, :, 0], c='w')
                 ax.set_xlabel('Lon [deg]')
                 ax.set_ylabel('Lat [deg]')
                 ax.set_title(self.levels[i] + " " + self.directions[j])
@@ -269,7 +285,10 @@ class DataHandler_Delft3D:
                 counter = counter + 1
                 print(counter)
         string_date = datetime.fromtimestamp(self.timestamp_data[0]).strftime("%Y_%m")
-        plt.savefig(figpath + "WindCondition_" + string_date + ".png")
+        if self.ROUGH:
+            plt.savefig(figpath + "WindCondition_" + string_date + "_Rough.png")
+        else:
+            plt.savefig(figpath + "WindCondition_" + string_date + ".png")
         print(figpath + "WindCondition_" + string_date + ".png")
         plt.close("all")
         # plt.show()
@@ -287,8 +306,8 @@ class DataHandler_Delft3D:
             plt.savefig(figpath + "I_{:04d}.png".format(i))
             plt.close("all")
 
-data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201709_surface_salinity.mat"
-# data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
+# data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201711_surface_salinity.mat"
+data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201612_surface_salinity.mat"
 
 wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/wind_Era5_douro_2017_a_2019.wnd"
