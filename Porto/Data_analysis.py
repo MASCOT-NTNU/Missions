@@ -238,6 +238,8 @@ class DataHandler_Delft3D:
         return sal_ave
 
     def plot_grouppeddata(self):
+        import matplotlib.pyplot as plt
+        from matplotlib.gridspec import GridSpec
         figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/"
         fig = plt.figure(figsize=(len(self.directions) * 10, len(self.levels) * 10))
         gs = GridSpec(ncols=len(self.directions), nrows=len(self.levels), figure=fig)
@@ -304,50 +306,3 @@ datahandler.plot_grouppeddata()
 #%%
 datahandler.plot_data()
 
-
-print("it comes here")
-fill_row = []
-fill_column = []
-for i in range(259 * sal_ave.shape[0]):
-    fill_row.append(0)
-    # fill_row.append(np.nan)
-for i in range(410 * sal_ave.shape[0]):
-    fill_column.append(0)
-    # fill_column.append(np.nan)
-fill_column = np.array(fill_column).reshape([sal_ave.shape[0], -1, 1])
-fill_row = np.array(fill_row).reshape([sal_ave.shape[0], 1, -1])
-
-sal_ave = np.concatenate((sal_ave, fill_row), axis = 1)
-sal_ave = np.concatenate((sal_ave, fill_column), axis = 2)
-
-ind_east = np.where(np.array(direction_wind) == 'East')[0]
-ind_west = np.where(np.array(direction_wind) == 'West')[0]
-ind_north = np.where(np.array(direction_wind) == 'North')[0]
-ind_south = np.where(np.array(direction_wind) == 'South')[0]
-
-
-sal_east = np.mean(sal_ave[ind_east], axis = 0)
-sal_west = np.mean(sal_ave[ind_west], axis = 0)
-sal_north = np.mean(sal_ave[ind_north], axis = 0)
-sal_south = np.mean(sal_ave[ind_south], axis = 0)
-
-import matplotlib.pyplot as plt
-plt.figure(figsize = (20, 20))
-plt.subplot(221)
-plt.scatter(x[:, :, 0], y[:, :, 0], c = sal_east)
-plt.title("east")
-
-plt.subplot(222)
-plt.scatter(x[:, :, 0], y[:, :, 0], c = sal_west)
-plt.title("west")
-
-plt.subplot(223)
-plt.scatter(x[:, :, 0], y[:, :, 0], c = sal_north)
-plt.title("north")
-
-plt.subplot(224)
-plt.scatter(x[:, :, 0], y[:, :, 0], c = sal_south)
-plt.title("south")
-
-plt.tight_layout()
-plt.show()
