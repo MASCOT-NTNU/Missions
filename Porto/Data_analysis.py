@@ -14,6 +14,7 @@ from datetime import datetime
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201607_surface_salinity.mat"
 data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
 sal_data = mat73.loadmat(data_path)
+
 #%%
 data = sal_data["data"]
 x = data["X"]
@@ -38,9 +39,9 @@ Z = z[0, :, :, 0].reshape(-1, 1)
 S = salinity[0, :, :].reshape(-1, 1)
 # for i in range(len(self.z.shape[0])):
 import matplotlib.pyplot as plt
-# plt.scatter(X, Y, c = salinity[0, :, :, 0])
-# plt.show()
-
+plt.scatter(X, Y, c = S)
+plt.show()
+#%%
 # X = np.array([1, 2, 3, 4, np.nan])
 # Y = np.array([1, 2, 3, 4, np.nan])
 # Z = np.array([1, 2, 3, 4, np.nan])
@@ -146,6 +147,15 @@ wind_angle = wind_data[:, -1]
 # wind_angle = wind_data[:, 2]
 
 
+data = sal_data["data"]
+x = data["X"]
+y = data["Y"]
+z = data["Z"]
+Time = data['Time']
+timestamp_data = (Time - 719529) * 24 * 3600 # 719529 is how many days have passed from Jan1 0,
+# to Jan1 1970. Since 1970Jan1, is used as the starting index for datetime
+salinity = data["Val"]
+
 
 sal = []
 wind_v = []
@@ -216,12 +226,6 @@ group_data()
 
 
 
-#%%
-# for i in timestamp_data:
-    # print(datetime.fromtimestamp(i))
-
-# for i in timestamp_wind:
-#     print(datetime.fromtimestamp(i))
 
 #%%
 import numpy as np
@@ -240,7 +244,6 @@ class DataHandler_Delft3D:
             print("Rough mode is activated!")
         else:
             print("Fine mode is activated!")
-
         self.set_datapath(datapath)
         self.set_windpath(windpath)
         self.loaddata()
@@ -385,7 +388,7 @@ class DataHandler_Delft3D:
                     sal_ave = np.mean(sal_total, axis=0)
                     if sal_ave.shape[0] != self.x.shape[0]:
                         sal_ave = self.refill_unmatched_data(sal_ave)
-                    im = ax.scatter(self.x[:, :, 0], self.y[:, :, 0], c=sal_ave, cmap = 'RdBu')
+                    im = ax.scatter(self.x[:, :, 0], self.y[:, :, 0], c=sal_ave)
                     plt.colorbar(im)
                 else:
                     ax.scatter(self.x[:, :, 0], self.y[:, :, 0], c='w')
@@ -413,7 +416,6 @@ class DataHandler_Delft3D:
 
         X = self.x[:, :, 0].reshape(-1, 1)
         Y = self.y[:, :, 0].reshape(-1, 1)
-
         # for i in range(len(self.z.shape[0])):
         for i in [0]:
             print(i)
@@ -426,7 +428,8 @@ class DataHandler_Delft3D:
                     x=X, y=Y, z=Z,
                     marker=dict(
                         size=4,
-                        color='black',
+                        color=sal_val,
+                        coloraxis="coloraxis",
                         showscale=False
                     ),
                     line=dict(
@@ -462,6 +465,7 @@ class DataHandler_Delft3D:
             plt.savefig(self.figpath + "rawdata/I_{:04d}.png".format(i))
             plt.close("all")
 
+
 data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201909_surface_salinity.mat"
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201612_surface_salinity.mat"
@@ -471,21 +475,22 @@ wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/win
 # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/wind_Era5_douro_2012_a_2016.wnd"
 # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/wind_times_serie_porto_obs_2015_2020.txt"
 datahandler = DataHandler_Delft3D(data_path, wind_path, rough = True)
-
-# print(datahandler.figpath)
 datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/")
-# print(datahandler.figpath)
 # datahandler.plotscatter3D()
-# print(datahandler.sal_data.shape)
-# print(datahandler.wind_data.shape)
-# print(datahandler.Time.shape)
-# datahandler.merge_data()
 datahandler.plot_grouppeddata()
+
 
 #%%
 datahandler.plot_data()
 #%%
+
 import os
 os.system('say "Now it is done, congratulations"')
 print("Done")
+
+#%%
+import os
+for i in range(0, 255):
+    os.system('ping 192.168.1.' + str(i))
+    print(i)
 
