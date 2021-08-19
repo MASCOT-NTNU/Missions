@@ -167,6 +167,115 @@ class SINMOD:
         return sal_sinmod, temp_sinmod
 
 
+class Plotter(Grid, AUVData, SINMOD):
+    '''
+    Plot essential figures to help the understanding
+    '''
+    def __init__(self):
+        Grid.__init__(self)
+        AUVData.__init__(self)
+        SINMOD.__init__(self)
+
+    def plotCrossPlot(self):
+        nlayers = len(self.depth_obs)
+        fig = plt.figure(figsize=(nlayers * 7, 30))
+        gs = GridSpec(nrows=nlayers, ncols=3)
+        for i in range(len(self.depth_obs)):
+            print(i)
+            depth_lower = self.depth_obs[i] - self.depth_tolerance
+            depth_upper = self.depth_obs[i] + self.depth_tolerance
+            ind = ((self.dauv >= depth_lower) & (self.dauv <= depth_upper))
+
+            colormin = np.amin(self.sal_auv)
+            colormax = np.amax(self.sal_auv)
+
+            ax = fig.add_subplot(gs[i, 0])
+            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=self.sal_auv[ind], vmin = colormin, vmax = colormax)
+            ax.set(title="AUV salinity data at {:.1f} metre".format(self.depth_obs[i]))
+            ax.set_box_aspect(1)
+            ax.set_xlabel("Lon [deg]")
+            ax.set_ylabel("Lat [deg]")
+            plt.colorbar(im)
+
+            ax = fig.add_subplot(gs[i, 1])
+            coordinates = np.hstack((self.lat_auv[ind].reshape(-1, 1), self.lon_auv[ind].reshape(-1, 1)))
+            sal_temp, temp_temp = self.getSINMODFromCoordsDepth(coordinates, self.depth_obs[i])
+            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=sal_temp, vmin = colormin, vmax = colormax)
+            ax.set(title="SINMOD salinity data at {:.1f} metre".format(self.depth_obs[i]))
+            ax.set_box_aspect(1)
+            ax.set_xlabel("Lon [deg]")
+            ax.set_ylabel("Lat [deg]")
+            plt.colorbar(im)
+
+            ax = fig.add_subplot(gs[i, 2])
+            ax.plot(sal_temp, self.sal_auv[ind], 'k.')
+            ax.plot([0, 40], [0, 40], 'r-.')
+            ax.set_xlim([0, 40])
+            ax.set_ylim([0, 40])
+            ax.set_aspect('equal', adjustable="box")
+            ax.set(title="SINMOD salinity data versus SINMOD data at {:.1f} metre".format(self.depth_obs[i]))
+            ax.set_xlabel("SINMOD")
+            ax.set_ylabel("AUV data")
+        fig.suptitle('Cross Plot for the mission on ' + self.string_date)
+        plt.savefig(self.figpath + "crossplot.pdf")
+        plt.show()
+
+    def separate_data(self):
+        time_auv = np.array(self.time_mission.squeeze())
+        jumps = np.diff(time_auv)
+        sections = jumps[jumps > 1]
+        self.ind_section_start = []
+        self.ind_section_end = []
+        self.ind_section_start.append(0)
+        for t in sections:
+            ind = np.where(jumps == t)[0][0]
+            self.ind_section_end.append(ind + 1)
+            self.ind_section_start.append(ind + 1)
+        self.ind_section_end.append(-1)
+
+        self.ind_section_start.append(0)
+        self.ind_section_end.append(-1)
+        print(self.ind_section_start)
+        print(self.ind_section_end)
+
+    def plot3dscatter(self):
+        self.separate_data()
+        self.makepath(self.figpath + "Scatter3D/")
+        for i in range(len(self.ind_section_start)):
+            fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
+            fig.add_trace(
+                go.Scatter3d(
+                    x=self.lon_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
+                    y=self.lat_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
+                    z=np.array(-self.dauv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze()),
+                    marker=dict(
+                        size=4,
+                        color=self.sal_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
+                        coloraxis="coloraxis",
+                        showscale=False
+                    ),
+                    line=dict(
+                        color='darkblue',
+                        width=.1
+                    ),
+                ),
+                row=1, col=1,
+            )
+            fig.update_coloraxes(colorscale="jet")
+            fig.update_layout(
+                scene={
+                    'aspectmode': 'manual',
+                    'xaxis_title': 'Lon [deg]',
+                    'yaxis_title': 'Lat [deg]',
+                    'zaxis_title': 'Depth [m]',
+                    'aspectratio': dict(x=1, y=1, z=.5),
+                },
+                showlegend=False,
+                title="Mission data analysis on " + self.string_date,
+                scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
+            )
+            plotly.offline.plot(fig, filename=self.figpath + "Scatter3D/Mission_{:02d}.html".format(i), auto_open=False)
+
 
 class Kriger(AUVData, SINMOD, Prior):
     def __init__(self):
@@ -266,7 +375,7 @@ a.extractData()
 a.load_sinmod()
 a.krige()
 # b.plotCrossPlot()
-# b.plot3dscatter()
+# a.plot3dscatter()
 
 
 
