@@ -134,13 +134,19 @@ class DataHandler_Delft3D:
     sal_data = None
     wind_path = None
     wind_data = None
+    figpath = None
 
-    def __init__(self, datapath, windpath):
+    def __init__(self, datapath, windpath, rough = False):
         self.set_datapath(datapath)
         self.set_windpath(windpath)
         self.loaddata()
         self.load_wind()
         self.merge_data()
+        self.ROUGH = rough
+
+    def set_figpath(self, figpath):
+        self.figpath = figpath
+        print("figpath is set correctly, ", self.figpath)
 
     def set_datapath(self, path):
         self.sal_path = path
@@ -157,11 +163,13 @@ class DataHandler_Delft3D:
         self.timestamp_data = (self.Time - 719529) * 24 * 3600  # 719529 is how many days have passed from Jan1 0,
         # to Jan1 1970. Since 1970Jan1, is used as the starting index for datetime
         self.sal_data = data["Val"]
+        self.string_date = datetime.fromtimestamp(self.timestamp_data[0]).strftime("%Y_%m")
         print("Data is loaded correctly!")
         print("X: ", self.x.shape)
         print("Y: ", self.y.shape)
         print("Z: ", self.z.shape)
         print("sal_data: ", self.sal_data.shape)
+        print("Date: ", self.string_date)
 
     def set_windpath(self, path):
         self.wind_path = path
@@ -212,7 +220,6 @@ class DataHandler_Delft3D:
         return self.levels[id]
 
     def windangle2directionRough(self, wind_angle):
-        self.ROUGH = True
         # print("Rough mode is activated!")
         angles = np.arange(4) * 90 + 45
         self.directions = ['East', 'South', 'West', 'North']
@@ -232,10 +239,12 @@ class DataHandler_Delft3D:
         for i in range(len(self.timestamp_data)):
             id_wind = (np.abs(self.timestamp_wind - self.timestamp_data[i])).argmin()
             self.wind_v.append(self.wind_speed[id_wind])
-            # self.wind_dir.append(self.windangle2direction(self.wind_angle[id_wind]))
-            # self.wind_level.append(self.windspeed2level(self.wind_speed[id_wind]))
-            self.wind_dir.append(self.windangle2directionRough(self.wind_angle[id_wind])) # here one can choose whether
-            self.wind_level.append(self.windspeed2levelRough(self.wind_speed[id_wind])) # to use rough or not
+            if self.ROUGH:
+                self.wind_dir.append(self.windangle2directionRough(self.wind_angle[id_wind])) # here one can choose whether
+                self.wind_level.append(self.windspeed2levelRough(self.wind_speed[id_wind])) # to use rough or not
+            else:
+                self.wind_dir.append(self.windangle2direction(self.wind_angle[id_wind]))
+                self.wind_level.append(self.windspeed2level(self.wind_speed[id_wind]))
         print("Data is merged correctly!!")
         print("wind levels: ", len(np.unique(self.wind_level)), np.unique(self.wind_level))
         print("wind directions: ", len(np.unique(self.wind_dir)), np.unique(self.wind_dir))
@@ -256,7 +265,6 @@ class DataHandler_Delft3D:
     def plot_grouppeddata(self):
         import matplotlib.pyplot as plt
         from matplotlib.gridspec import GridSpec
-        figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/"
         fig = plt.figure(figsize=(len(self.directions) * 10, len(self.levels) * 10))
         gs = GridSpec(ncols=len(self.directions), nrows=len(self.levels), figure=fig)
         counter = 0
@@ -284,26 +292,72 @@ class DataHandler_Delft3D:
 
                 counter = counter + 1
                 print(counter)
-        string_date = datetime.fromtimestamp(self.timestamp_data[0]).strftime("%Y_%m")
+
         if self.ROUGH:
-            plt.savefig(figpath + "WindCondition_" + string_date + "_Rough.png")
+            plt.savefig(self.figpath + "WindCondition_" + self.string_date + "_Rough.png")
         else:
-            plt.savefig(figpath + "WindCondition_" + string_date + ".png")
-        print(figpath + "WindCondition_" + string_date + ".png")
+            plt.savefig(self.figpath + "WindCondition_" + self.string_date + ".png")
+        print(self.figpath + "WindCondition_" + self.string_date + ".png")
         plt.close("all")
         # plt.show()
 
-    @staticmethod
-    def plot_data():
+    def plotscatter3D(self):
+        import plotly.graph_objects as go
+        import plotly
+        plotly.io.orca.config.executable = '/Users/yaoling/anaconda3/bin/orca/'
+        plotly.io.orca.config.save()
+        from plotly.subplots import make_subplots
+
+        X = self.x.reshape(-1, 1)
+        Y = self.y.reshape(-1, 1)
+
+        # for i in range(len(self.z.shape[0])):
+        for i in [0]:
+            Z = self.z[i, :, :, :].reshape(-1, 1)
+            sal_val = self.sal_data[i, :, :, :].reshape(-1, 1)
+
+            # Make 3D plot # #
+            fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
+
+            fig.add_trace(
+                go.Scatter3d(
+                    x=X, y=Y, z=Z,
+                    marker=dict(
+                        size=4,
+                        color=sal_val,
+                        coloraxis="coloraxis",
+                        showscale=False
+                    ),
+                    line=dict(
+                        color='darkblue',
+                        width=.1
+                    ),
+                ),
+                row=1, col=1,
+            )
+            fig.update_layout(
+                scene={
+                    'aspectmode': 'manual',
+                    'xaxis_title': 'Lon [deg]',
+                    'yaxis_title': 'Lat [deg]',
+                    'zaxis_title': 'Depth [m]',
+                    'aspectratio': dict(x=1, y=1, z=.5),
+                },
+                showlegend=False,
+                title="Delft 3D data visualisation on " + self.string_date,
+                scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
+            )
+            plotly.offline.plot(fig, filename=self.figpath + "Scatter3D/Data_" + self.string_date + ".html", auto_open=False)
+
+    def plot_data(self):
         import matplotlib.pyplot as plt
-        figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/"
-        for i in range(DataHandler_Delft3D.sal_data.shape[0]):
+        for i in range(self.sal_data.shape[0]):
             print(i)
             plt.figure()
-            plt.imshow(DataHandler_Delft3D.sal_data[i, :, :])
+            plt.imshow(self.sal_data[i, :, :])
             plt.colorbar()
             plt.title("%s".format(i))
-            plt.savefig(figpath + "I_{:04d}.png".format(i))
+            plt.savefig(self.figpath + "rawdata/I_{:04d}.png".format(i))
             plt.close("all")
 
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201711_surface_salinity.mat"
@@ -314,14 +368,18 @@ wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/win
 # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/wind_Era5_douro_2005_a_2006.wnd"
 # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/wind_Era5_douro_2012_a_2016.wnd"
 # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/wind_times_serie_porto_obs_2015_2020.txt"
-datahandler = DataHandler_Delft3D(data_path, wind_path)
+datahandler = DataHandler_Delft3D(data_path, wind_path, rough = True)
+
+print(datahandler.figpath)
+datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/")
+print(datahandler.figpath)
 
 # print(datahandler.sal_data.shape)
 # print(datahandler.wind_data.shape)
 # print(datahandler.Time.shape)
 # datahandler.merge_data()
-datahandler.plot_grouppeddata()
+# datahandler.plot_grouppeddata()
 
 #%%
 datahandler.plot_data()
-
+#%%
