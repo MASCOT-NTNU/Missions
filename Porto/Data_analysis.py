@@ -14,6 +14,110 @@ from datetime import datetime
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201607_surface_salinity.mat"
 data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
 sal_data = mat73.loadmat(data_path)
+#%%
+data = sal_data["data"]
+x = data["X"]
+y = data["Y"]
+z = data["Z"]
+Time = data['Time']
+timestamp_data = (Time - 719529) * 24 * 3600 # 719529 is how many days have passed from Jan1 0,
+# to Jan1 1970. Since 1970Jan1, is used as the starting index for datetime
+salinity = data["Val"]
+
+# def plotscatter3D():
+import plotly.graph_objects as go
+import plotly
+plotly.io.orca.config.executable = '/Users/yaoling/anaconda3/bin/orca/'
+plotly.io.orca.config.save()
+from plotly.subplots import make_subplots
+figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/'
+
+X = x[:, :, 0].reshape(-1, 1)
+Y = y[:, :, 0].reshape(-1, 1)
+Z = z[0, :, :, 0].reshape(-1, 1)
+S = salinity[0, :, :].reshape(-1, 1)
+# for i in range(len(self.z.shape[0])):
+import matplotlib.pyplot as plt
+# plt.scatter(X, Y, c = salinity[0, :, :, 0])
+# plt.show()
+
+# X = np.array([1, 2, 3, 4, np.nan])
+# Y = np.array([1, 2, 3, 4, np.nan])
+# Z = np.array([1, 2, 3, 4, np.nan])
+# S = np.array([1, 2, 3, 4, np.nan])
+
+fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
+fig.add_trace(
+    go.Scatter3d(
+        x=X.squeeze(), y=Y.squeeze(), z=Z.squeeze(),
+        marker=dict(
+            size=4,
+            color=S.squeeze(),
+            colorscale = "RdBu",
+            showscale=False
+        ),
+        line=dict(
+            color='darkblue',
+            width=.1
+        ),
+    ),
+    row=1, col=1,
+)
+fig.update_layout(
+    scene={
+        'aspectmode': 'manual',
+        'xaxis_title': 'Lon [deg]',
+        'yaxis_title': 'Lat [deg]',
+        'zaxis_title': 'Depth [m]',
+        'aspectratio': dict(x=1, y=1, z=.5),
+    },
+    showlegend=False,
+    # title="Delft 3D data visualisation on " + self.string_date,
+    scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
+)
+plotly.offline.plot(fig, filename=figpath + "Scatter3D/Data_" + ".html",
+                    auto_open=False)
+
+
+#%%
+for i in [0]:
+    print(i)
+    Z = z[i, :, :, 0].reshape(-1, 1)
+    sal_val = salinity[i, :, :, 0].reshape(-1, 1)
+    # Make 3D plot # #
+    fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
+    fig.add_trace(
+        go.Scatter3d(
+            x=X, y=Y, z=Z,
+            marker=dict(
+                size=4,
+                color='black',
+                showscale=False
+            ),
+            line=dict(
+                color='darkblue',
+                width=.1
+            ),
+        ),
+        row=1, col=1,
+    )
+    fig.update_layout(
+        scene={
+            'aspectmode': 'manual',
+            'xaxis_title': 'Lon [deg]',
+            'yaxis_title': 'Lat [deg]',
+            'zaxis_title': 'Depth [m]',
+            'aspectratio': dict(x=1, y=1, z=.5),
+        },
+        showlegend=False,
+        # title="Delft 3D data visualisation on " + self.string_date,
+        scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
+    )
+    plotly.offline.plot(fig, filename=figpath + "Scatter3D/Data_" + ".html",
+                        auto_open=False)
+    # fig.write_image(figpath + "sal.png".format(j), width=1980, height=1080)
+
+
 
 #%%
 # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/wind_Era5_douro_2012_a_2016.wnd"
@@ -41,14 +145,7 @@ wind_angle = wind_data[:, -1]
 # wind_maxspeed = wind_data[:, 4]
 # wind_angle = wind_data[:, 2]
 
-data = sal_data["data"]
-x = data["X"]
-y = data["Y"]
-z = data["Z"]
-Time = data['Time']
-timestamp_data = (Time - 719529) * 24 * 3600 # 719529 is how many days have passed from Jan1 0,
-# to Jan1 1970. Since 1970Jan1, is used as the starting index for datetime
-salinity = data["Val"]
+
 
 sal = []
 wind_v = []
@@ -83,6 +180,7 @@ directions = ['NorthEast', 'East', 'SouthEast', 'South',
               'SouthWest', 'West', 'NorthWest', 'North']
 
 figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/'
+
 from matplotlib.gridspec import GridSpec
 def group_data():
     counter = 0
@@ -137,12 +235,17 @@ class DataHandler_Delft3D:
     figpath = None
 
     def __init__(self, datapath, windpath, rough = False):
+        self.ROUGH = rough
+        if self.ROUGH:
+            print("Rough mode is activated!")
+        else:
+            print("Fine mode is activated!")
+
         self.set_datapath(datapath)
         self.set_windpath(windpath)
         self.loaddata()
         self.load_wind()
         self.merge_data()
-        self.ROUGH = rough
 
     def set_figpath(self, figpath):
         self.figpath = figpath
@@ -308,24 +411,22 @@ class DataHandler_Delft3D:
         plotly.io.orca.config.save()
         from plotly.subplots import make_subplots
 
-        X = self.x.reshape(-1, 1)
-        Y = self.y.reshape(-1, 1)
+        X = self.x[:, :, 0].reshape(-1, 1)
+        Y = self.y[:, :, 0].reshape(-1, 1)
 
         # for i in range(len(self.z.shape[0])):
         for i in [0]:
-            Z = self.z[i, :, :, :].reshape(-1, 1)
-            sal_val = self.sal_data[i, :, :, :].reshape(-1, 1)
-
+            print(i)
+            Z = self.z[i, :, :, 0].reshape(-1, 1)
+            sal_val = self.sal_data[i, :, :, 0].reshape(-1, 1)
             # Make 3D plot # #
             fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
-
             fig.add_trace(
                 go.Scatter3d(
                     x=X, y=Y, z=Z,
                     marker=dict(
                         size=4,
-                        color=sal_val,
-                        coloraxis="coloraxis",
+                        color='black',
                         showscale=False
                     ),
                     line=dict(
@@ -348,6 +449,7 @@ class DataHandler_Delft3D:
                 scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
             )
             plotly.offline.plot(fig, filename=self.figpath + "Scatter3D/Data_" + self.string_date + ".html", auto_open=False)
+            # fig.write_image(figpath + "sal.png".format(j), width=1980, height=1080)
 
     def plot_data(self):
         import matplotlib.pyplot as plt
@@ -360,8 +462,8 @@ class DataHandler_Delft3D:
             plt.savefig(self.figpath + "rawdata/I_{:04d}.png".format(i))
             plt.close("all")
 
-# data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201711_surface_salinity.mat"
-data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
+data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201909_surface_salinity.mat"
+# data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201612_surface_salinity.mat"
 
 wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/wind_Era5_douro_2017_a_2019.wnd"
@@ -370,16 +472,20 @@ wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/win
 # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/wind_times_serie_porto_obs_2015_2020.txt"
 datahandler = DataHandler_Delft3D(data_path, wind_path, rough = True)
 
-print(datahandler.figpath)
+# print(datahandler.figpath)
 datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/")
-print(datahandler.figpath)
-
+# print(datahandler.figpath)
+# datahandler.plotscatter3D()
 # print(datahandler.sal_data.shape)
 # print(datahandler.wind_data.shape)
 # print(datahandler.Time.shape)
 # datahandler.merge_data()
-# datahandler.plot_grouppeddata()
+datahandler.plot_grouppeddata()
 
 #%%
 datahandler.plot_data()
 #%%
+import os
+os.system('say "Now it is done, congratulations"')
+print("Done")
+
