@@ -1,5 +1,6 @@
 import os
 import mat73
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -13,129 +14,17 @@ from datetime import datetime
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201606_surface_salinity.mat"
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201607_surface_salinity.mat"
 data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
+os.system("say It will take a long time to import data")
 sal_data = mat73.loadmat(data_path)
+os.system('say Finished Data importing')
 
 #%%
-
-data = sal_data["data"]
-x = data["X"]
-y = data["Y"]
-z = data["Z"]
-Time = data['Time']
-timestamp_data = (Time - 719529) * 24 * 3600 # 719529 is how many days have passed from Jan1 0,
-# to Jan1 1970. Since 1970Jan1, is used as the starting index for datetime
-salinity = data["Val"]
-
-# def plotscatter3D():
-import plotly.graph_objects as go
-import plotly
-plotly.io.orca.config.executable = '/Users/yaoling/anaconda3/bin/orca/'
-plotly.io.orca.config.save()
-from plotly.subplots import make_subplots
-figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/'
-
-X = x[:, :, 0]
-Y = y[:, :, 0]
-Z = z[0, :, :, 0]
-S = np.mean(salinity[:, :, :, 0], axis = 0)
-# for i in range(len(self.z.shape[0])):
-import matplotlib.pyplot as plt
-# plt.scatter(X, Y, c = S)
-con = plt.contour(X, Y, Z)
-# plt.clabel(con, inline = True, fontsize = 8)
-# plt.show()
-
-fig = go.Figure(data=[go.Surface(z=S)])
-fig.update_traces(contours_z=dict(show=True, usecolormap=True,
-                                  highlightcolor="limegreen", project_z=True))
-fig.update_layout(title='Mt Bruno Elevation', autosize=False,
-                  scene_camera_eye=dict(x=1.87, y=0.88, z=-0.64),
-                  width=500, height=500,
-                  margin=dict(l=65, r=50, b=65, t=90)
-)
-plotly.offline.plot(fig, filename=figpath + "Contour/Data" + ".html",
-                    auto_open=False)
-
-#%%
-# X = np.array([1, 2, 3, 4, np.nan])
-# Y = np.array([1, 2, 3, 4, np.nan])
-# Z = np.array([1, 2, 3, 4, np.nan])
-# S = np.array([1, 2, 3, 4, np.nan])
-
-fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
-fig.add_trace(
-    go.Scatter3d(
-        x=X.squeeze(), y=Y.squeeze(), z=Z.squeeze(),
-        marker=dict(
-            size=4,
-            color=S.squeeze(),
-            colorscale = "RdBu",
-            showscale=False
-        ),
-        line=dict(
-            color='darkblue',
-            width=.1
-        ),
-    ),
-    row=1, col=1,
-)
-fig.update_layout(
-    scene={
-        'aspectmode': 'manual',
-        'xaxis_title': 'Lon [deg]',
-        'yaxis_title': 'Lat [deg]',
-        'zaxis_title': 'Depth [m]',
-        'aspectratio': dict(x=1, y=1, z=.5),
-    },
-    showlegend=False,
-    # title="Delft 3D data visualisation on " + self.string_date,
-    scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
-)
-plotly.offline.plot(fig, filename=figpath + "Scatter3D/Data_" + ".html",
-                    auto_open=False)
-
-
-#%%
-
-# Analyse the data
-for i in [0]:
-    print(i)
-    Z = z[i, :, :, 0].reshape(-1, 1)
-    sal_val = salinity[i, :, :, 0].reshape(-1, 1)
-    # Make 3D plot # #
-    fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
-    fig.add_trace(
-        go.Scatter3d(
-            x=X, y=Y, z=Z,
-            marker=dict(
-                size=4,
-                color='black',
-                showscale=False
-            ),
-            line=dict(
-                color='darkblue',
-                width=.1
-            ),
-        ),
-        row=1, col=1,
-    )
-    fig.update_layout(
-        scene={
-            'aspectmode': 'manual',
-            'xaxis_title': 'Lon [deg]',
-            'yaxis_title': 'Lat [deg]',
-            'zaxis_title': 'Depth [m]',
-            'aspectratio': dict(x=1, y=1, z=.5),
-        },
-        showlegend=False,
-        # title="Delft 3D data visualisation on " + self.string_date,
-        scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
-    )
-    plotly.offline.plot(fig, filename=figpath + "Scatter3D/Data_" + ".html",
-                        auto_open=False)
-    # fig.write_image(figpath + "sal.png".format(j), width=1980, height=1080)
-
-
+from Adaptive_script.Porto.Grid import Grid
+a = Grid()
+lat_grid = a.grid_coord[:, 0].reshape(-1, 1)
+lon_grid = a.grid_coord[:, 1].reshape(-1, 1)
+depth_grid = np.ones_like(lat_grid) * 1
+color_grid = np.zeros_like(lat_grid)
 
 #%%
 # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/wind_Era5_douro_2012_a_2016.wnd"
@@ -145,99 +34,104 @@ ref_t_wind = datetime(2005, 1, 1).timestamp()
 timestamp_wind = wind_data[:, 0] * 60 + ref_t_wind
 wind_speed = wind_data[:, 1]
 wind_angle = wind_data[:, -1]
-
-# wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/wind_times_serie_porto_obs_2015_2020.txt"
-# wind_data = np.array(pd.read_csv(wind_path, sep = "\t", engine = 'python'))
-# wind_data = wind_data[:-3, :5]
-# yr_wind = wind_data[:, 0]
-# hr_wind = wind_data[:, 1]
-# timestamp_wind = []
-# for i in range(len(yr_wind)):
-#     year = int(yr_wind[i][6:])
-#     month = int(yr_wind[i][3:5])
-#     day = int(yr_wind[i][:2])
-#     hour = int(hr_wind[i][:2])
-#     timestamp_wind.append(datetime(year, month, day, hour).timestamp())
-# timestamp_wind = np.array(timestamp_wind)
-# wind_speed = wind_data[:, 3]
-# wind_maxspeed = wind_data[:, 4]
-# wind_angle = wind_data[:, 2]
-
+#%%
 data = sal_data["data"]
-x = data["X"]
-y = data["Y"]
-z = data["Z"]
+lon = data["X"]
+lat = data["Y"]
+depth = data["Z"]
 Time = data['Time']
 timestamp_data = (Time - 719529) * 24 * 3600 # 719529 is how many days have passed from Jan1 0,
 # to Jan1 1970. Since 1970Jan1, is used as the starting index for datetime
 salinity = data["Val"]
 
+def filterNaN(Delft3D):
+    lon = Delft3D['data']["X"]
+    lat = Delft3D['data']['Y']
+    depth = Delft3D['data']['Z']
+    timestamp = (Delft3D['data']['Time'] - 719529) * 24 * 3600
+    # salinity = np.mean(Delft3D['data']['Val'], axis = 0)
+    Lon = lon[:, :, 0].reshape(-1, 1) # only extract surface data
+    Lat = lat[:, :, 0].reshape(-1, 1)
+    Depth = depth[0, :, :, 0].reshape(-1, 1)
+    S = np.mean(salinity[:, :, :, 0], axis=0).reshape(-1, 1)
+    LON = []
+    LAT = []
+    DEPTH = []
+    SAL = []
+    for i in range(len(Lon)):
+        if np.isnan(Lon[i]) or np.isnan(Lat[i]) or np.isnan(Depth[i]) or np.isnan(S[i]):
+            pass
+        else:
+            LON.append(Lon[i])
+            LAT.append(Lat[i])
+            DEPTH.append(Depth[i])
+            SAL.append(S[i])
+    LON = np.array(LON).reshape(-1, 1)
+    LAT = np.array(LAT).reshape(-1, 1)
+    SAL = np.array(SAL).reshape(-1, 1)
+    DEPTH = np.array(DEPTH).reshape(-1, 1)
+    return LAT, LON, DEPTH, SAL
 
-sal = []
-wind_v = []
-wind_dir = []
-wind_level = []
+lat, lon, depth, sal = filterNaN(sal_data)
+X = np.hstack((np.ones_like(lat), lat, lon))
+beta = np.linalg.solve(X.T @ X, X.T @ sal)
+lat_origin, lon_origin = 41.10251, -8.669811
 
-def windangle2direction(wind_angle):
-    angles = np.arange(8) * 45 + 22.5
-    directions = ['NorthEast', 'East', 'SouthEast', 'South',
-                  'SouthWest', 'West', 'NorthWest', 'North']
-    id = len(angles[angles < wind_angle]) - 1
-    return directions[id]
+circumference = 40075000
+def deg2rad(deg):
+    return deg / 180 * np.pi
+def rad2deg(rad):
+    return rad / np.pi * 180
+def latlon2xy(lat, lon, lat_origin, lon_origin):
+    x = deg2rad(lat - lat_origin) / 2 / np.pi * circumference
+    y = deg2rad(lon - lon_origin) / 2 / np.pi * circumference * np.cos(deg2rad(lat))
+    # x_, y_ = self.R.T @ np.vstack(x, y) # convert it back
+    return x, y
+x, y = latlon2xy(lat, lon, lat_origin, lon_origin)
+print(beta)
+#%%
+mu = X @ beta
+residual = sal - mu
+from skgstat import Variogram
 
-def windspeed2level(wind_speed):
-    speeds = np.array([0, 2.5, 10])
-    levels = ['Mild', 'Moderate', 'Great']
-    id = len(speeds[speeds < wind_speed]) - 1
-    return levels[id]
+#%%
+ind = np.random.randint(0, lat.shape[0] - 1, size = 5000)
 
+#%%
+V_v = Variogram(coordinates = np.hstack((x[ind], y[ind])), values = residual[ind].squeeze(), use_nugget=True)
+# V_v.fit_method = 'trf' # moment method
+fig = V_v.plot(hist = True)
+print(V_v)
 
-def merge_data():
-    for i in range(len(timestamp_data)):
-        id_wind = (np.abs(timestamp_wind - timestamp_data[i])).argmin()
-        wind_v.append(wind_speed[id_wind])
-        wind_dir.append(windangle2direction(wind_angle[id_wind]))
-        wind_level.append(windspeed2level(wind_speed[id_wind]))
+#%%
+def extractDelft3DFromLocation(Delft3D, location):
+    lat, lon, depth, salinity = filterNaN(Delft3D)
+    print(lat.shape)
+    print(lon.shape)
+    print(salinity.shape)
+    Sal = []
+    for i in range(location.shape[0]):
+        lat_desired = location[i, 0].reshape(-1, 1)
+        lon_desired = location[i, 1].reshape(-1, 1)
+        depth_desired = location[i, 2].reshape(-1, 1)
+        print(lat_desired, lon_desired, depth_desired)
+        ind = np.argmin((lat - lat_desired) ** 2 + (lon - lon_desired) ** 2)
+        print(ind)
+        Sal.append(salinity[ind])
+        print(salinity[ind])
+    Sal = np.array(Sal).reshape(-1, 1)
+    return Sal, lat, lon, depth, salinity
 
-merge_data()
+coordinates = a.grid_coord
+depth = np.ones([coordinates.shape[0], 1]) * .15
+location = np.hstack((coordinates, depth))
 
-levels = ['Mild', 'Moderate', 'Great']
-directions = ['NorthEast', 'East', 'SouthEast', 'South',
-              'SouthWest', 'West', 'NorthWest', 'North']
-
-figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/'
-
-from matplotlib.gridspec import GridSpec
-def group_data():
-    counter = 0
-    fig = plt.figure(figsize = (80, 30))
-    gs = GridSpec(ncols = 8, nrows = 3, figure=fig)
-    for i in range(len(levels)):
-        idx = np.where(np.array(wind_level) == levels[i])[0]
-        sal_temp = salinity[idx, :, :, 0]
-        for j in range(len(directions)):
-            idy = np.where(np.array(wind_dir)[idx] == directions[j])[0]
-            # print(idy)
-            ax = fig.add_subplot(gs[i, j])
-            if len(idy):
-                sal_total = sal_temp[idy, :, :]
-                sal_ave = np.mean(sal_total, axis = 0)
-                counter = counter + 1
-                print(counter)
-                im = ax.scatter(x[:, :, 0], y[:, :, 0], c=sal_ave)
-                plt.colorbar(im)
-            else:
-                sal_ave = None
-                ax.scatter(x[:, :, 0], y[:, :, 0], c='w')
-
-            ax.set_xlabel('Lon [deg]')
-            ax.set_ylabel('Lat [deg]')
-            ax.set_title(levels[i] + " " +  directions[j])
-    plt.savefig(figpath + "wc2.png")
-    plt.show()
-
-
-group_data()
+sal, lat, lon, depth, salinity = extractDelft3DFromLocation(sal_data, location)
+#%%
+plt.scatter(lon, lat, c = salinity)
+plt.scatter(a.grid_coord[:, 1], a.grid_coord[:, 0], c = sal)
+plt.colorbar()
+plt.show()
 
 #%%
 import numpy as np
@@ -466,6 +360,59 @@ class DataHandler_Delft3D:
             plotly.offline.plot(fig, filename=self.figpath + "Scatter3D/Data_" + self.string_date + ".html", auto_open=False)
             # fig.write_image(figpath + "sal.png".format(j), width=1980, height=1080)
 
+    def plot_grid_on_data(self, grid):
+        from plotly.subplots import make_subplots
+        import plotly.graph_objects as go
+        import plotly
+        plotly.io.orca.config.executable = '/Users/yaoling/anaconda3/bin/orca/'
+        plotly.io.orca.config.save()
+        X = self.x[:, :, 0].reshape(-1, 1)
+        Y = self.y[:, :, 0].reshape(-1, 1)
+        Z = self.z[0, :, :, 0].reshape(-1, 1)
+        S = np.mean(self.sal_data[:, :, :, 0], axis = 0).reshape(-1, 1)
+
+        lat_grid = grid.grid_coord[:, 0]
+        lon_grid = grid.grid_coord[:, 1]
+        depth_grid = np.ones_like(lat_grid) * 1
+        fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
+        fig.add_trace(
+            go.Scatter3d(
+                x=X.squeeze(), y=Y.squeeze(), z=Z.squeeze(),
+                mode='markers',
+                marker=dict(
+                    size=4,
+                    color=S.squeeze(),
+                    colorscale="RdBu",
+                    showscale=False
+                ),
+            ),
+            row=1, col=1,
+        )
+        fig.add_trace(
+            go.Scatter3d(
+                x=lon_grid.squeeze(), y=lat_grid.squeeze(), z=depth_grid.squeeze(),
+                mode='markers',
+                marker=dict(
+                    size=2,
+                    showscale=False
+                ),
+            ),
+            row=1, col=1,
+        )
+        fig.update_layout(
+            scene={
+                'aspectmode': 'manual',
+                'xaxis_title': 'Lon [deg]',
+                'yaxis_title': 'Lat [deg]',
+                'zaxis_title': 'Depth [m]',
+                'aspectratio': dict(x=1, y=1, z=.5),
+            },
+            showlegend=False,
+            scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
+        )
+        plotly.offline.plot(fig, filename=self.figpath + "Grid/Data" + ".html",
+                            auto_open=False)
+
     def plot_data(self):
         import matplotlib.pyplot as plt
         for i in range(self.sal_data.shape[0]):
@@ -477,8 +424,8 @@ class DataHandler_Delft3D:
             plt.savefig(self.figpath + "rawdata/I_{:04d}.png".format(i))
             plt.close("all")
 
-data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201909_surface_salinity.mat"
-# data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
+# data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201909_surface_salinity.mat"
+data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201612_surface_salinity.mat"
 
 wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/wind_Era5_douro_2017_a_2019.wnd"
@@ -493,6 +440,7 @@ datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Port
 # print(datahandler.Time.shape)
 # datahandler.merge_data()
 # datahandler.plot_grouppeddata()
+datahandler.plot_grid_on_data(Grid())
 
 
 #%%

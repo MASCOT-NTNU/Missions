@@ -373,10 +373,11 @@ a.setpath_AUVdata(datapath)
 a.setpath_SINMOD(SINMOD_datapath)
 a.extractData()
 a.load_sinmod()
-a.krige()
+# a.krige()
 # b.plotCrossPlot()
 # a.plot3dscatter()
 
+#%%
 
 
 
