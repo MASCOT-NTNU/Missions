@@ -82,6 +82,8 @@ plotly.offline.plot(fig, filename=figpath + "Scatter3D/Data_" + ".html",
 
 
 #%%
+
+# Analyse the data
 for i in [0]:
     print(i)
     Z = z[i, :, :, 0].reshape(-1, 1)
