@@ -34,14 +34,28 @@ plotly.io.orca.config.save()
 from plotly.subplots import make_subplots
 figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/'
 
-X = x[:, :, 0].reshape(-1, 1)
-Y = y[:, :, 0].reshape(-1, 1)
-Z = z[0, :, :, 0].reshape(-1, 1)
-S = salinity[0, :, :].reshape(-1, 1)
+X = x[:, :, 0]
+Y = y[:, :, 0]
+Z = z[0, :, :, 0]
+S = np.mean(salinity[:, :, :, 0], axis = 0)
 # for i in range(len(self.z.shape[0])):
 import matplotlib.pyplot as plt
-plt.scatter(X, Y, c = S)
-plt.show()
+# plt.scatter(X, Y, c = S)
+con = plt.contour(X, Y, Z)
+# plt.clabel(con, inline = True, fontsize = 8)
+# plt.show()
+
+fig = go.Figure(data=[go.Surface(z=S)])
+fig.update_traces(contours_z=dict(show=True, usecolormap=True,
+                                  highlightcolor="limegreen", project_z=True))
+fig.update_layout(title='Mt Bruno Elevation', autosize=False,
+                  scene_camera_eye=dict(x=1.87, y=0.88, z=-0.64),
+                  width=500, height=500,
+                  margin=dict(l=65, r=50, b=65, t=90)
+)
+plotly.offline.plot(fig, filename=figpath + "Contour/Data" + ".html",
+                    auto_open=False)
+
 #%%
 # X = np.array([1, 2, 3, 4, np.nan])
 # Y = np.array([1, 2, 3, 4, np.nan])
