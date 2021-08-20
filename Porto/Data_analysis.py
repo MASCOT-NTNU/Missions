@@ -16,6 +16,7 @@ data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity
 sal_data = mat73.loadmat(data_path)
 
 #%%
+
 data = sal_data["data"]
 x = data["X"]
 y = data["Y"]
@@ -146,7 +147,6 @@ wind_angle = wind_data[:, -1]
 # wind_maxspeed = wind_data[:, 4]
 # wind_angle = wind_data[:, 2]
 
-
 data = sal_data["data"]
 x = data["X"]
 y = data["Y"]
@@ -222,10 +222,6 @@ def group_data():
 
 
 group_data()
-
-
-
-
 
 #%%
 import numpy as np
@@ -465,7 +461,6 @@ class DataHandler_Delft3D:
             plt.savefig(self.figpath + "rawdata/I_{:04d}.png".format(i))
             plt.close("all")
 
-
 data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201909_surface_salinity.mat"
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201612_surface_salinity.mat"
@@ -476,8 +471,12 @@ wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/win
 # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/wind_times_serie_porto_obs_2015_2020.txt"
 datahandler = DataHandler_Delft3D(data_path, wind_path, rough = True)
 datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/")
-# datahandler.plotscatter3D()
-datahandler.plot_grouppeddata()
+
+# print(datahandler.sal_data.shape)
+# print(datahandler.wind_data.shape)
+# print(datahandler.Time.shape)
+# datahandler.merge_data()
+# datahandler.plot_grouppeddata()
 
 
 #%%
