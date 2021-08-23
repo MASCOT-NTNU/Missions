@@ -4,11 +4,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from datetime import datetime
-# root_dir = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/"
-# for i in range(16, len(os.listdir(root_dir))):
-#     datapath = root_dir + os.listdir(root_dir)[i]
-#     print(datapath)
-
+plt.rcParams["font.family"] = "Times New Roman"
+plt.rcParams.update({'font.size': 12})
+plt.rcParams.update({'font.style': 'oblique'})
 
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201612_surface_salinity.mat"
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201605_surface_salinity.mat"
@@ -35,15 +33,16 @@ ref_t_wind = datetime(2005, 1, 1).timestamp()
 timestamp_wind = wind_data[:, 0] * 60 + ref_t_wind
 wind_speed = wind_data[:, 1]
 wind_angle = wind_data[:, -1]
+
 #%%
-data = sal_data["data"]
-lon = data["X"]
-lat = data["Y"]
-depth = data["Z"]
-Time = data['Time']
-timestamp_data = (Time - 719529) * 24 * 3600 # 719529 is how many days have passed from Jan1 0,
-# to Jan1 1970. Since 1970Jan1, is used as the starting index for datetime
-salinity = data["Val"]
+# data = sal_data["data"]
+# lon = data["X"]
+# lat = data["Y"]
+# depth = data["Z"]
+# Time = data['Time']
+# timestamp_data = (Time - 719529) * 24 * 3600 # 719529 is how many days have passed from Jan1 0,
+# # to Jan1 1970. Since 1970Jan1, is used as the starting index for datetime
+# salinity = data["Val"]
 
 def filterNaN(Delft3D):
     lon = Delft3D['data']["X"]
@@ -51,33 +50,33 @@ def filterNaN(Delft3D):
     depth = Delft3D['data']['Z']
     timestamp = (Delft3D['data']['Time'] - 719529) * 24 * 3600
     # salinity = np.mean(Delft3D['data']['Val'], axis = 0)
-    Lon = lon[:, :, 0].reshape(-1, 1) # only extract surface data
-    Lat = lat[:, :, 0].reshape(-1, 1)
-    Depth = depth[0, :, :, 0].reshape(-1, 1)
-    S = np.mean(salinity[:, :, :, 0], axis=0).reshape(-1, 1)
-    LON = []
+    Lon = lon[:, :, 0]
+    Lat = lat[:, :, 0]
+    Depth = depth[0, :, :, 0]
+    S = np.mean(Delft3D['data']['Val'][:, :, :, 0], axis=0)
+
     LAT = []
-    DEPTH = []
+    LON = []
     SAL = []
-    for i in range(len(Lon)):
-        if np.isnan(Lon[i]) or np.isnan(Lat[i]) or np.isnan(Depth[i]) or np.isnan(S[i]):
-            pass
-        else:
-            LON.append(Lon[i])
-            LAT.append(Lat[i])
-            DEPTH.append(Depth[i])
-            SAL.append(S[i])
-    LON = np.array(LON).reshape(-1, 1)
+    DEPTH = []
+    for i in range(Lon.shape[0]):
+        for j in range(Lon.shape[1]):
+            if np.isnan(Lon[i, j]) or np.isnan(Lat[i, j]) or np.isnan(Depth[i, j]) or np.isnan(S[i, j]):
+                pass
+            else:
+                LAT.append(Lat[i, j])
+                LON.append(Lon[i, j])
+                DEPTH.append(Depth[i, j])
+                SAL.append(S[i, j])
     LAT = np.array(LAT).reshape(-1, 1)
-    SAL = np.array(SAL).reshape(-1, 1)
+    LON = np.array(LON).reshape(-1, 1)
     DEPTH = np.array(DEPTH).reshape(-1, 1)
-    return LAT, LON, DEPTH, SAL
+    SAL = np.array(SAL).reshape(-1, 1)
+    return LAT, LON, DEPTH, SAL, timestamp
 
-lat, lon, depth, sal = filterNaN(sal_data)
-X = np.hstack((np.ones_like(lat), lat, lon))
-beta = np.linalg.solve(X.T @ X, X.T @ sal)
+lat, lon, depth, sal, timestamp = filterNaN(sal_data)
+
 lat_origin, lon_origin = 41.10251, -8.669811
-
 circumference = 40075000
 def deg2rad(deg):
     return deg / 180 * np.pi
@@ -89,17 +88,104 @@ def latlon2xy(lat, lon, lat_origin, lon_origin):
     # x_, y_ = self.R.T @ np.vstack(x, y) # convert it back
     return x, y
 x, y = latlon2xy(lat, lon, lat_origin, lon_origin)
-print(beta)
+
+X = np.hstack((np.ones_like(x), x, y))
+beta = np.linalg.solve(X.T @ X, X.T @ sal)
+print(beta.round(3))
+for i in beta:
+    print('%f' % i)
+plt.scatter(lon, lat, c = sal, cmap = 'RdBu')
+plt.title("Salinity mean in Dec, 2017")
+plt.xlabel("Lon [deg]")
+plt.ylabel("Lat [deg]")
+plt.colorbar()
+plt.show()
+
 #%%
 mu = X @ beta
+plt.scatter(y, x, c = mu, cmap = "RdBu", vmin = np.amin(sal), vmax = np.amax(sal))
+plt.title("Trend in Dec, 2017")
+plt.xlabel("y [m]")
+plt.ylabel("x [m]")
+plt.colorbar()
+plt.show()
 residual = sal - mu
+plt.scatter(y, x, c = residual, cmap = "RdBu")
+plt.title("Residual in Dec, 2017")
+plt.xlabel("y [m]")
+plt.ylabel("x [m]")
+plt.colorbar()
+plt.show()
+
+#%%
+ind_box = np.where(y >= -7500)[0]
+
+X = np.hstack((np.ones_like(x[ind_box]), x[ind_box], y[ind_box]))
+beta = np.linalg.solve(X.T @ X, X.T @ sal[ind_box])
+for i in beta:
+    print('%f' % i)
+mu = X @ beta
+plt.scatter(y[ind_box], x[ind_box], c = mu, cmap = "RdBu", vmin = np.amin(sal), vmax = np.amax(sal))
+plt.title("Trend in Dec, 2017")
+plt.xlabel("y [m]")
+plt.ylabel("x [m]")
+plt.colorbar()
+plt.show()
+residual = sal[ind_box] - mu
+plt.scatter(y[ind_box], x[ind_box], c = residual, cmap = "RdBu")
+plt.title("Residual in Dec, 2017")
+plt.xlabel("y [m]")
+plt.ylabel("x [m]")
+plt.colorbar()
+plt.show()
+
+#%%
+sigma = np.sqrt(7.17)
+eta = 4.5 / 20000
+grid = np.hstack((x, y, np.zeros_like(x)))
+
+def compute_H(grid, ksi):
+    '''
+    :param grid:
+    :param ksi:
+    :return:
+    '''
+    X = grid[:, 0].reshape(-1, 1)
+    Y = grid[:, 1].reshape(-1, 1)
+    Z = grid[:, -1].reshape(-1, 1)
+
+    distX = X @ np.ones([1, X.shape[0]]) - np.ones([X.shape[0], 1]) @ X.T
+    distY = Y @ np.ones([1, Y.shape[0]]) - np.ones([Y.shape[0], 1]) @ Y.T
+    distXY = distX ** 2 + distY ** 2
+    distZ = Z @ np.ones([1, Z.shape[0]]) - np.ones([Z.shape[0], 1]) @ Z.T
+    dist = np.sqrt(distXY + (ksi * distZ) ** 2)
+
+    return dist
+## Functions used
+def Matern_cov(sigma, eta, H):
+    '''
+    :param sigma: scaling coef
+    :param eta: range coef
+    :param H: distance matrix
+    :return: matern covariance
+    '''
+    return sigma ** 2 * (1 + eta * H) * np.exp(-eta * H)
+
+ksi = 0
+t = compute_H(grid, ksi)
+Sigma = Matern_cov(sigma, eta, t)
+plt.imshow(Sigma)
+plt.show()
+
+
+#%%
+xnew = x[ind_box]
+ynew = y[ind_box]
+sal_new = sal[ind_box]
+
 from skgstat import Variogram
-
-#%%
-ind = np.random.randint(0, lat.shape[0] - 1, size = 5000)
-
-#%%
-V_v = Variogram(coordinates = np.hstack((x[ind], y[ind])), values = residual[ind].squeeze(), use_nugget=True)
+ind = np.random.randint(0, xnew.shape[0] - 1, size = 5000)
+V_v = Variogram(coordinates = np.hstack((xnew[ind], ynew[ind])), values = residual[ind].squeeze(), use_nugget=True)
 # V_v.fit_method = 'trf' # moment method
 fig = V_v.plot(hist = True)
 print(V_v)
