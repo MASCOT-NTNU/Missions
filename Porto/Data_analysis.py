@@ -44,37 +44,30 @@ wind_angle = wind_data[:, -1]
 # # to Jan1 1970. Since 1970Jan1, is used as the starting index for datetime
 # salinity = data["Val"]
 
-def filterNaN(Delft3D):
-    lon = Delft3D['data']["X"]
-    lat = Delft3D['data']['Y']
-    depth = Delft3D['data']['Z']
-    timestamp = (Delft3D['data']['Time'] - 719529) * 24 * 3600
-    # salinity = np.mean(Delft3D['data']['Val'], axis = 0)
-    Lon = lon[:, :, 0]
-    Lat = lat[:, :, 0]
-    Depth = depth[0, :, :, 0]
-    S = np.mean(Delft3D['data']['Val'][:, :, :, 0], axis=0)
+lon = sal_data['data']["X"]
+lat = sal_data['data']['Y']
+depth = sal_data['data']['Z']
+timestamp = (sal_data['data']['Time'] - 719529) * 24 * 3600
+# salinity = np.mean(Delft3D['data']['Val'], axis = 0)
+S = np.mean(sal_data['data']['Val'][:, :, :, 0], axis=0)
+Lon = lon[:, :, 0].reshape(-1, 1)
+Lat = lat[:, :, 0].reshape(-1, 1)
+Depth = depth[0, :, :, 0].reshape(-1, 1)
 
-    LAT = []
-    LON = []
-    SAL = []
-    DEPTH = []
-    for i in range(Lon.shape[0]):
-        for j in range(Lon.shape[1]):
-            if np.isnan(Lon[i, j]) or np.isnan(Lat[i, j]) or np.isnan(Depth[i, j]) or np.isnan(S[i, j]):
-                pass
-            else:
-                LAT.append(Lat[i, j])
-                LON.append(Lon[i, j])
-                DEPTH.append(Depth[i, j])
-                SAL.append(S[i, j])
-    LAT = np.array(LAT).reshape(-1, 1)
-    LON = np.array(LON).reshape(-1, 1)
-    DEPTH = np.array(DEPTH).reshape(-1, 1)
-    SAL = np.array(SAL).reshape(-1, 1)
-    return LAT, LON, DEPTH, SAL, timestamp
+figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/rawdata'
 
-lat, lon, depth, sal, timestamp = filterNaN(sal_data)
+def filterNaN(val):
+    temp = []
+    for i in range(len(val)):
+        if not np.isnan(val[i]):
+            temp.append(val[i])
+    val = np.array(val).reshape(-1, 1)
+    return val
+
+
+
+
+#%%
 
 lat_origin, lon_origin = 41.10251, -8.669811
 circumference = 40075000
@@ -89,17 +82,27 @@ def latlon2xy(lat, lon, lat_origin, lon_origin):
     return x, y
 x, y = latlon2xy(lat, lon, lat_origin, lon_origin)
 
-X = np.hstack((np.ones_like(x), x, y))
-beta = np.linalg.solve(X.T @ X, X.T @ sal)
-print(beta.round(3))
-for i in beta:
-    print('%f' % i)
+# X = np.hstack((np.ones_like(x), x, y))
+# beta = np.linalg.solve(X.T @ X, X.T @ sal)
+
+# print(beta.round(3))
+# for i in beta:
+#     print('%f' % i)
 plt.scatter(lon, lat, c = sal, cmap = 'RdBu')
 plt.title("Salinity mean in Dec, 2017")
 plt.xlabel("Lon [deg]")
 plt.ylabel("Lat [deg]")
 plt.colorbar()
 plt.show()
+#%% find the residuals
+
+plt.scatter(lon, lat, c = S, cmap = 'RdBu')
+plt.title("Salinity mean in Dec, 2017")
+plt.xlabel("Lon [deg]")
+plt.ylabel("Lat [deg]")
+plt.colorbar()
+plt.show()
+
 
 #%%
 mu = X @ beta
