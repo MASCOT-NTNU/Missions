@@ -34,23 +34,11 @@ wind_speed = wind_data[:, 1]
 wind_angle = wind_data[:, -1]
 
 #%%
-# data = sal_data["data"]
-# lon = data["X"]
-# lat = data["Y"]
-# depth = data["Z"]
-# Time = data['Time']
-# timestamp_data = (Time - 719529) * 24 * 3600 # 719529 is how many days have passed from Jan1 0,
-# # to Jan1 1970. Since 1970Jan1, is used as the starting index for datetime
-# salinity = data["Val"]
-
-lon = sal_data['data']["X"]
-lat = sal_data['data']['Y']
-depth = sal_data['data']['Z']
+lon = sal_data['data']["X"][:, :, 0]
+lat = sal_data['data']['Y'][:, :, 0]
+depth = sal_data['data']['Z'][0, :, :, 0]
 timestamp = (sal_data['data']['Time'] - 719529) * 24 * 3600
-# salinity = np.mean(Delft3D['data']['Val'], axis = 0)
 S = np.mean(sal_data['data']['Val'][:, :, :, 0], axis=0)
-
-figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/rawdata/2/'
 
 def filterNaN(val):
     temp = []
@@ -60,39 +48,24 @@ def filterNaN(val):
     val = np.array(temp).reshape(-1, 1)
     return val
 
-vmin = np.amin(filterNaN(S.reshape(-1, 1)))
-vmax = np.amax(filterNaN(S.reshape(-1, 1)))
-print(vmin)
-print(vmax)
 
-def deg2rad(deg):
-    return deg / 180 * np.pi
-def rad2deg(rad):
-    return rad / np.pi * 180
-def angle2angle(angle):
-    return deg2rad(-90 - angle)
+lon_f = filterNaN(lon.reshape(-1, 1))
+lat_f = filterNaN(lat.reshape(-1, 1))
+S_f = filterNaN(S.reshape(-1, 1))
 
-from matplotlib.gridspec import GridSpec
-
-
-
-#%%
-plt.figure(figsize = (5, 5))
-cir = plt.Circle((0, 0), 2.5, color='r', fill=False)
-plt.gca().add_patch(cir)
-ws = wind_speed[ind_wind]
-wd = wind_angle[ind_wind]
-u = ws * np.cos(angle2angle(wd))
-v = ws * np.sin(angle2angle(wd))
-plt.quiver(0, 0, u, v, scale=20)
-plt.xlim(-10, 10)
-plt.ylim(-10, 10)
-ax.set_aspect("equal", adjustable="box")
-# plt.savefig(figpath + "D_{:04d}.png".format(i))
+plt.scatter(lon_f, lat_f, c = S_f, cmap = "Paired", )
+plt.colorbar()
 plt.show()
-plt.close("all")
 
-#%%
+ind_sim = 151
+S_sample = filterNaN(sal_data['data']['Val'][ind_sim, :, :, 0].reshape(-1, 1))
+residual = S_sample - S_f
+
+plt.scatter(lon_f, lat_f, c = residual, cmap = "Paired")
+plt.colorbar()
+plt.show()
+
+
 lat_origin, lon_origin = 41.10251, -8.669811
 circumference = 40075000
 def deg2rad(deg):
@@ -104,57 +77,11 @@ def latlon2xy(lat, lon, lat_origin, lon_origin):
     y = deg2rad(lon - lon_origin) / 2 / np.pi * circumference * np.cos(deg2rad(lat))
     # x_, y_ = self.R.T @ np.vstack(x, y) # convert it back
     return x, y
-x, y = latlon2xy(lat, lon, lat_origin, lon_origin)
-
-
-
-#%%
-sigma = np.sqrt(7.17)
-eta = 4.5 / 20000
-grid = np.hstack((x, y, np.zeros_like(x)))
-
-def compute_H(grid, ksi):
-    '''
-    :param grid:
-    :param ksi:
-    :return:
-    '''
-    X = grid[:, 0].reshape(-1, 1)
-    Y = grid[:, 1].reshape(-1, 1)
-    Z = grid[:, -1].reshape(-1, 1)
-
-    distX = X @ np.ones([1, X.shape[0]]) - np.ones([X.shape[0], 1]) @ X.T
-    distY = Y @ np.ones([1, Y.shape[0]]) - np.ones([Y.shape[0], 1]) @ Y.T
-    distXY = distX ** 2 + distY ** 2
-    distZ = Z @ np.ones([1, Z.shape[0]]) - np.ones([Z.shape[0], 1]) @ Z.T
-    dist = np.sqrt(distXY + (ksi * distZ) ** 2)
-
-    return dist
-## Functions used
-def Matern_cov(sigma, eta, H):
-    '''
-    :param sigma: scaling coef
-    :param eta: range coef
-    :param H: distance matrix
-    :return: matern covariance
-    '''
-    return sigma ** 2 * (1 + eta * H) * np.exp(-eta * H)
-
-ksi = 0
-t = compute_H(grid, ksi)
-Sigma = Matern_cov(sigma, eta, t)
-plt.imshow(Sigma)
-plt.show()
-
-
-#%%
-xnew = x[ind_box]
-ynew = y[ind_box]
-sal_new = sal[ind_box]
+x, y = latlon2xy(lat_f, lon_f, lat_origin, lon_origin)
 
 from skgstat import Variogram
-ind = np.random.randint(0, xnew.shape[0] - 1, size = 5000)
-V_v = Variogram(coordinates = np.hstack((xnew[ind], ynew[ind])), values = residual[ind].squeeze(), use_nugget=True)
+ind = np.random.randint(0, lat_f.shape[0] - 1, size = 5000)
+V_v = Variogram(coordinates = np.hstack((x[ind], y[ind])), values = residual[ind].squeeze(), use_nugget=True)
 # V_v.fit_method = 'trf' # moment method
 fig = V_v.plot(hist = True)
 print(V_v)
@@ -529,44 +456,7 @@ datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Port
 # datahandler.merge_data()
 # datahandler.plot_grouppeddata()
 # datahandler.plot_grid_on_data(Grid())
-datahandler.plot_surface_timeseries()
 
 
-#%%
-import os
-import pandas as pd
-import numpy as np
-wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/"
-time_wind = np.array([]).reshape(-1, 1)
-ws = np.array([]).reshape(-1, 1)
-wa = np.array([]).reshape(-1, 1)
-
-sum = 0
-counter = 0
-#%%
-counter = 0
-for i in os.listdir(wind_path):
-    if i.endswith(".wnd"):
-        if counter == 0:
-            wind_data = np.array(pd.read_csv(wind_path + i, sep="\t ", header=None, engine='python'))
-            ref_t_wind = datetime(2005, 1, 1).timestamp()
-            print(sum)
-            print(wind_data.shape)
-            # print(wind_data[:, 1].shape)
-            time_wind = np.concatenate((time_wind, np.reshape(wind_data[:, 0] * 60 + ref_t_wind, (-1, 1))), axis=0)
-            ws = np.concatenate((ws, np.reshape(wind_data[:, 1], (-1, 1))), axis=0)
-            wa = np.concatenate((wa, np.reshape(wind_data[:, -1], (-1, 1))), axis=0)
-        else:
-            pass
-        counter = counter + 1
-
-#%%
-
-new_wind_data = np.hstack((time_wind, ws, wa))
-
-wind_data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Wind/"
-np.savetxt(wind_data_path + "wind_data.txt", new_wind_data, delimiter=",")
-
-for i in range(new_wind_data.shape[0]):
-    print(datetime.fromtimestamp(new_wind_data[i, 0]).strftime("%Y | %m | %d | %H | %M | %S"))
+datahandler.plot_surface_timeseries() # it has problems, needs to be fixed
 
