@@ -24,7 +24,6 @@ lat_grid = a.grid_coord[:, 0].reshape(-1, 1)
 lon_grid = a.grid_coord[:, 1].reshape(-1, 1)
 depth_grid = np.ones_like(lat_grid) * 1
 color_grid = np.zeros_like(lat_grid)
-
 #%%
 # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/wind_Era5_douro_2012_a_2016.wnd"
 wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/wind_Era5_douro_2017_a_2019.wnd"
@@ -50,25 +49,50 @@ depth = sal_data['data']['Z']
 timestamp = (sal_data['data']['Time'] - 719529) * 24 * 3600
 # salinity = np.mean(Delft3D['data']['Val'], axis = 0)
 S = np.mean(sal_data['data']['Val'][:, :, :, 0], axis=0)
-Lon = lon[:, :, 0].reshape(-1, 1)
-Lat = lat[:, :, 0].reshape(-1, 1)
-Depth = depth[0, :, :, 0].reshape(-1, 1)
 
-figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/rawdata'
+figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/rawdata/2/'
 
 def filterNaN(val):
     temp = []
     for i in range(len(val)):
         if not np.isnan(val[i]):
             temp.append(val[i])
-    val = np.array(val).reshape(-1, 1)
+    val = np.array(temp).reshape(-1, 1)
     return val
 
+vmin = np.amin(filterNaN(S.reshape(-1, 1)))
+vmax = np.amax(filterNaN(S.reshape(-1, 1)))
+print(vmin)
+print(vmax)
+
+def deg2rad(deg):
+    return deg / 180 * np.pi
+def rad2deg(rad):
+    return rad / np.pi * 180
+def angle2angle(angle):
+    return deg2rad(-90 - angle)
+
+from matplotlib.gridspec import GridSpec
 
 
 
 #%%
+plt.figure(figsize = (5, 5))
+cir = plt.Circle((0, 0), 2.5, color='r', fill=False)
+plt.gca().add_patch(cir)
+ws = wind_speed[ind_wind]
+wd = wind_angle[ind_wind]
+u = ws * np.cos(angle2angle(wd))
+v = ws * np.sin(angle2angle(wd))
+plt.quiver(0, 0, u, v, scale=20)
+plt.xlim(-10, 10)
+plt.ylim(-10, 10)
+ax.set_aspect("equal", adjustable="box")
+# plt.savefig(figpath + "D_{:04d}.png".format(i))
+plt.show()
+plt.close("all")
 
+#%%
 lat_origin, lon_origin = 41.10251, -8.669811
 circumference = 40075000
 def deg2rad(deg):
@@ -82,65 +106,7 @@ def latlon2xy(lat, lon, lat_origin, lon_origin):
     return x, y
 x, y = latlon2xy(lat, lon, lat_origin, lon_origin)
 
-# X = np.hstack((np.ones_like(x), x, y))
-# beta = np.linalg.solve(X.T @ X, X.T @ sal)
 
-# print(beta.round(3))
-# for i in beta:
-#     print('%f' % i)
-plt.scatter(lon, lat, c = sal, cmap = 'RdBu')
-plt.title("Salinity mean in Dec, 2017")
-plt.xlabel("Lon [deg]")
-plt.ylabel("Lat [deg]")
-plt.colorbar()
-plt.show()
-#%% find the residuals
-
-plt.scatter(lon, lat, c = S, cmap = 'RdBu')
-plt.title("Salinity mean in Dec, 2017")
-plt.xlabel("Lon [deg]")
-plt.ylabel("Lat [deg]")
-plt.colorbar()
-plt.show()
-
-
-#%%
-mu = X @ beta
-plt.scatter(y, x, c = mu, cmap = "RdBu", vmin = np.amin(sal), vmax = np.amax(sal))
-plt.title("Trend in Dec, 2017")
-plt.xlabel("y [m]")
-plt.ylabel("x [m]")
-plt.colorbar()
-plt.show()
-residual = sal - mu
-plt.scatter(y, x, c = residual, cmap = "RdBu")
-plt.title("Residual in Dec, 2017")
-plt.xlabel("y [m]")
-plt.ylabel("x [m]")
-plt.colorbar()
-plt.show()
-
-#%%
-ind_box = np.where(y >= -7500)[0]
-
-X = np.hstack((np.ones_like(x[ind_box]), x[ind_box], y[ind_box]))
-beta = np.linalg.solve(X.T @ X, X.T @ sal[ind_box])
-for i in beta:
-    print('%f' % i)
-mu = X @ beta
-plt.scatter(y[ind_box], x[ind_box], c = mu, cmap = "RdBu", vmin = np.amin(sal), vmax = np.amax(sal))
-plt.title("Trend in Dec, 2017")
-plt.xlabel("y [m]")
-plt.ylabel("x [m]")
-plt.colorbar()
-plt.show()
-residual = sal[ind_box] - mu
-plt.scatter(y[ind_box], x[ind_box], c = residual, cmap = "RdBu")
-plt.title("Residual in Dec, 2017")
-plt.xlabel("y [m]")
-plt.ylabel("x [m]")
-plt.colorbar()
-plt.show()
 
 #%%
 sigma = np.sqrt(7.17)
@@ -217,11 +183,6 @@ depth = np.ones([coordinates.shape[0], 1]) * .15
 location = np.hstack((coordinates, depth))
 
 sal, lat, lon, depth, salinity = extractDelft3DFromLocation(sal_data, location)
-#%%
-plt.scatter(lon, lat, c = salinity)
-plt.scatter(a.grid_coord[:, 1], a.grid_coord[:, 0], c = sal)
-plt.colorbar()
-plt.show()
 
 #%%
 import numpy as np
@@ -364,6 +325,14 @@ class DataHandler_Delft3D:
         sal_ave = np.concatenate((sal_ave, fill_column), axis=1)
         return sal_ave
 
+    def filterNaN(self, val):
+        temp = []
+        for i in range(len(val)):
+            if not np.isnan(val[i]):
+                temp.append(val[i])
+        val = np.array(temp).reshape(-1, 1)
+        return val
+
     def plot_grouppeddata(self):
         import matplotlib.pyplot as plt
         from matplotlib.gridspec import GridSpec
@@ -384,7 +353,7 @@ class DataHandler_Delft3D:
                     sal_ave = np.mean(sal_total, axis=0)
                     if sal_ave.shape[0] != self.x.shape[0]:
                         sal_ave = self.refill_unmatched_data(sal_ave)
-                    im = ax.scatter(self.x[:, :, 0], self.y[:, :, 0], c=sal_ave)
+                    im = ax.scatter(self.x[:, :, 0], self.y[:, :, 0], c=sal_ave, cmap = "Paired")
                     plt.colorbar(im)
                 else:
                     ax.scatter(self.x[:, :, 0], self.y[:, :, 0], c='w')
@@ -396,12 +365,52 @@ class DataHandler_Delft3D:
                 print(counter)
 
         if self.ROUGH:
-            plt.savefig(self.figpath + "WindCondition_" + self.string_date + "_Rough.png")
+            plt.savefig(self.figpath + "WindCondition/WindCondition_" + self.string_date + "_Rough.png")
         else:
-            plt.savefig(self.figpath + "WindCondition_" + self.string_date + ".png")
-        print(self.figpath + "WindCondition_" + self.string_date + ".png")
+            plt.savefig(self.figpath + "WindCondition/WindCondition_" + self.string_date + ".png")
+        print(self.figpath + "WindCondition/WindCondition_" + self.string_date + ".png")
         plt.close("all")
         # plt.show()
+
+    def plot_surface_timeseries(self):
+        vmin = 0
+        vmax = 35
+        for i in range(self.sal_data.shape[0]):
+            Lon = self.x[:, :, 0].reshape(-1, 1)
+            Lat = self.y[:, :, 0].reshape(-1, 1)
+            if self.sal_data.shape == 4:
+                S = self.sal_data[i, :, :, 0].reshape(-1, 1)
+            else:
+                S = self.sal_data[i, :, :].reshape(-1, 1)
+            print(Lon.shape)
+            print(Lat.shape)
+            print(S.shape)
+            print(Lon[0])
+
+            fig = plt.figure(figsize=(20, 10))
+            gs = GridSpec(ncols=2, nrows=1, figure=fig)
+            ax = fig.add_subplot(gs[0])
+            im = ax.scatter(self.filterNaN(Lon), self.filterNaN(Lat), c=self.filterNaN(S), cmap="Paired", vmin=vmin, vmax=vmax)
+            ax.set_title("Salinity on " + datetime.fromtimestamp(self.timestamp_data[i]).strftime("%d / %m / %Y - %H:%M"))
+            ax.set_xlabel("Lon [deg]")
+            ax.set_ylabel("Lat [deg]")
+            plt.colorbar(im)
+
+            id_wind = (np.abs(self.timestamp_wind - self.timestamp_data[i])).argmin()
+            ax = fig.add_subplot(gs[1])
+            cir = plt.Circle((0, 0), 2.5, color='r', fill=False)
+            plt.gca().add_patch(cir)
+            ws = wind_speed[id_wind]
+            wd = wind_angle[id_wind]
+            u = ws * np.cos(angle2angle(wd))
+            v = ws * np.sin(angle2angle(wd))
+            plt.quiver(0, 0, u, v, scale=20)
+            ax.set_title("Wind on " + datetime.fromtimestamp(self.timestamp_wind[id_wind]).strftime("%d / %m / %Y - %H:%M"))
+            plt.xlim(-10, 10)
+            plt.ylim(-10, 10)
+            ax.set_aspect("equal", adjustable="box")
+            plt.savefig(self.figpath + "TimeSeries/D_{:04d}.png".format(i))
+            plt.close("all")
 
     def plotscatter3D(self):
         import plotly.graph_objects as go
@@ -503,26 +512,15 @@ class DataHandler_Delft3D:
         plotly.offline.plot(fig, filename=self.figpath + "Grid/Data" + ".html",
                             auto_open=False)
 
-    def plot_data(self):
-        import matplotlib.pyplot as plt
-        for i in range(self.sal_data.shape[0]):
-            print(i)
-            plt.figure()
-            plt.imshow(self.sal_data[i, :, :])
-            plt.colorbar()
-            plt.title("%s".format(i))
-            plt.savefig(self.figpath + "rawdata/I_{:04d}.png".format(i))
-            plt.close("all")
-
-# data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201909_surface_salinity.mat"
-data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
+data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201909_surface_salinity.mat"
+# data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201612_surface_salinity.mat"
 
 wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/wind_Era5_douro_2017_a_2019.wnd"
 # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/wind_Era5_douro_2005_a_2006.wnd"
 # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/wind_Era5_douro_2012_a_2016.wnd"
 # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/wind_times_serie_porto_obs_2015_2020.txt"
-datahandler = DataHandler_Delft3D(data_path, wind_path, rough = True)
+datahandler = DataHandler_Delft3D(data_path, wind_path, rough = False)
 datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/")
 
 # print(datahandler.sal_data.shape)
@@ -530,20 +528,45 @@ datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Port
 # print(datahandler.Time.shape)
 # datahandler.merge_data()
 # datahandler.plot_grouppeddata()
-datahandler.plot_grid_on_data(Grid())
+# datahandler.plot_grid_on_data(Grid())
+datahandler.plot_surface_timeseries()
 
-
-#%%
-datahandler.plot_data()
-#%%
-
-import os
-os.system('say "Now it is done, congratulations"')
-print("Done")
 
 #%%
 import os
-for i in range(0, 255):
-    os.system('ping 192.168.1.' + str(i))
-    print(i)
+import pandas as pd
+import numpy as np
+wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/"
+time_wind = np.array([]).reshape(-1, 1)
+ws = np.array([]).reshape(-1, 1)
+wa = np.array([]).reshape(-1, 1)
+
+sum = 0
+counter = 0
+#%%
+counter = 0
+for i in os.listdir(wind_path):
+    if i.endswith(".wnd"):
+        if counter == 0:
+            wind_data = np.array(pd.read_csv(wind_path + i, sep="\t ", header=None, engine='python'))
+            ref_t_wind = datetime(2005, 1, 1).timestamp()
+            print(sum)
+            print(wind_data.shape)
+            # print(wind_data[:, 1].shape)
+            time_wind = np.concatenate((time_wind, np.reshape(wind_data[:, 0] * 60 + ref_t_wind, (-1, 1))), axis=0)
+            ws = np.concatenate((ws, np.reshape(wind_data[:, 1], (-1, 1))), axis=0)
+            wa = np.concatenate((wa, np.reshape(wind_data[:, -1], (-1, 1))), axis=0)
+        else:
+            pass
+        counter = counter + 1
+
+#%%
+
+new_wind_data = np.hstack((time_wind, ws, wa))
+
+wind_data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Wind/"
+np.savetxt(wind_data_path + "wind_data.txt", new_wind_data, delimiter=",")
+
+for i in range(new_wind_data.shape[0]):
+    print(datetime.fromtimestamp(new_wind_data[i, 0]).strftime("%Y | %m | %d | %H | %M | %S"))
 
