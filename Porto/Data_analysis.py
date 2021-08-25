@@ -222,6 +222,12 @@ class DataHandler_Delft3D:
         id = len(speeds[speeds < wind_speed]) - 1
         return self.levels[id]
 
+    def angle2angle(self, nautical_angle):
+        '''
+        convert nautical angle to plot angle
+        '''
+        return self.deg2rad(-90 - nautical_angle)
+
     def merge_data(self):
         self.wind_v = []
         self.wind_dir = []
@@ -302,6 +308,7 @@ class DataHandler_Delft3D:
     def plot_surface_timeseries(self):
         vmin = 0
         vmax = 35
+        from matplotlib.gridspec import GridSpec
         for i in range(self.sal_data.shape[0]):
             Lon = self.x[:, :, 0].reshape(-1, 1)
             Lat = self.y[:, :, 0].reshape(-1, 1)
@@ -348,8 +355,8 @@ class DataHandler_Delft3D:
 
         X = self.x[:, :, 0].reshape(-1, 1)
         Y = self.y[:, :, 0].reshape(-1, 1)
-        # for i in range(len(self.z.shape[0])):
-        for i in [0]:
+        for i in range(len(self.z.shape[0])):
+        # for i in [0]:
             print(i)
             Z = self.z[i, :, :, 0].reshape(-1, 1)
             sal_val = self.sal_data[i, :, :, 0].reshape(-1, 1)
@@ -439,8 +446,8 @@ class DataHandler_Delft3D:
         plotly.offline.plot(fig, filename=self.figpath + "Grid/Data" + ".html",
                             auto_open=False)
 
-data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201909_surface_salinity.mat"
-# data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
+# data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201909_surface_salinity.mat"
+data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat"
 # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201612_surface_salinity.mat"
 
 wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/conditions/wind_Era5_douro_2017_a_2019.wnd"
@@ -456,7 +463,6 @@ datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Port
 # datahandler.merge_data()
 # datahandler.plot_grouppeddata()
 # datahandler.plot_grid_on_data(Grid())
-
-
-datahandler.plot_surface_timeseries() # it has problems, needs to be fixed
+datahandler.plotscatter3D()
+# datahandler.plot_surface_timeseries() # it has problems, needs to be fixed
 
