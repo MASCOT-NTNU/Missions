@@ -29,8 +29,8 @@ class Grid:
     circumference = 40075000  # circumference of the earth, [m]
     depth_tolerance = 0.25  # tolerance +/- in depth, 0.5 m == [0.25 ~ 0.75]m
 
-    N1 = 31  # number of grid points along north direction
-    N2 = 31  # number of grid points along east direction
+    N1 = 21  # number of grid points along north direction
+    N2 = 41  # number of grid points along east direction
     N3 = len(depth_obs)  # number of layers in the depth dimension
     N = N1 * N2 * N3  # total number of grid points
     XLIM = [0, distance]  # limit for the x axis
