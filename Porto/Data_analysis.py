@@ -11,7 +11,7 @@ from progress.bar import IncrementalBar
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly
-plotly.io.orca.config.executable = '/Users/yaoling/anaconda3/bin/orca/'
+plotly.io.orca.config.executable = '/usr/local/bin/orca'
 plotly.io.orca.config.save()
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams.update({'font.size': 12})
@@ -318,7 +318,7 @@ class DataHandler_Delft3D:
         bar.finish()
 
     def plotscatter3D(self, frame, layers):
-        os.system("say I am plotting the scatter data on the 3D grid now")
+        # os.system("say I am plotting the scatter data on the 3D grid now")
         Lon = self.lon[:, :, :layers].reshape(-1, 1)
         Lat = self.lat[:, :, :layers].reshape(-1, 1)
         Depth = self.depth[0, :, :, :layers].reshape(-1, 1)
@@ -350,9 +350,9 @@ class DataHandler_Delft3D:
             title="Delft 3D data visualisation on " + self.string_date,
             scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
         )
-        plotly.offline.plot(fig, filename=self.figpath + "Scatter3D/Data_" + self.string_date + ".html", auto_open=False)
-        os.system("say Finished plotting 3D")
-        # fig.write_image(figpath + "sal.png".format(j), width=1980, height=1080)
+        # plotly.offline.plot(fig, filename=self.figpath + "Scatter3D/Data_" + self.string_date + ".html", auto_open=False)
+        # os.system("say Finished plotting 3D")
+        fig.write_image(self.figpath + "Scatter3D/S_{:04}.png".format(frame), width=1980, height=1080, engine = "orca")
 
     def plot_grid_on_data(self, grid):
         Lon = self.lon[:, :, 0].reshape(-1, 1)
@@ -408,9 +408,53 @@ datahandler = DataHandler_Delft3D(data_path, wind_path, rough = True)
 datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/")
 # datahandler.plot_grouppeddata()
 # datahandler.plot_grid_on_data(Grid())
-# datahandler.plotscatter3D(frame = 150, layers=5)
+datahandler.plotscatter3D(frame = 150, layers=5)
 # datahandler.plot_surface_timeseries() # it has problems, needs to be fixed
 
+#%%
+from Adaptive_script.Porto.Grid import Grid
+from skgstat import Variogram
+
+class Coef(Grid):
+    data_path = None
+
+    def __init__(self, data_path):
+        self.data_path = data_path
+        Grid.__init__(self)
+
+    def load_data(self):
+        t1 = time.time()
+        self.data = h5py.File(self.data_path, 'r')
+        self.lat = np.array(self.data.get("lat"))
+        self.lon = np.array(self.data.get("lon"))
+        self.depth = np.array(self.data.get("depth"))
+        self.salinity = np.array(self.data.get("salinity"))
+        self.timestamp_data = np.array(self.data.get("timestamp"))
+        self.string_date = datetime.fromtimestamp(self.timestamp_data[0]).strftime("%Y-%m")
+        t2 = time.time()
+        print("Time consumed: ", t2 - t1, " seconds")
+        os.system("say loading data correctly, it takes {:.1f} seconds".format(t2 - t1))
+        print("Lat: ", self.lat.shape)
+        print("Lon: ", self.lon.shape)
+        print("Depth: ", self.depth.shape)
+        print("Salinity: ", self.salinity.shape)
+        print("Date: ", self.string_date)
+        print("Time: ", self.timestamp_data.shape)
+
+
+    def latlon2xy(self, lat, lon):
+        x = self.deg2rad(lat - self.lat_origin) / 2 / np.pi * self.circumference
+        y = self.deg2rad(lon - self.lon_origin) / 2 / np.pi * self.circumference * np.cos(self.deg2rad(lat))
+        return x, y
+
+    def getcoef(self):
+        ind = np.random.randint(0, .shape[0] - 1, size=5000)
+        V_v = Variogram(coordinates=np.hstack((x[ind], y[ind])), values=residual[ind].squeeze(), n_lags=20, maxlag=1500,
+                        use_nugget=True)
+        # V_v.fit_method = 'trf' # moment method
+        fig = V_v.plot(hist=True)
+        fig.savefig("test1.pdf")
+        print(V_v)
 
 
 
