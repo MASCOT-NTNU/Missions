@@ -18,6 +18,35 @@ sal_data = mat73.loadmat(data_path)
 os.system('say Finished Data importing')
 
 #%%
+lon = sal_data['data']["X"]
+lat = sal_data['data']['Y']
+depth = sal_data['data']['Z']
+timestamp = (sal_data['data']['Time'] - 719529) * 24 * 3600
+S = sal_data['data']['Val']
+
+
+os.system("say It will create a data set now, the size will be unknown")
+import h5py
+f = h5py.File("test.hdf5", "w")
+f.create_dataset("lon", data = lon)
+f.create_dataset("lat", data = lat)
+f.create_dataset("timestamp", data = timestamp)
+f.create_dataset("depth", data = depth)
+f.create_dataset("salinity", data = S)
+os.system("say Now it finished the data creation")
+#%%
+import time
+os.system("say data")
+t1 = time.time()
+f = h5py.File("test.hdf5", "r")
+a = f.get("lon")
+b = np.array(a)
+t2 = time.time()
+print(t2 - t1)
+os.system("say it takes {:.2f} seconds to import data".format(t2 - t1))
+
+
+#%%
 from Adaptive_script.Porto.Grid import Grid
 a = Grid()
 lat_grid = a.grid_coord[:, 0].reshape(-1, 1)
