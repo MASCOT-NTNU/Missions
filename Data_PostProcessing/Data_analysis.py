@@ -1,7 +1,7 @@
 from matplotlib.gridspec import GridSpec
 import plotly.graph_objects as go
 import plotly
-plotly.io.orca.config.executable = '/Users/yaoling/anaconda3/bin/orca/'
+plotly.io.orca.config.executable = '/usr/local/bin/orca'
 plotly.io.orca.config.save()
 from plotly.subplots import make_subplots
 from datetime import datetime
@@ -580,7 +580,7 @@ for i in [len(xauv_new)]:
  #%%
 import plotly.graph_objects as go
 import plotly
-plotly.io.orca.config.executable = '/Users/yaoling/anaconda3/bin/orca/'
+plotly.io.orca.config.executable = '/usr/local/bin/orca'
 plotly.io.orca.config.save()
 from plotly.subplots import make_subplots
 
@@ -722,7 +722,7 @@ for j in range(N_steps):
 
 import plotly.graph_objects as go
 import plotly
-plotly.io.orca.config.executable = '/Users/yaoling/anaconda3/bin/orca/'
+plotly.io.orca.config.executable = '/usr/local/bin/orca'
 plotly.io.orca.config.save()
 from plotly.subplots import make_subplots
 

@@ -411,13 +411,3 @@ print(get_prime_factors(len(sal_sinmod)))
 
 
 #%%
-
-mu_prior = np.zeros([n, 1]) # SINMOD data
-
-mu_post = mu_prior + Sigma_loc_obs @ np.linalg.solve(Sigma_obs, sal2)
-Sigma_post = Sigma - Sigma_loc_obs @ np.linalg.solve(Sigma_obs, Sigma_loc_obs.T)
-
-mu_post = mu_post.reshape(n1, n2)
-# fig = plotf(mu_post, "Salinity posterior mean", xlim = XLIM, ylim = YLIM)
-estd = np.sqrt(np.diag(Sigma_post)).reshape(n1, n2)
-

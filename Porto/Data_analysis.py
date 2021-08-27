@@ -18,8 +18,6 @@ plt.rcParams.update({'font.size': 12})
 plt.rcParams.update({'font.style': 'oblique'})
 
 
-
-
 class Mat2HDF5:
     data_path = None
     data_path_new = None
@@ -319,7 +317,7 @@ class DataHandler_Delft3D:
         os.system("say Finished plotting time series")
         bar.finish()
 
-    def plotscatter3D(self, frame, layers):
+    def plotscatter3D(self, frame, layers, camera = dict(x=-1.25, y=-1.25, z=1.25)):
         # os.system("say I am plotting the scatter data on the 3D grid now")
         Lon = self.lon[:, :, :layers].reshape(-1, 1)
         Lat = self.lat[:, :, :layers].reshape(-1, 1)
@@ -350,11 +348,25 @@ class DataHandler_Delft3D:
             },
             showlegend=False,
             title="Delft 3D data visualisation on " + self.string_date,
-            scene_camera_eye=dict(x=-1.25, y=-1.25, z=1.25),
+            scene_camera_eye=camera,
         )
-        # plotly.offline.plot(fig, filename=self.figpath + "Scatter3D/Data_" + self.string_date + ".html", auto_open=False)
+        plotly.offline.plot(fig, filename=self.figpath + "Scatter3D/Data_" + self.string_date + ".html", auto_open=False)
         # os.system("say Finished plotting 3D")
-        fig.write_image(self.figpath + "Scatter3D/S_{:04}.png".format(frame), width=1980, height=1080, engine = "orca")
+        # fig.write_image(self.figpath + "Scatter3D/S_{:04}.png".format(frame), width=1980, height=1080, engine = "orca")
+
+    def plot3Danimation(self):
+        x_eye = -1.25
+        y_eye = -1.25
+        z_eye = .5
+
+        def rotate_z(x, y, z, theta):
+            w = x + 1j * y
+            return np.real(np.exp(1j * theta) * w), np.imag(np.exp(1j * theta) * w), z
+        for i in range(self.salinity.shape[0]):
+            xe, ye, ze = rotate_z(x_eye, y_eye, z_eye, -i * .005)
+            camera = dict(x=xe, y=ye, z=ze)
+            self.plotscatter3D(i, 5, camera)
+            print(i)
 
     def plot_grid_on_data(self, grid):
         Lon = self.lon[:, :, 0].reshape(-1, 1)
@@ -411,6 +423,7 @@ datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Port
 # datahandler.plot_grouppeddata()
 # datahandler.plot_grid_on_data(Grid())
 datahandler.plotscatter3D(frame = 150, layers=5)
+# datahandler.plot3Danimation()
 # datahandler.plot_surface_timeseries() # it has problems, needs to be fixed
 
 #%%
@@ -449,14 +462,14 @@ class Coef(Grid):
         y = self.deg2rad(lon - self.lon_origin) / 2 / np.pi * self.circumference * np.cos(self.deg2rad(lat))
         return x, y
 
-    def getcoef(self):
-        ind = np.random.randint(0, .shape[0] - 1, size=5000)
-        V_v = Variogram(coordinates=np.hstack((x[ind], y[ind])), values=residual[ind].squeeze(), n_lags=20, maxlag=1500,
-                        use_nugget=True)
-        # V_v.fit_method = 'trf' # moment method
-        fig = V_v.plot(hist=True)
-        fig.savefig("test1.pdf")
-        print(V_v)
+    # def getcoef(self):
+        # ind = np.random.randint(0, .shape[0] - 1, size=5000)
+        # V_v = Variogram(coordinates=np.hstack((x[ind], y[ind])), values=residual[ind].squeeze(), n_lags=20, maxlag=1500,
+        #                 use_nugget=True)
+        # # V_v.fit_method = 'trf' # moment method
+        # fig = V_v.plot(hist=True)
+        # fig.savefig("test1.pdf")
+        # print(V_v)
 
 
 
