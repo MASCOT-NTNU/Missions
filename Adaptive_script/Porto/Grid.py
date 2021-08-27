@@ -9,6 +9,16 @@ __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
 import numpy as np
+from gmplot import GoogleMapPlotter
+from matplotlib.colors import Normalize
+from matplotlib.cm import ScalarMappable
+import matplotlib.pyplot as plt
+import matplotlib.path as mplPath # used to determine whether a point is inside the grid or not
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+import plotly
+plotly.io.orca.config.executable = '/usr/local/bin/orca'
+plotly.io.orca.config.save()
 
 '''
 Goal of the script is to make the class structure
@@ -94,10 +104,12 @@ class Grid:
     def set_N2(self, value):
         self.N2 = value
 
-    def deg2rad(self, deg):
+    @staticmethod
+    def deg2rad(deg):
         return deg / 180 * np.pi
 
-    def rad2deg(self, rad):
+    @staticmethod
+    def rad2deg(rad):
         return rad / np.pi * 180
 
     def computeR(self):
@@ -154,30 +166,12 @@ class Grid:
     def generateGrid(self):
         self.grid = self.GGrid()
 
-    def checkBox(self):
-        from gmplot import GoogleMapPlotter
-        initial_zoom = 12
-        apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
-        gmap = GoogleMapPlotter(self.lat_origin, self.lon_origin, initial_zoom, map_type='satellite', apikey=apikey)
-        gmap.scatter(self.box[:, 0], self.box[:, 1], 'cornflowerblue', size=10)
-        gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
-
     def checkGrid(self):
-        import plotly.graph_objects as go
-        import plotly
-        plotly.io.orca.config.executable = '/Users/yaoling/anaconda3/bin/orca/'
-        plotly.io.orca.config.save()
-        from plotly.subplots import make_subplots
-
         # Make 3D plot # #
         fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
         fig.add_trace(
             go.Scatter3d(
                 x=self.grid[:, 0], y=self.grid[:, 1], z=self.grid[:, -1],
-                # marker=dict(
-                #     color="black",
-                #     showscale=False
-                # ),
             ),
             row=1, col=1
         )
@@ -191,14 +185,152 @@ class Grid:
         )
         plotly.offline.plot(fig, filename="grid.html", auto_open=True)
 
-    def checkGridCoord(self):
-        from gmplot import GoogleMapPlotter
+    @staticmethod
+    def checkBox(lat_origin, lon_origin, box):
         initial_zoom = 12
         apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
-        gmap = GoogleMapPlotter(self.lat_origin, self.lon_origin, initial_zoom, map_type='satellite', apikey=apikey)
-        gmap.scatter(self.grid_coord[:, 0], self.grid_coord[:, 1], color='#99ff00', size=20, marker=False)
+        gmap = GoogleMapPlotter(lat_origin, lon_origin, initial_zoom, map_type='satellite', apikey=apikey)
+        gmap.scatter(box[:, 0], box[:, 1], 'cornflowerblue', size=10)
+        gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/box.html")
+
+    @staticmethod
+    def checkGridCoord(lat_origin, lon_origin, lat, lon):
+        initial_zoom = 12
+        apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
+        gmap = GoogleMapPlotter(lat_origin, lon_origin, initial_zoom, map_type='satellite', apikey=apikey)
+        gmap.scatter(lat, lon, color='#99ff00', size=20, marker=False)
         gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
 
-a = Grid()
-a.checkGridCoord()
+
+from progress.bar import Bar
+
+class GridPoly(Grid):
+
+    def __init__(self, coord_polygon):
+        self.lat_origin, self.lon_origin = 41.061874, -8.650977
+        self.reluctance = [30, 150] # distance between two points, min and max
+        self.pointsPr = 1000 # points per layer
+        self.coord_polygon = coord_polygon
+        self.getBox()
+        self.getGrid()
+        self.checkBox(self.lat_origin, self.lon_origin, self.coord_polygon)
+        self.getPolygonArea()
+        self.plotGridonMap(self.grid)
+        # self.generateBaseGrid()
+        # Grid.__init__(self)
+        # os.system("say initialised")
+
+    def getBox(self):
+        self.lat_min = np.amin(self.coord_polygon[:, 0])
+        self.lon_min = np.amin(self.coord_polygon[:, -1])
+        self.lat_max = np.amax(self.coord_polygon[:, 0])
+        self.lon_max = np.amax(self.coord_polygon[:, -1])
+        self.box = np.array([[self.lat_min, self.lon_min], [self.lat_max, self.lon_min],
+                             [self.lat_min, self.lon_max], [self.lat_max, self.lon_max]])
+
+    def getGrid(self):
+        counter = 0
+        self.grid = np.empty((0, 2))
+        self.poly_path = mplPath.Path(self.coord_polygon)
+        while counter <= self.pointsPr:
+            lat_random = np.random.uniform(self.lat_min, self.lat_max)
+            lon_random = np.random.uniform(self.lon_min, self.lon_max)
+            if self.poly_path.contains_point((lat_random, lon_random)):
+                if self.grid.shape[0] == 0:
+                    self.grid = np.append(self.grid, np.array([lat_random, lon_random]).reshape(1, -1), axis = 0)
+                    counter = counter + 1
+                    print(counter)
+                else:
+                    ind_neighbour = ((self.grid[:, 0] - lat_random) ** 2 + (self.grid[:, 1] - lon_random) ** 2).argmin()
+                    if (self.getDistance(self.grid[ind_neighbour], [lat_random, lon_random]) >= self.reluctance[0]):
+                            # (self.getDistance(self.grid[ind_neighbour], [lat_random, lon_random]) <= self.reluctance[1]):
+                        self.grid = np.append(self.grid, np.array([lat_random, lon_random]).reshape(1, -1), axis = 0)
+                        counter = counter + 1
+                        print(counter)
+                    else:
+                        pass
+
+    def getPolygonArea(self):
+        area = 0
+        prev = self.coord_polygon[-1]
+        for i in range(self.coord_polygon.shape[0]):
+            now = self.coord_polygon[i]
+            xnow, ynow = GridPoly.latlon2xy(now[0], now[1])
+            xpre, ypre = GridPoly.latlon2xy(prev[0], prev[1])
+            area += xnow * ypre - ynow * xpre
+            prev = now
+        self.PolyArea = area / 2
+        print("Area: ", self.PolyArea / 1e6, " km2")
+        os.system("say The area covered is {:.1f} squared kilometers".format(self.PolyArea / 1e6))
+
+    def plotGridonMap(self, grid):
+        def color_scatter(gmap, lats, lngs, values=None, colormap='coolwarm',
+                          size=None, marker=False, s=None, **kwargs):
+            def rgb2hex(rgb):
+                """ Convert RGBA or RGB to #RRGGBB """
+                rgb = list(rgb[0:3])  # remove alpha if present
+                rgb = [int(c * 255) for c in rgb]
+                hexcolor = '#%02x%02x%02x' % tuple(rgb)
+                return hexcolor
+
+            if values is None:
+                colors = [None for _ in lats]
+            else:
+                cmap = plt.get_cmap(colormap)
+                norm = Normalize(vmin=min(values), vmax=max(values))
+                scalar_map = ScalarMappable(norm=norm, cmap=cmap)
+                colors = [rgb2hex(scalar_map.to_rgba(value)) for value in values]
+            for lat, lon, c in zip(lats, lngs, colors):
+                gmap.scatter(lats=[lat], lngs=[lon], c=c, size=size, marker=marker, s=s, **kwargs)
+        initial_zoom = 12
+        apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
+        gmap = GoogleMapPlotter(grid[0, 0], grid[0, 1], initial_zoom, apikey=apikey)
+        color_scatter(gmap, grid[:, 0], grid[:, 1], np.zeros_like(grid[:, 0]), size=20, colormap='hsv')
+        gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
+
+    @staticmethod
+    def latlon2xy(lat, lon):
+        x = GridPoly.deg2rad((lat - GridPoly.lat_origin)) / 2 / np.pi * GridPoly.circumference
+        y = GridPoly.deg2rad((lon - GridPoly.lon_origin)) / 2 / np.pi * GridPoly.circumference * np.cos(GridPoly.deg2rad(lat))
+        return x, y
+
+    @staticmethod
+    def getDistance(coord1, coord2):
+        x1, y1 = GridPoly.latlon2xy(coord1[0], coord1[1])
+        x2, y2 = GridPoly.latlon2xy(coord2[0], coord2[1])
+        dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+        return dist
+
+# polygon = np.array([[41.119233, -8.684664],
+#                     [41.124663, -8.719759],
+#                     [41.154379, -8.719759],
+#                     [41.174658, -8.716345],
+#                     [41.184653, -8.755802],
+#                     [41.152665, -8.787862],
+#                     [41.124520, -8.784258],
+#                     [41.097793, -8.744800],
+#                     [41.106512, -8.669678]])
+
+polygon = np.array([[41.154048,-8.690331],
+                    [41.151126,-8.697998],
+                    [41.146167,-8.699673],
+                    [41.142020,-8.698232],
+                    [41.138724,-8.695476],
+                    [41.135439,-8.692878],
+                    [41.134865,-8.686244],
+                    [41.136944,-8.677676],
+                    [41.139944,-8.679487],
+                    [41.139344,-8.686413],
+                    [41.140632,-8.690824],
+                    [41.142870,-8.693485],
+                    [41.145835,-8.694987],
+                    [41.150319,-8.693925],
+                    [41.151651,-8.688966]])
+
+
+a = GridPoly(polygon)
+import os
+os.system("say finished")
+# a = Grid()
+# a.checkGridCoord()
 # a.checkBox()
