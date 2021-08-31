@@ -196,6 +196,7 @@ class Grid:
 
     @staticmethod
     def checkGridCoord(lat_origin, lon_origin, lat, lon):
+
         initial_zoom = 12
         apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
         gmap = GoogleMapPlotter(lat_origin, lon_origin, initial_zoom, map_type='satellite', apikey=apikey)
@@ -322,8 +323,6 @@ os.system("say finished")
 # a = Grid()
 # a.checkGridCoord()
 # a.checkBox()
-
-
 
 
 
