@@ -9,6 +9,7 @@ __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
 import numpy as np
+import os
 from gmplot import GoogleMapPlotter
 from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
@@ -216,6 +217,7 @@ class GridPoly(Grid):
         self.checkBox(self.lat_origin, self.lon_origin, self.coord_polygon)
         self.getPolygonArea()
         self.plotGridonMap(self.grid)
+        print(self.coord_polygon)
         # self.generateBaseGrid()
         # Grid.__init__(self)
         # os.system("say initialised")
@@ -228,27 +230,14 @@ class GridPoly(Grid):
         self.box = np.array([[self.lat_min, self.lon_min], [self.lat_max, self.lon_min],
                              [self.lat_min, self.lon_max], [self.lat_max, self.lon_max]])
 
+
     def getGrid(self):
         counter = 0
         self.grid = np.empty((0, 2))
         self.poly_path = mplPath.Path(self.coord_polygon)
-        while counter <= self.pointsPr:
-            lat_random = np.random.uniform(self.lat_min, self.lat_max)
-            lon_random = np.random.uniform(self.lon_min, self.lon_max)
-            if self.poly_path.contains_point((lat_random, lon_random)):
-                if self.grid.shape[0] == 0:
-                    self.grid = np.append(self.grid, np.array([lat_random, lon_random]).reshape(1, -1), axis = 0)
-                    counter = counter + 1
-                    print(counter)
-                else:
-                    ind_neighbour = ((self.grid[:, 0] - lat_random) ** 2 + (self.grid[:, 1] - lon_random) ** 2).argmin()
-                    if (self.getDistance(self.grid[ind_neighbour], [lat_random, lon_random]) >= self.reluctance[0]):
-                            # (self.getDistance(self.grid[ind_neighbour], [lat_random, lon_random]) <= self.reluctance[1]):
-                        self.grid = np.append(self.grid, np.array([lat_random, lon_random]).reshape(1, -1), axis = 0)
-                        counter = counter + 1
-                        print(counter)
-                    else:
-                        pass
+        # self.poly_path = mplPath.Path(self.coord_polygon_new)
+        # while counter <= self.pointsPr:
+
 
     def getPolygonArea(self):
         area = 0
@@ -261,7 +250,7 @@ class GridPoly(Grid):
             prev = now
         self.PolyArea = area / 2
         print("Area: ", self.PolyArea / 1e6, " km2")
-        os.system("say The area covered is {:.1f} squared kilometers".format(self.PolyArea / 1e6))
+        os.system("say Area is: {:.1f} squared kilometers".format(self.PolyArea / 1e6))
 
     def plotGridonMap(self, grid):
         def color_scatter(gmap, lats, lngs, values=None, colormap='coolwarm',
@@ -328,9 +317,14 @@ polygon = np.array([[41.154048,-8.690331],
                     [41.151651,-8.688966]])
 
 
-a = GridPoly(polygon)
-import os
+# a = GridPoly(polygon)
 os.system("say finished")
 # a = Grid()
 # a.checkGridCoord()
 # a.checkBox()
+
+
+
+
+
+

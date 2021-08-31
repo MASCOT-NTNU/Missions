@@ -1,66 +1,110 @@
+
 import numpy as np
+import os
+from gmplot import GoogleMapPlotter
+from matplotlib.colors import Normalize
+from matplotlib.cm import ScalarMappable
 import matplotlib.pyplot as plt
-from usr_func import *
-
-data = np.loadtxt("data.txt", delimiter = ",")
-timestamp = data[:, 0].reshape(-1, 1)
-lat_auv_origin = rad2deg(data[:, 1]).reshape(-1, 1)
-lon_auv_origin = rad2deg(data[:, 2]).reshape(-1, 1)
-xauv = data[:, 3].reshape(-1, 1)
-yauv = data[:, 4].reshape(-1, 1)
-zauv = data[:, 5].reshape(-1, 1)
-depth_auv = data[:, 6].reshape(-1, 1)
-sal_auv = data[:, 7].reshape(-1, 1)
-temp_auv = data[:, 8].reshape(-1, 1)
+import matplotlib.path as mplPath # used to determine whether a point is inside the grid or not
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+import plotly
+plotly.io.orca.config.executable = '/usr/local/bin/orca'
+plotly.io.orca.config.save()
 
 
-depth_obs = [0.5, 1.0, 1.5, 2.0, 2.5]  # planned depth to be observed
-depth_tolerance = .25
+class GridTest:
 
-lat_auv = lat_auv_origin + rad2deg(xauv * np.pi * 2.0 / circumference)
-lon_auv = lon_auv_origin + rad2deg(yauv * np.pi * 2.0 / (circumference * np.cos(deg2rad(lat_auv))))
+    distance = 45 / 1000 # distance between
+    polygon = None
+    grid = np.empty((0, 2))
+    counter = 0
+    cnt = 0
+    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/fig/"
+    x = []
+    y = []
 
-depthl = np.array(depth_obs) - depth_tolerance
-depthu = np.array(depth_obs) + depth_tolerance
+    def __init__(self):
+        pass
 
-beta0 = np.zeros([len(depth_obs), 2])
-beta1 = np.zeros([len(depth_obs), 2])
-sal_residual = []
-temp_residual = []
-x_loc = []
-y_loc = []
-SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/samples_2020.05.01.nc"
-import netCDF4
-SINMOD_Data = netCDF4.Dataset(SINMOD_datapath)
+    def setPolyGon(self, polygon):
+        self.polygon = polygon
 
-for i in range(len(depth_obs)):
-    # sort out AUV data
-    ind_obs = (depthl[i] <= depth_auv) & (depth_auv <= depthu[i])
-    lat_obs = lat_auv[ind_obs].reshape(-1, 1)
-    lon_obs = lon_auv[ind_obs].reshape(-1, 1)
-    sal_obs = sal_auv[ind_obs].reshape(-1, 1)
-    temp_obs = temp_auv[ind_obs].reshape(-1, 1)
+    def deg2rad(self, deg):
+        return deg / 180 * np.pi
 
-    # sort out SINMOD data
-    salinity = np.mean(SINMOD_Data['salinity'][:, :, :, :], axis=0)  # time averaging of salinity
-    temperature = np.mean(SINMOD_Data['temperature'][:, :, :, :], axis=0) - 273.15  # time averaging of temperature
-    depth_sinmod = np.array(SINMOD_Data['zc'])  # depth from SINMOD
-    lat_sinmod = np.array(SINMOD_Data['gridLats'][:, :]).reshape(-1, 1)  # lat from SINMOD
-    lon_sinmod = np.array(SINMOD_Data['gridLons'][:, :]).reshape(-1, 1)  # lon from SINMOD
-    sal_sinmod = np.zeros([sal_obs.shape[0], 1])
-    temp_sinmod = np.zeros([temp_obs.shape[0], 1])
-    a = []
-    for j in range(sal_obs.shape[0]):
-        # print(depth_obs[i])
-        ind_depth = np.where(np.array(depth_sinmod) == depth_obs[i])[0][0]
-        # print(ind_depth)
-        idx = np.argmin((lat_sinmod - lat_obs[j]) ** 2 + (lon_sinmod - lon_obs[j]) ** 2)
-        sal_sinmod[j] = salinity[ind_depth].reshape(-1, 1)[idx]
-        temp_sinmod[j] = temperature[ind_depth].reshape(-1, 1)[idx]
-    # print(sal_sinmod.shape)
+    def rad2deg(self, rad):
+        return rad / np.pi * 180
 
-    X = np.hstack((np.ones_like(sal_sinmod), sal_sinmod))
-    Beta = np.linalg.solve((X.T @ X), X.T @ sal_obs)
-    print(Beta)
-    a.append(Beta[0] + Beta[1] * sal_sinmod)
+    def isInGrid(self, loc):
+        x, y = loc
+        for i in range(self.grid.shape[0]):
+            if x == np.around(self.grid[i, 0], decimals=4) and y == np.around(self.grid[i, 1], decimals=4):
+                return False
+            else:
+                return True
+
+    def getCandidates(self, xnow, ynow):
+
+        polygon_path = mplPath.Path(self.polygon)
+        theta = self.deg2rad(np.arange(0, 6) * 60)
+        xnew = np.around(xnow + self.distance * np.cos(theta), decimals=4)
+        ynew = np.around(ynow + self.distance * np.sin(theta), decimals=4)
+        print(xnew, ynew)
+
+        for i in range(len(xnew)):
+
+            if polygon_path.contains_point((xnew[i], ynew[i])):
+                if
+                    self.grid = np.append(self.grid, np.array([xnew[i], ynew[i]]).reshape(1, -1), axis = 0)
+                    counter_in = counter_in + 1
+                    self.cnt = self.cnt + 1
+                else:
+                    pass
+            else:
+                counter_out = counter_out + 1
+
+        if self.cnt>=1000:
+            return self.grid
+
+        print(self.cnt)
+        # print(self.isInGrid(loc))
+        if grid_temp:
+            g = np.array(grid_temp).reshape(-1, 2)
+            self.counter = self.counter + 1
+            plt.figure()
+            plt.plot(self.grid[:, 0], self.grid[:, 1], 'k.')
+            plt.plot(g[:, 0], g[:, 1], 'r.')
+            plt.plot(self.polygon[:, 0], self.polygon[:, 1], 'r-')
+            plt.xlim([-0.2, 1.2])
+            plt.ylim([-0.2, 1.2])
+            plt.savefig(self.figpath + "I_{:04d}.png".format(self.counter))
+            plt.close("all")
+            return self.getCandidates(grid_temp[np.random.randint(0, len(grid_temp))])
+        else:
+            return self.getCandidates(self.grid[np.random.randint(0, self.grid.shape[0])])
+
+
+    def getGrid(self, loc):
+        self.grid = np.append(self.grid, np.array(self.getCandidates(loc)).reshape(-1, 2), axis = 0)
+        # while True:
+            # xnew, ynew = self.getCandidates(loc)
+
+coord_polygon = np.array([[0, 0],
+                          [0, 1],
+                          [1, 1],
+                          [1, 0]])
+
+poly_path = mplPath.Path(coord_polygon)
+m = [0.95, 0.95]
+a = GridTest()
+a.setPolyGon(coord_polygon)
+a.getGrid(m)
+print(a.polygon)
+# os.system("say finished")
+
+# plt.plot(a.grid[:, 0], a.grid[:, 1], 'k.')
+# plt.show()
+
+
 
