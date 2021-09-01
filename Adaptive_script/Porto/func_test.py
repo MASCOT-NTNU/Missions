@@ -55,12 +55,12 @@ class GridTest:
         for i in range(len(xnew)):
 
             if polygon_path.contains_point((xnew[i], ynew[i])):
-                if
+                # if
                     self.grid = np.append(self.grid, np.array([xnew[i], ynew[i]]).reshape(1, -1), axis = 0)
                     counter_in = counter_in + 1
                     self.cnt = self.cnt + 1
-                else:
-                    pass
+                # else:
+                #     pass
             else:
                 counter_out = counter_out + 1
 
