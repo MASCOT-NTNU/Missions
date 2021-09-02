@@ -1,5 +1,6 @@
 # Dynamic grid discretisation
 
+Here is one example of the polygon grid discretisation.
 ![Dynamic waypoint generation](Porto/Setup/Grid/fig/P1/test.mp4)
 
 ---
