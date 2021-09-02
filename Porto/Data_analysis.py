@@ -23,6 +23,8 @@ class Mat2HDF5:
     data_path_new = None
 
     def __init__(self, data_path, data_path_new):
+        # data_path contains the path for the mat file
+        # data_path_new contains the path for the new hdf5 file
         self.data_path = data_path
         self.data_path_new = data_path_new
         self.loaddata()
@@ -71,6 +73,111 @@ class Mat2HDF5:
         print("Time consumed: ", t2 - t1, " seconds.")
         os.system("say finished data conversion, it takes {:.1f} seconds.".format(t2 - t1))
 
+
+class DataGetter(Mat2HDF5):
+    '''
+    Get data according to date specified
+    '''
+    data_folder = None
+    data_folder_new = None
+    date_string = None
+
+    def __init__(self, data_folder, date_string, data_folder_new):
+        self.data_folder = data_folder
+        self.data_folder_new = data_folder_new
+        self.date_string = date_string
+        pass
+
+    def mergedata(self):
+        for file in os.listdir(self.data_folder_new):
+            if file.endswith(".h5"):
+                t1 = time.time()
+                data_temp = h5py.File(self.data_folder_new + file, 'r')
+                lat_temp = data_temp.get("lat")
+                lon_temp = data_temp.get("lon")
+                depth_temp = data_temp.get("depth")
+                sal_temp = data_temp.get("salinity")
+                timestamp_temp = data_temp.get("timestamp")
+                t2 = time.time()
+                # print(t2 - t1)
+                print("data file: ", file[:-2] + "mat")
+                print("lat dim: ", lat_temp.shape)
+                print("lon dim: ", lon_temp.shape)
+                print("depth dim: ", depth_temp.shape)
+                print("sal dim: ", sal_temp.shape)
+                print("timestamp dim: ", timestamp_temp.shape)
+                print("=============")
+
+    def getfiles(self):
+        self.FOUND = False
+        for file in os.listdir(self.data_folder):
+            if file.endswith(".mat"):
+                if len(self.date_string) == 2:
+                    if self.date_string in file[7:9]:
+                        print("Found file: ")
+                        print(file)
+                        self.FOUND = True
+                        data_mat = Mat2HDF5(self.data_folder + file, self.data_folder_new + file[:-4] + ".h5")
+                        data_mat.mat2hdf()
+                else:
+                    if self.date_string in file[3:9]:
+                        print("Found file: ")
+                        print(file)
+                        data_mat = Mat2HDF5(self.data_folder + file, self.data_folder_new + file[:-4] + ".h5")
+                        data_mat.mat2hdf()
+                        self.FOUND = True
+
+        if not self.FOUND:
+            if len(self.date_string) == 2:
+                print("There is no month ", self.date_string, ", file does not exist, please check!")
+            else:
+                print("There is no date ", self.date_string, ", file does not exist, please check!")
+
+data_folder = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/"
+data_folder_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_HDF/"
+
+a = DataGetter(data_folder, "09", data_folder_new)
+# a.getfiles()
+a.mergedata()
+
+#%%
+
+
+
+
+
+#%%
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D1.nc"
+import time
+import netCDF4
+import h5py
+t1 = time.time()
+a = netCDF4.Dataset(datapath)
+lat = a['lat']
+lon = a['lon']
+depth = a['depth']
+timestamp = a['timestamp']
+salinity = a['salinity']
+t2 = time.time()
+print("Time consumed: ", t2 - t1)
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201604_surface_salinity.h5"
+t1 = time.time()
+a = h5py.File(datapath, 'r')
+lat = a.get('lat')
+lon = a.get('lon')
+depth = a.get('depth')
+timestamp = a.get('timestamp')
+salinity = a.get('salinity')
+t2 = time.time()
+print("Time consumed: ", t2 - t1)
+
+
+#%%
+
+
+#%%
+
+#%%
 
 class DataHandler_Delft3D:
     data_path = None
@@ -217,7 +324,7 @@ class DataHandler_Delft3D:
         fill_column = []
         for i in range(sal_ave.shape[1]):
             fill_row.append(np.nan)
-        for i in range(self.x.shape[0]):
+        for i in range(self.lat.shape[0]):
             fill_column.append(np.nan)
         fill_column = np.array(fill_column).reshape([-1, 1])
         fill_row = np.array(fill_row).reshape([1, -1])
@@ -422,7 +529,7 @@ datahandler = DataHandler_Delft3D(data_path, wind_path, rough = True)
 datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/")
 # datahandler.plot_grouppeddata()
 # datahandler.plot_grid_on_data(Grid())
-datahandler.plotscatter3D(frame = 150, layers=5)
+# datahandler.plotscatter3D(frame = 150, layers=5)
 # datahandler.plot3Danimation()
 # datahandler.plot_surface_timeseries() # it has problems, needs to be fixed
 
