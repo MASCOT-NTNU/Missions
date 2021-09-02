@@ -1,18 +1,14 @@
+#%%
+a = np.arange(12).reshape(2, 2, 3)
+b = np.arange(12).reshape(2, 2, 3)
+c = np.mean([a, b], axis = 0)
 
-import numpy as np
-import os
-from gmplot import GoogleMapPlotter
-from matplotlib.colors import Normalize
-from matplotlib.cm import ScalarMappable
-import matplotlib.pyplot as plt
-import matplotlib.path as mplPath # used to determine whether a point is inside the grid or not
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-import plotly
-plotly.io.orca.config.executable = '/usr/local/bin/orca'
-plotly.io.orca.config.save()
+for i in range(3):
+    print(a[:, :, i])
+    print(b[:, :, i])
+    print(c[:, :, i])
 
-
+#%%
 #! /usr/bin/env python3
 __author__ = "Yaolin Ge"
 __copyright__ = "Copyright 2021, The MASCOT Project, NTNU (https://wiki.math.ntnu.no/mascot)"
@@ -662,4 +658,68 @@ lat_origin = 10
 lon_origin = 10
 lat, lon = xy2latlon(x, y, lat_origin, lon_origin)
 print(lat, lon)
+
+#%%
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D1.nc"
+import time
+import netCDF4
+import h5py
+t1 = time.time()
+a = netCDF4.Dataset(datapath)
+lat = a['lat']
+lon = a['lon']
+depth = a['depth']
+timestamp = a['timestamp']
+salinity = a['salinity']
+t2 = time.time()
+print("Time consumed: ", t2 - t1)
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201604_surface_salinity.h5"
+t1 = time.time()
+a = h5py.File(datapath, 'r')
+lat = a.get('lat')
+lon = a.get('lon')
+depth = a.get('depth')
+timestamp = a.get('timestamp')
+salinity = a.get('salinity')
+t2 = time.time()
+print("Time consumed: ", t2 - t1)
+
+#%%
+alpha = 100
+beta = 270 - alpha
+import math
+u = 1 * np.cos(math.radians(beta))
+v = 1 * np.sin(math.radians(beta))
+plt.quiver(u, v)
+
+plt.show()
+
+
+
+#%%
+u = np.random.rand(5, 1) - .5
+v = np.random.rand(5, 1) - .5
+import math
+def uv2wind(u, v):
+    ws = np.sqrt(u ** 2 + v ** 2)
+    # wa = math.atan2(v, u)
+    wa = np.arctan2(v, u)
+    return ws, wa
+
+def wind2uv(ws, wa):
+    u = ws * np.cos(wa)
+    v = ws * np.sin(wa)
+    return u, v
+
+print(u, v)
+
+plt.quiver(u, v)
+a, b = uv2wind(u, v)
+u, v = wind2uv(a, b)
+print(u, v)
+plt.quiver(u, v, u)
+plt.show()
+
+
+
 

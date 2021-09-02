@@ -74,109 +74,6 @@ class Mat2HDF5:
         os.system("say finished data conversion, it takes {:.1f} seconds.".format(t2 - t1))
 
 
-class DataGetter(Mat2HDF5):
-    '''
-    Get data according to date specified
-    '''
-    data_folder = None
-    data_folder_new = None
-    date_string = None
-
-    def __init__(self, data_folder, date_string, data_folder_new):
-        self.data_folder = data_folder
-        self.data_folder_new = data_folder_new
-        self.date_string = date_string
-        pass
-
-    def mergedata(self):
-        for file in os.listdir(self.data_folder_new):
-            if file.endswith(".h5"):
-                t1 = time.time()
-                data_temp = h5py.File(self.data_folder_new + file, 'r')
-                lat_temp = data_temp.get("lat")
-                lon_temp = data_temp.get("lon")
-                depth_temp = data_temp.get("depth")
-                sal_temp = data_temp.get("salinity")
-                timestamp_temp = data_temp.get("timestamp")
-                t2 = time.time()
-                # print(t2 - t1)
-                print("data file: ", file[:-2] + "mat")
-                print("lat dim: ", lat_temp.shape)
-                print("lon dim: ", lon_temp.shape)
-                print("depth dim: ", depth_temp.shape)
-                print("sal dim: ", sal_temp.shape)
-                print("timestamp dim: ", timestamp_temp.shape)
-                print("=============")
-
-    def getfiles(self):
-        self.FOUND = False
-        for file in os.listdir(self.data_folder):
-            if file.endswith(".mat"):
-                if len(self.date_string) == 2:
-                    if self.date_string in file[7:9]:
-                        print("Found file: ")
-                        print(file)
-                        self.FOUND = True
-                        data_mat = Mat2HDF5(self.data_folder + file, self.data_folder_new + file[:-4] + ".h5")
-                        data_mat.mat2hdf()
-                else:
-                    if self.date_string in file[3:9]:
-                        print("Found file: ")
-                        print(file)
-                        data_mat = Mat2HDF5(self.data_folder + file, self.data_folder_new + file[:-4] + ".h5")
-                        data_mat.mat2hdf()
-                        self.FOUND = True
-
-        if not self.FOUND:
-            if len(self.date_string) == 2:
-                print("There is no month ", self.date_string, ", file does not exist, please check!")
-            else:
-                print("There is no date ", self.date_string, ", file does not exist, please check!")
-
-data_folder = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/"
-data_folder_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_HDF/"
-
-a = DataGetter(data_folder, "09", data_folder_new)
-# a.getfiles()
-a.mergedata()
-
-#%%
-
-
-
-
-
-#%%
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D1.nc"
-import time
-import netCDF4
-import h5py
-t1 = time.time()
-a = netCDF4.Dataset(datapath)
-lat = a['lat']
-lon = a['lon']
-depth = a['depth']
-timestamp = a['timestamp']
-salinity = a['salinity']
-t2 = time.time()
-print("Time consumed: ", t2 - t1)
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/D2_201604_surface_salinity.h5"
-t1 = time.time()
-a = h5py.File(datapath, 'r')
-lat = a.get('lat')
-lon = a.get('lon')
-depth = a.get('depth')
-timestamp = a.get('timestamp')
-salinity = a.get('salinity')
-t2 = time.time()
-print("Time consumed: ", t2 - t1)
-
-
-#%%
-
-
-#%%
-
 #%%
 
 class DataHandler_Delft3D:
@@ -185,14 +82,19 @@ class DataHandler_Delft3D:
     wind_path = None
     wind_data = None
     figpath = None
+    ROUGH = False
+    voiceControl = True
 
-    def __init__(self, datapath, windpath, rough = False):
+    def __init__(self, datapath, windpath, rough = False, voiceControl = True):
         self.ROUGH = rough
+        self.voiceControl = voiceControl
         if self.ROUGH:
-            os.system("say Rough mode is activated")
+            if self.voiceControl:
+                os.system("say Rough mode is activated")
             print("Rough mode is activated!")
         else:
-            os.system("say Fine mode is activated")
+            if self.voiceControl:
+                os.system("say Fine mode is activated")
             print("Fine mode is activated!")
         self.set_datapath(datapath)
         self.set_windpath(windpath)
@@ -219,7 +121,8 @@ class DataHandler_Delft3D:
         self.string_date = datetime.fromtimestamp(self.timestamp_data[0]).strftime("%Y-%m")
         t2 = time.time()
         print("Time consumed: ", t2 - t1, " seconds")
-        os.system("say loading data correctly, it takes {:.1f} seconds".format(t2 - t1))
+        if self.voiceControl:
+            os.system("say loading data correctly, it takes {:.1f} seconds".format(t2 - t1))
         print("Lat: ", self.lat.shape)
         print("Lon: ", self.lon.shape)
         print("Depth: ", self.depth.shape)
@@ -262,7 +165,8 @@ class DataHandler_Delft3D:
         print("wind timestamp: ", self.timestamp_wind.shape)
         t2 = time.time()
         print("Time consumed: ", t2 - t1, " seconds")
-        os.system("say Importing wind data takes {:.1f} seconds".format(t2 - t1))
+        if self.voiceControl:
+            os.system("say Importing wind data takes {:.1f} seconds".format(t2 - t1))
 
     def windangle2direction(self, wind_angle):
         angles = np.arange(8) * 45 + 22.5
@@ -278,7 +182,6 @@ class DataHandler_Delft3D:
         return self.levels[id]
 
     def windangle2directionRough(self, wind_angle):
-        # print("Rough mode is activated!")
         angles = np.arange(4) * 90 + 45
         self.directions = ['East', 'South', 'West', 'North']
         id = len(angles[angles < wind_angle]) - 1
@@ -300,7 +203,18 @@ class DataHandler_Delft3D:
         '''
         convert nautical angle to plot angle
         '''
-        return self.deg2rad(-90 - nautical_angle)
+        return self.deg2rad(270 - nautical_angle)
+
+    def wind2uv(self, wind_speed, wind_angle):
+        wind_angle = self.angle2angle(wind_angle)
+        u = wind_speed * np.cos(wind_angle)
+        v = wind_speed * np.sin(wind_angle)
+        return u, v
+
+    def uv2wind(self, u, v):
+        wind_speed = np.sqrt(u ** 2 + v ** 2)
+        wind_angle = np.arctan2(v, u) # v is the speed component in y, u is the speed component in x, cartisian normal
+        return wind_speed, wind_angle
 
     def merge_data(self):
         self.wind_v = []
@@ -318,6 +232,23 @@ class DataHandler_Delft3D:
         print("Data is merged correctly!!")
         print("wind levels: ", len(np.unique(self.wind_level)), np.unique(self.wind_level))
         print("wind directions: ", len(np.unique(self.wind_dir)), np.unique(self.wind_dir))
+
+    def merge_data_explicit(self):
+        self.wind_v = []
+        self.wind_dir = []
+        self.wind_level = []
+        for i in range(len(self.timestamp_data)):
+            id_wind = (np.abs(self.timestamp_wind - self.timestamp_data[i])).argmin()
+            self.wind_v.append(self.wind_speed[id_wind])
+            if self.ROUGH:
+                self.wind_dir.append(self.wind_angle[id_wind]) # here one can choose whether
+                self.wind_level.append(self.wind_speed[id_wind]) # to use rough or not
+            else:
+                self.wind_dir.append(self.wind_angle[id_wind])
+                self.wind_level.append(self.wind_speed[id_wind])
+        print("Data is merged correctly!!")
+        print("wind levels: ", len(np.unique(self.wind_level)))
+        print("wind directions: ", len(np.unique(self.wind_dir)))
 
     def refill_unmatched_data(self, sal_ave):
         fill_row = []
@@ -381,10 +312,12 @@ class DataHandler_Delft3D:
             plt.savefig(self.figpath + "WindCondition/WindCondition_" + self.string_date + ".png")
         print(self.figpath + "WindCondition/WindCondition_" + self.string_date + ".png")
         plt.close("all")
-        os.system("say Finished plotting the groupped data")
+        if self.voiceControl:
+            os.system("say Finished plotting the groupped data")
 
     def plot_surface_timeseries(self):
-        os.system("say Now it plots timeseries")
+        if self.voiceControl:
+            os.system("say Now it plots timeseries")
         vmin = 0
         vmax = 35
         Lon = self.lon[:, :, 0].reshape(-1, 1)
@@ -421,11 +354,13 @@ class DataHandler_Delft3D:
             plt.savefig(self.figpath + "TimeSeries/D_{:04d}.png".format(i))
             plt.close("all")
             bar.next()
-        os.system("say Finished plotting time series")
+        if self.voiceControl:
+            os.system("say Finished plotting time series")
         bar.finish()
 
     def plotscatter3D(self, frame, layers, camera = dict(x=-1.25, y=-1.25, z=1.25)):
-        # os.system("say I am plotting the scatter data on the 3D grid now")
+        if self.voiceControl:
+            os.system("say I am plotting the scatter data on the 3D grid now")
         Lon = self.lon[:, :, :layers].reshape(-1, 1)
         Lat = self.lat[:, :, :layers].reshape(-1, 1)
         Depth = self.depth[0, :, :, :layers].reshape(-1, 1)
@@ -458,7 +393,8 @@ class DataHandler_Delft3D:
             scene_camera_eye=camera,
         )
         plotly.offline.plot(fig, filename=self.figpath + "Scatter3D/Data_" + self.string_date + ".html", auto_open=False)
-        # os.system("say Finished plotting 3D")
+        if self.voiceControl:
+            os.system("say Finished plotting 3D")
         # fig.write_image(self.figpath + "Scatter3D/S_{:04}.png".format(frame), width=1980, height=1080, engine = "orca")
 
     def plot3Danimation(self):
@@ -523,15 +459,126 @@ class DataHandler_Delft3D:
         plotly.offline.plot(fig, filename=self.figpath + "Grid/Data" + ".html",
                             auto_open=False)
 
-data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Delft3D.hdf5"
+# data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Delft3D.hdf5"
 wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Wind/wind_data.txt"
-datahandler = DataHandler_Delft3D(data_path, wind_path, rough = True)
-datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/")
+# datahandler = DataHandler_Delft3D(data_path, wind_path, rough = True)
+# datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/")
 # datahandler.plot_grouppeddata()
 # datahandler.plot_grid_on_data(Grid())
 # datahandler.plotscatter3D(frame = 150, layers=5)
 # datahandler.plot3Danimation()
 # datahandler.plot_surface_timeseries() # it has problems, needs to be fixed
+
+class DataGetter(Mat2HDF5, DataHandler_Delft3D):
+    '''
+    Get data according to date specified
+    '''
+    data_folder = None
+    data_folder_new = None
+    date_string = None
+
+    def __init__(self, data_folder, date_string, data_folder_new):
+        self.data_folder = data_folder
+        self.data_folder_new = data_folder_new
+        self.date_string = date_string
+        pass
+
+    def mergedata(self, wind_path):
+        t1 = time.time()
+        lat = []
+        lon = []
+        depth = []
+        salinity = []
+        wind_u = []
+        wind_v = []
+        for file in os.listdir(self.data_folder_new):
+            if file.endswith(".h5"):
+                datahandler = DataHandler_Delft3D(self.data_folder_new + file, wind_path, rough = True, voiceControl = False)
+                datahandler.merge_data_explicit()
+                lat.append(datahandler.lat)
+                lon.append(datahandler.lon)
+                depth.append(datahandler.depth)
+                salinity.append(datahandler.salinity)
+                u, v = datahandler.wind2uv(np.array(datahandler.wind_level).reshape(-1, 1),
+                                           np.array(datahandler.wind_dir).reshape(-1, 1))
+                wind_u.append(u)
+                wind_v.append(v)
+                print(datahandler.lat.shape)
+                print(datahandler.lon.shape)
+                print(datahandler.depth.shape)
+                print(datahandler.salinity.shape)
+                print(u.shape)
+                print(v.shape)
+        print("Here comes the averaging")
+        self.lat_merged = np.mean(lat, axis = 0)
+        self.lon_merged = np.mean(lon, axis = 0)
+        self.depth_merged = np.mean(depth, axis = 0)
+        self.salinity_merged = np.mean(salinity, axis = 0)
+        wind_u = np.array(wind_u).squeeze()
+        wind_v = np.array(wind_v).squeeze()
+        wind_u_merged = np.sum(wind_u, axis = 0)
+        wind_v_merged = np.sum(wind_v, axis = 0)
+        self.wind_speed_merged, self.wind_angle_merged = self.uv2wind(wind_u_merged, wind_v_merged)
+        self.wind_level_merged = []
+        self.wind_dir_merged = []
+        if self.ROUGH:
+            for i in range(len(self.wind_speed_merged)):
+                self.wind_dir_merged.append(self.windangle2directionRough(self.angle2angle(self.wind_angle_merged[i])))
+                self.wind_level_merged.append(self.windspeed2levelRough(self.wind_speed_merged[i]))
+        else:
+            for i in range(len(self.wind_speed_merged)):
+                self.wind_dir_merged.append(self.windangle2direction(self.angle2angle(self.wind_angle_merged[i])))
+                self.wind_level_merged.append(self.windspeed2level(self.wind_speed_merged[i]))
+        t2 = time.time()
+        print(t2 - t1)
+
+
+    def getdata4wind(self, wind_dir, wind_level):
+        print(np.unique(self.wind_dir_merged))
+
+
+    def getfiles(self):
+        self.FOUND = False
+        for file in os.listdir(self.data_folder):
+            if file.endswith(".mat"):
+                if len(self.date_string) == 2:
+                    if self.date_string in file[7:9]:
+                        print("Found file: ")
+                        print(file)
+                        self.FOUND = True
+                        data_mat = Mat2HDF5(self.data_folder + file, self.data_folder_new + file[:-4] + ".h5")
+                        data_mat.mat2hdf()
+                else:
+                    if self.date_string in file[3:9]:
+                        print("Found file: ")
+                        print(file)
+                        data_mat = Mat2HDF5(self.data_folder + file, self.data_folder_new + file[:-4] + ".h5")
+                        data_mat.mat2hdf()
+                        self.FOUND = True
+
+        if not self.FOUND:
+            if len(self.date_string) == 2:
+                print("There is no month ", self.date_string, ", file does not exist, please check!")
+            else:
+                print("There is no date ", self.date_string, ", file does not exist, please check!")
+
+
+data_folder = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/"
+data_folder_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_HDF/"
+
+a = DataGetter(data_folder, "09", data_folder_new)
+# a.getfiles()
+a.mergedata(wind_path)
+a.getdata4wind("okay", "okay")
+#%%
+
+plt.scatter(a.lon_merged[:-1, :-1, 0], a.lat_merged[:-1, :-1, 0], c = a.salinity_merged[0, :, :], cmap = 'Paired')
+plt.colorbar()
+plt.show()
+
+
+
+
 
 #%%
 from Adaptive_script.Porto.Grid import Grid
