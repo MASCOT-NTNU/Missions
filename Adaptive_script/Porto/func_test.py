@@ -240,7 +240,7 @@ class GridPoly(Grid, Node):
     grid_poly = []
     counter_plot = 0 # counter for plot number
     counter_grid = 0 # counter for grid points
-    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/fig/"
+    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/fig/P3/"
 
     def __init__(self, polygon):
         self.lat_origin, self.lon_origin = 41.061874, -8.650977
@@ -286,7 +286,7 @@ class GridPoly(Grid, Node):
         plt.plot(self.polygon[:, 1], self.polygon[:, 0], 'r-')
         plt.xlabel("Lon [deg]")
         plt.ylabel("Lat [deg]")
-        plt.title("Step No. {:04d}, added {:1d} new points".format(self.counter_plot, 6))
+        plt.title("Step No. {:04d}, added {:1d} new points, {:1d} total points in the grid".format(self.counter_plot, 6, 6))
         plt.savefig(self.figpath + "I_{:04d}.png".format(self.counter_plot))
         plt.close("all")
         NODE_start = Node(len(start_node), start_node, loc)
@@ -318,11 +318,11 @@ class GridPoly(Grid, Node):
                 temp1 = np.array(self.grid_poly)
                 plt.plot(temp1[:, 1], temp1[:, 0], 'k.')
                 plt.plot(temp1[-length_new:][:, 1], temp1[-length_new:][:, 0], 'g.')
-                plt.plot(node.node_loc[1], node.node_loc[0], 'bx')
+                plt.plot(node.subnode_loc[i][1], node.subnode_loc[i][0], 'bx')
                 plt.plot(self.polygon[:, 1], self.polygon[:, 0], 'r-')
                 plt.xlabel("Lon [deg]")
                 plt.ylabel("Lat [deg]")
-                plt.title("Step No. {:04d}, added {:1d} new points".format(self.counter_plot, length_new))
+                plt.title("Step No. {:04d}, added {:1d} new points, {:1d} total points in the grid".format(self.counter_plot, length_new, self.counter_grid))
                 plt.savefig(self.figpath + "I_{:04d}.png".format(self.counter_plot))
                 plt.close("all")
                 SUBNODE = Node(len(subsubnode), subsubnode, node.subnode_loc[i])
@@ -390,30 +390,60 @@ class GridPoly(Grid, Node):
         return dist
 
 
-polygon = np.array([[41.154048,-8.690331],
-                    [41.151126,-8.697998],
-                    [41.146167,-8.699673],
-                    [41.142020,-8.698232],
-                    [41.138724,-8.695476],
-                    [41.135439,-8.692878],
-                    [41.134865,-8.686244],
-                    [41.136944,-8.677676],
-                    [41.139944,-8.679487],
-                    [41.139344,-8.686413],
-                    [41.140632,-8.690824],
-                    [41.142870,-8.693485],
-                    [41.145835,-8.694987],
-                    [41.150319,-8.693925],
-                    [41.151651,-8.688966],
-                    [41.154048,-8.690331]])
+# polygon = np.array([[41.154048,-8.690331],
+#                     [41.151126,-8.697998],
+#                     [41.146167,-8.699673],
+#                     [41.142020,-8.698232],
+#                     [41.138724,-8.695476],
+#                     [41.135439,-8.692878],
+#                     [41.134865,-8.686244],
+#                     [41.136944,-8.677676],
+#                     [41.139944,-8.679487],
+#                     [41.139344,-8.686413],
+#                     [41.140632,-8.690824],
+#                     [41.142870,-8.693485],
+#                     [41.145835,-8.694987],
+#                     [41.150319,-8.693925],
+#                     [41.151651,-8.688966],
+#                     [41.154048,-8.690331]])
+
+# polygon = np.array([[41.132435, -8.695369],
+#                     [41.132263, -8.722786],
+#                     [41.120591, -8.698818],
+#                     [41.132435, -8.695369]])
+
+polygon = np.array([[41.132505, -8.713994],
+                    [41.132873, -8.705683],
+                    [41.138212, -8.700060],
+                    [41.132934, -8.695008],
+                    [41.132750, -8.686697],
+                    [41.127595, -8.695090],
+                    [41.122316, -8.691097],
+                    [41.125876, -8.699653],
+                    [41.122316, -8.705927],
+                    [41.126613, -8.704786],
+                    [41.132505, -8.713994]])
+
 
 a = GridPoly(polygon)
-a.getStart([41.1375, -8.6875])
+a.getStart([41.128270, -8.701934])
 os.system("say finished")
 # a = Grid()
 # a.checkGridCoord()
 # a.checkBox()
+#%%
+a = np.arange(6).reshape(2, 3, 1)
+b = np.arange(6, 12).reshape(2, 3, 1)
+c = np.arange(12, 18).reshape(2, 3, 1)
 
+print(a[:, :, 0])
+print(b[:, :, 0])
+print(c[:, :, 0])
+d = np.concatenate((a, b, c), axis = 2)
+for i in range(d.shape[2]):
+    print(d[:, :, i])
+
+print(np.mean(d, axis = 2))
 
 #%%
 plt.plot(a.polygon[:, 1], a.polygon[:, 0], 'k-.')
