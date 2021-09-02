@@ -694,7 +694,13 @@ plt.quiver(u, v)
 
 plt.show()
 
+#%%
+t = ['k', 'f', 'n', 'e', 'f', 't', 'g']
+t2 = ['k', 't', 'n', 'e', 't', 't', 't']
+ind = (t == 'f') & (t2 == 't')
+print(ind)
 
+print(len(ind))
 
 #%%
 u = np.random.rand(5, 1) - .5

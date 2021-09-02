@@ -30,7 +30,7 @@ Path planner: plan the next waypoint
 
 class Grid:
     '''
-    Grid generates the waypoint grid graph
+    Grid generates the waypoint grid graph with a square
     '''
     lat_origin, lon_origin = 41.10251, -8.669811 # the right bottom corner coordinates
     origin = [lat_origin, lon_origin]  # set the origin at the right bottom corner
@@ -196,21 +196,30 @@ class Grid:
 
     @staticmethod
     def checkGridCoord(lat_origin, lon_origin, lat, lon):
-
         initial_zoom = 12
         apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
         gmap = GoogleMapPlotter(lat_origin, lon_origin, initial_zoom, map_type='satellite', apikey=apikey)
         gmap.scatter(lat, lon, color='#99ff00', size=20, marker=False)
         gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
 
-
-from progress.bar import Bar
+class Node:
+    '''
+    generate node for
+    '''
+    node_loc = None
+    subnode_len = 0
+    subnode_loc = []
+    def __init__(self, subnodes_len, subnodes_loc, node_loc):
+        self.subnode_len = subnodes_len
+        self.subnode_loc = subnodes_loc
+        self.node_loc = node_loc
 
 class GridPoly(Grid):
-
+    '''
+    generate the polygon grid with equal-distance from one to another
+    '''
     def __init__(self, coord_polygon):
         self.lat_origin, self.lon_origin = 41.061874, -8.650977
-        self.reluctance = [30, 150] # distance between two points, min and max
         self.pointsPr = 1000 # points per layer
         self.coord_polygon = coord_polygon
         self.getBox()
