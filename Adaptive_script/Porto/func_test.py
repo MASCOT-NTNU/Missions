@@ -236,7 +236,7 @@ class GridPoly(Grid, Node):
     grid_poly = []
     counter_plot = 0 # counter for plot number
     counter_grid = 0 # counter for grid points
-    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/fig/P3/"
+    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/fig/P4/"
 
     def __init__(self, polygon):
         self.lat_origin, self.lon_origin = 41.061874, -8.650977
@@ -403,22 +403,18 @@ class GridPoly(Grid, Node):
 #                     [41.151651,-8.688966],
 #                     [41.154048,-8.690331]])
 
-# polygon = np.array([[41.132435, -8.695369],
-#                     [41.132263, -8.722786],
-#                     [41.120591, -8.698818],
-#                     [41.132435, -8.695369]])
+polygon = np.array([[41.132435, -8.695369],
+                    [41.132263, -8.722786],
+                    [41.120591, -8.698818],
+                    [41.132435, -8.695369]])
 
-polygon = np.array([[41.132505, -8.713994],
-                    [41.132873, -8.705683],
-                    [41.138212, -8.700060],
-                    [41.132934, -8.695008],
-                    [41.132750, -8.686697],
-                    [41.127595, -8.695090],
-                    [41.122316, -8.691097],
-                    [41.125876, -8.699653],
-                    [41.122316, -8.705927],
-                    [41.126613, -8.704786],
-                    [41.132505, -8.713994]])
+
+# polygon = np.array([[41.05425, -8.777448],
+#                     [41.06175, -8723814],
+#                     [41.1145, -8.714369],
+#                     [41.13914, -8.737476],
+#                     [41.10503, -8.764139],
+#                     [41.05425, -8.777448]])
 
 
 a = GridPoly(polygon)
@@ -445,6 +441,18 @@ print(np.mean(d, axis = 2))
 plt.plot(a.polygon[:, 1], a.polygon[:, 0], 'k-.')
 plt.plot(41.1375, -86875, )
 plt.show()
+#%%
+
+t = np.arange(12).reshape(3, 4)
+t = t[np.newaxis, :]
+f = np.arange(24).reshape(2, 3, 4)
+t = np.concatenate((t, f), axis = 0)
+print(t.shape)
+print(t)
+#%%
+t = np.arange(12).reshape(3, 4)
+print(t)
+print(t / 3)
 
 #%%
 class GridTest(Node):
