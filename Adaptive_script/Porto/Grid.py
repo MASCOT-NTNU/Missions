@@ -8,6 +8,8 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
+import time
+
 import numpy as np
 import os
 from gmplot import GoogleMapPlotter
@@ -202,65 +204,186 @@ class Grid:
         gmap.scatter(lat, lon, color='#99ff00', size=20, marker=False)
         gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
 
-class Node:
+class WaypointNode:
     '''
-    generate node for
+    generate node for each waypoint
     '''
-    node_loc = None
-    subnode_len = 0
-    subnode_loc = []
-    def __init__(self, subnodes_len, subnodes_loc, node_loc):
-        self.subnode_len = subnodes_len
-        self.subnode_loc = subnodes_loc
-        self.node_loc = node_loc
+    waypoint_loc = None
+    subwaypoint_len = 0
+    subwaypoint_loc = []
+    def __init__(self, subwaypoints_len, subwaypoints_loc, waypoint_loc):
+        self.subwaypoint_len = subwaypoints_len
+        self.subwaypoint_loc = subwaypoints_loc
+        self.waypoint_loc = waypoint_loc
 
-class GridPoly(Grid):
+class GridPoly(Grid, WaypointNode):
     '''
     generate the polygon grid with equal-distance from one to another
     '''
-    def __init__(self, coord_polygon):
-        self.lat_origin, self.lon_origin = 41.061874, -8.650977
-        self.pointsPr = 1000 # points per layer
-        self.coord_polygon = coord_polygon
-        self.getBox()
-        self.getGrid()
-        self.checkBox(self.lat_origin, self.lon_origin, self.coord_polygon)
+    distance_poly = 60  # [m], distance between two neighbouring points
+    polygon = None
+    loc_start = None
+    counter_plot = 0  # counter for plot number
+    counter_grid = 0  # counter for grid points
+    debug = True
+    voiceCtrl = False
+    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/fig/P4/"
+
+    def __init__(self, polygon = np.array([[41.12251, -8.707745],
+                                        [41.12413, -8.713079],
+                                        [41.11937, -8.715101],
+                                        [41.11509, -8.717317],
+                                        [41.11028, -8.716535],
+                                        [41.10336, -8.716813],
+                                        [41.10401, -8.711306],
+                                        [41.11198, -8.710787],
+                                        [41.11764, -8.710245],
+                                        [41.12251, -8.707745]]), debug = True, voiceCtrl = False):
+        self.lat_origin, self.lon_origin = 41.061874, -8.650977 # origin location
+        self.grid_poly = []
+        self.pointsPr = 1000  # points per layer
+        self.polygon = polygon
+        self.debug = debug
+        self.voiceCtrl = voiceCtrl
+        self.polygon_path = mplPath.Path(self.polygon)
+        self.angle_poly = self.deg2rad(np.arange(0, 6) * 60)  # angles for polygon
         self.getPolygonArea()
-        self.plotGridonMap(self.grid)
-        print(self.coord_polygon)
-        # self.generateBaseGrid()
-        # Grid.__init__(self)
-        # os.system("say initialised")
+        print("Grid polygon is activated!")
+        print("Distance between neighbouring points: ", self.distance_poly)
+        print("Starting location: ", self.loc_start)
+        print("Polygon: ", self.polygon.shape)
+        print("Points desired: ", self.pointsPr)
+        print("Debug mode: ", self.debug)
+        t1 = time.time()
+        self.getGridPoly()
+        t2 = time.time()
+        print("Grid discretisation takes: {:.2f} seconds".format(t2 - t1))
 
-    def getBox(self):
-        self.lat_min = np.amin(self.coord_polygon[:, 0])
-        self.lon_min = np.amin(self.coord_polygon[:, -1])
-        self.lat_max = np.amax(self.coord_polygon[:, 0])
-        self.lon_max = np.amax(self.coord_polygon[:, -1])
-        self.box = np.array([[self.lat_min, self.lon_min], [self.lat_max, self.lon_min],
-                             [self.lat_min, self.lon_max], [self.lat_max, self.lon_max]])
+    def revisit(self, loc):
+        '''
+        func determines whether it revisits the points it already have
+        '''
+        temp = np.array(self.grid_poly)
+        if len(self.grid_poly) > 0:
+            dist_min = np.min(np.sqrt((temp[:, 0] - loc[0]) ** 2 + (temp[:, 1] - loc[1]) ** 2))
+            ind = np.argmin(np.sqrt((temp[:, 0] - loc[0]) ** 2 + (temp[:, 1] - loc[1]) ** 2))
+            if dist_min <= .00001:
+                return [True, ind]
+            else:
+                return [False, []]
+        else:
+            return [False, []]
 
+    def getNewLocations(self, loc):
+        '''
+        get new locations around the current location 
+        '''
+        lat_delta, lon_delta = self.xy2latlon(self.distance_poly * np.cos(self.angle_poly),
+                                              self.distance_poly * np.sin(self.angle_poly), 0, 0)
+        return lat_delta + loc[0], lon_delta + loc[1]
 
-    def getGrid(self):
-        counter = 0
-        self.grid = np.empty((0, 2))
-        self.poly_path = mplPath.Path(self.coord_polygon)
-        # self.poly_path = mplPath.Path(self.coord_polygon_new)
-        # while counter <= self.pointsPr:
+    def getStartLocation(self):
+        lat_min = np.amin(self.polygon[:, 0])
+        lat_max = np.amax(self.polygon[:, 0])
+        lon_min = np.amin(self.polygon[:, 1])
+        lon_max = np.amax(self.polygon[:, 1])
+        path_polygon = mplPath.Path(self.polygon)
+        while True:
+            lat_random = np.random.uniform(lat_min, lat_max)
+            lon_random = np.random.uniform(lon_min, lon_max)
+            if path_polygon.contains_point((lat_random, lon_random)):
+                break
+        print("The generated random starting location is: ")
+        print([lat_random, lon_random])
+        self.loc_start = [lat_random, lon_random]
+    
+    def getGridPoly(self):
+        '''        
+        get the polygon grid discretisation 
+        '''
+        self.getStartLocation()
+        lat_new, lon_new = self.getNewLocations(self.loc_start)
+        start_node = []
+        for i in range(len(self.angle_poly)):
+            if self.polygon_path.contains_point((lat_new[i], lon_new[i])):
+                start_node.append([lat_new[i], lon_new[i]])
+                self.grid_poly.append([lat_new[i], lon_new[i]])
+                self.counter_grid = self.counter_grid + 1
 
+        if self.debug:
+            self.counter_plot = self.counter_plot + 1
+            plt.figure(figsize=(10, 10))
+            temp1 = np.array(self.grid_poly)
+            plt.plot(temp1[:, 1], temp1[:, 0], 'k.')
+            plt.plot(self.loc_start[1], self.loc_start[0], 'bx')
+            plt.plot(self.polygon[:, 1], self.polygon[:, 0], 'r-')
+            plt.xlabel("Lon [deg]")
+            plt.ylabel("Lat [deg]")
+            plt.title(
+                "Step No. {:04d}, added {:1d} new points, {:1d} total points in the grid".format(self.counter_plot, 6, 6))
+            plt.savefig(self.figpath + "I_{:04d}.png".format(self.counter_plot))
+            plt.close("all")
+        WaypointNode_start = WaypointNode(len(start_node), start_node, self.loc_start)
+        Allwaypoints = self.getAllWaypoints(WaypointNode_start)
+        self.grid_poly = np.array(self.grid_poly)
+        if len(self.grid_poly) > self.pointsPr:
+            print("{:d} waypoints are generated, only {:d} waypoints are selected!".format(len(self.grid_poly), self.pointsPr))
+            self.grid_poly = self.grid_poly[:self.pointsPr, :]
+        else:
+            print("{:d} waypoints are generated, all are selected!".format(len(self.grid_poly)))
+        print("Grid: ", self.grid_poly.shape)
+
+    def getAllWaypoints(self, waypoint_node):
+        if self.counter_grid > self.pointsPr:  # stopping criterion to end the recursion
+            return WaypointNode(0, [], waypoint_node.waypoint_loc)
+        # print(self.counter_grid)
+        for i in range(waypoint_node.subwaypoint_len):  # loop through all the subnodes
+            subsubwaypoint = []
+            length_new = 0
+            lat_subsubwaypoint, lon_subsubwaypoint = self.getNewLocations(waypoint_node.subwaypoint_loc[i])  # generate candidates location
+            for j in range(len(self.angle_poly)):
+                if self.polygon_path.contains_point((lat_subsubwaypoint[j], lon_subsubwaypoint[j])):
+                    testRevisit = self.revisit([lat_subsubwaypoint[j], lon_subsubwaypoint[j]])
+                    if not testRevisit[0]:
+                        subsubwaypoint.append([lat_subsubwaypoint[j], lon_subsubwaypoint[j]])
+                        self.grid_poly.append([lat_subsubwaypoint[j], lon_subsubwaypoint[j]])
+                        self.counter_grid = self.counter_grid + 1
+                        length_new = length_new + 1
+            if len(subsubwaypoint) > 0:
+                if self.debug:
+                    self.counter_plot = self.counter_plot + 1
+                    plt.figure(figsize=(10, 10))
+                    temp1 = np.array(self.grid_poly)
+                    plt.plot(temp1[:, 1], temp1[:, 0], 'k.')
+                    plt.plot(temp1[-length_new:][:, 1], temp1[-length_new:][:, 0], 'g.')
+                    plt.plot(waypoint_node.subwaypoint_loc[i][1], waypoint_node.subwaypoint_loc[i][0], 'bx')
+                    plt.plot(self.polygon[:, 1], self.polygon[:, 0], 'r-')
+                    plt.xlabel("Lon [deg]")
+                    plt.ylabel("Lat [deg]")
+                    plt.title("Step No. {:04d}, added {:1d} new points, {:1d} total points in the grid".format(self.counter_plot,
+                                                                                                         length_new,
+                                                                                                         self.counter_grid))
+                    plt.savefig(self.figpath + "I_{:04d}.png".format(self.counter_plot))
+                    plt.close("all")
+                Subwaypoint = WaypointNode(len(subsubwaypoint), subsubwaypoint, waypoint_node.subwaypoint_loc[i])
+                self.getAllWaypoints(Subwaypoint)
+            else:
+                return WaypointNode(0, [], waypoint_node.subwaypoint_loc[i])
+        return WaypointNode(0, [], waypoint_node.waypoint_loc)
 
     def getPolygonArea(self):
         area = 0
-        prev = self.coord_polygon[-1]
-        for i in range(self.coord_polygon.shape[0]):
-            now = self.coord_polygon[i]
-            xnow, ynow = GridPoly.latlon2xy(now[0], now[1])
-            xpre, ypre = GridPoly.latlon2xy(prev[0], prev[1])
+        prev = self.polygon[-1]
+        for i in range(self.polygon.shape[0]):
+            now = self.polygon[i]
+            xnow, ynow = GridPoly.latlon2xy(now[0], now[1], self.lat_origin, self.lon_origin)
+            xpre, ypre = GridPoly.latlon2xy(prev[0], prev[1], self.lat_origin, self.lon_origin)
             area += xnow * ypre - ynow * xpre
             prev = now
         self.PolyArea = area / 2
         print("Area: ", self.PolyArea / 1e6, " km2")
-        os.system("say Area is: {:.1f} squared kilometers".format(self.PolyArea / 1e6))
+        if self.voiceCtrl:
+            os.system("say Area is: {:.1f} squared kilometers".format(self.PolyArea / 1e6))
 
     def plotGridonMap(self, grid):
         def color_scatter(gmap, lats, lngs, values=None, colormap='coolwarm',
@@ -288,15 +411,21 @@ class GridPoly(Grid):
         gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
 
     @staticmethod
-    def latlon2xy(lat, lon):
-        x = GridPoly.deg2rad((lat - GridPoly.lat_origin)) / 2 / np.pi * GridPoly.circumference
-        y = GridPoly.deg2rad((lon - GridPoly.lon_origin)) / 2 / np.pi * GridPoly.circumference * np.cos(GridPoly.deg2rad(lat))
+    def latlon2xy(lat, lon, lat_origin, lon_origin):
+        x = GridPoly.deg2rad((lat - lat_origin)) / 2 / np.pi * GridPoly.circumference
+        y = GridPoly.deg2rad((lon - lon_origin)) / 2 / np.pi * GridPoly.circumference * np.cos(GridPoly.deg2rad(lat))
         return x, y
 
     @staticmethod
+    def xy2latlon(x, y, lat_origin, lon_origin):
+        lat = lat_origin + GridPoly.rad2deg(x * np.pi * 2.0 / GridPoly.circumference)
+        lon = lon_origin + GridPoly.rad2deg(y * np.pi * 2.0 / (GridPoly.circumference * np.cos(GridPoly.deg2rad(lat))))
+        return lat, lon
+
+    @staticmethod
     def getDistance(coord1, coord2):
-        x1, y1 = GridPoly.latlon2xy(coord1[0], coord1[1])
-        x2, y2 = GridPoly.latlon2xy(coord2[0], coord2[1])
+        x1, y1 = GridPoly.latlon2xy(coord1[0], coord1[1], GridPoly.lat_origin, GridPoly.lon_origin)
+        x2, y2 = GridPoly.latlon2xy(coord2[0], coord2[1], GridPoly.lat_origin, GridPoly.lon_origin)
         dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
         return dist
 
@@ -310,25 +439,48 @@ class GridPoly(Grid):
 #                     [41.097793, -8.744800],
 #                     [41.106512, -8.669678]])
 
-polygon = np.array([[41.154048,-8.690331],
-                    [41.151126,-8.697998],
-                    [41.146167,-8.699673],
-                    [41.142020,-8.698232],
-                    [41.138724,-8.695476],
-                    [41.135439,-8.692878],
-                    [41.134865,-8.686244],
-                    [41.136944,-8.677676],
-                    [41.139944,-8.679487],
-                    [41.139344,-8.686413],
-                    [41.140632,-8.690824],
-                    [41.142870,-8.693485],
-                    [41.145835,-8.694987],
-                    [41.150319,-8.693925],
-                    [41.151651,-8.688966]])
+# polygon = np.array([[41.154048,-8.690331],
+#                     [41.151126,-8.697998],
+#                     [41.146167,-8.699673],
+#                     [41.142020,-8.698232],
+#                     [41.138724,-8.695476],
+#                     [41.135439,-8.692878],
+#                     [41.134865,-8.686244],
+#                     [41.136944,-8.677676],
+#                     [41.139944,-8.679487],
+#                     [41.139344,-8.686413],
+#                     [41.140632,-8.690824],
+#                     [41.142870,-8.693485],
+#                     [41.145835,-8.694987],
+#                     [41.150319,-8.693925],
+#                     [41.151651,-8.688966]])
+
+# polygon = np.array([[41.07765, -8.718977],
+#                     [41.07814, -8.705016],
+#                     [41.11243, -8.706682],
+#                     [41.11566, -8.718444],
+#                     [41.07765, -8.718977]])
+
+# polygon = np.array([[41.12251, -8.707745],
+#                     [41.12413, -8.713079],
+#                     [41.11937, -8.715101],
+#                     [41.11509, -8.717317],
+#                     [41.11028, -8.716535],
+#                     [41.10336, -8.716813],
+#                     [41.10401, -8.711306],
+#                     [41.11198, -8.710787],
+#                     [41.11764, -8.710245],
+#                     [41.12251, -8.707745]])
 
 
-# a = GridPoly(polygon)
-os.system("say finished")
+# a = GridPoly(debug = False)
+# a = GridPoly(debug = False)
+# t1 = time.time()
+# a.getGridPoly()
+# t2 = time.time()
+# print("Time consumed: ", t2 - t1)
+# a.plotGridonMap(a.grid_poly)
+# os.system("say finished")
 # a = Grid()
 # a.checkGridCoord()
 # a.checkBox()
