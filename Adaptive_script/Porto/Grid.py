@@ -227,7 +227,7 @@ class GridPoly(Grid, WaypointNode):
     counter_grid = 0  # counter for grid points
     debug = True
     voiceCtrl = False
-    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/fig/P4/"
+    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/fig/P5/"
 
     def __init__(self, polygon = np.array([[41.12251, -8.707745],
                                         [41.12413, -8.713079],
@@ -254,6 +254,7 @@ class GridPoly(Grid, WaypointNode):
         print("Polygon: ", self.polygon.shape)
         print("Points desired: ", self.pointsPr)
         print("Debug mode: ", self.debug)
+        print("fig path: ", self.figpath)
         t1 = time.time()
         self.getGridPoly()
         t2 = time.time()
