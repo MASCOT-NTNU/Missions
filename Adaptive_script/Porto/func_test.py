@@ -438,9 +438,9 @@ for i in range(d.shape[2]):
 print(np.mean(d, axis = 2))
 
 #%%
-plt.plot(a.polygon[:, 1], a.polygon[:, 0], 'k-.')
-plt.plot(41.1375, -86875, )
-plt.show()
+import h5py
+t = h5py.File('/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_HDF/Merged/Merged_09_North_Calm.h5', 'r')
+print(np.array(t.get("lat")))
 #%%
 
 t = np.arange(12).reshape(3, 4)
