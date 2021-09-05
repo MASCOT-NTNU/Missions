@@ -37,13 +37,13 @@ class Grid:
     lat_origin, lon_origin = 41.10251, -8.669811 # the right bottom corner coordinates
     origin = [lat_origin, lon_origin]  # set the origin at the right bottom corner
     distance = 6000  # distance of the edge
-    depth_obs = [0.5, 1.25, 2.0]  # planned depth to be observed
-    alpha = 115  # angle to be tilted
+    depth_obs = [0.5, 1.0, 1.5, 2.0, 2.5]  # planned depth to be observed
+    alpha = 60  # angle to be tilted
     circumference = 40075000  # circumference of the earth, [m]
     depth_tolerance = 0.25  # tolerance +/- in depth, 0.5 m == [0.25 ~ 0.75]m
 
-    N1 = 21  # number of grid points along north direction
-    N2 = 41  # number of grid points along east direction
+    N1 = 31  # number of grid points along north direction
+    N2 = 31  # number of grid points along east direction
     N3 = len(depth_obs)  # number of layers in the depth dimension
     N = N1 * N2 * N3  # total number of grid points
     XLIM = [0, distance]  # limit for the x axis
@@ -258,7 +258,7 @@ class GridPoly(Grid, WaypointNode):
         t1 = time.time()
         self.getGridPoly()
         t2 = time.time()
-        self.N = len(self.grid_poly)
+
         print("Grid discretisation takes: {:.2f} seconds".format(t2 - t1))
 
     def revisit(self, loc):

@@ -342,10 +342,12 @@ class PathPlanner_Polygon(AUV, DataAssimilator, GP_Poly):
         '''
         find the candidates location based on distance coverage
         '''
-        self.distance_lat = self.lat_loc - self.lat_now
-        self.distance_lon = self.lon_loc - self.lon_now
-        self.distance_depth = self.depth_loc - self.depth_now
-        self.distance_total = np.sqrt(self.distance_lat ** 2 + self.distance_lon ** 2 + self.distance_depth ** 2)
+
+        delta_x, delta_y = self.latlon2xy(self.lat_loc, self.lon_loc, self.lat_now, self.lon_now)
+        delta_depth = self.depth_loc - self.depth_now
+        print(self.depth_loc)
+        self.distance_total = np.sqrt(delta_x ** 2 + delta_y ** 2 + delta_depth ** 2)
+        print(self.distance_total)
         self.ind_cand = np.where(self.distance_total <= self.distance_neighbours + 1)[0] # 1 here refers to the tolerance
         print("ind cand: ", self.ind_cand)
         self.lat_cand = self.lat_loc[self.ind_cand]

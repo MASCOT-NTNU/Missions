@@ -43,6 +43,12 @@ plt.plot(lon_origin, lat_origin, 'r.')
 plt.show()
 
 #%%
+import numpy as np
+t1 = np.array([0, 0, 0])
+t2 = np.array([1, 2, 3])
+print(np.dot(t1, t2))
+
+#%%
 t = np.random.rand(30, 1) - .5
 t2 = np.random.rand(30, 1) - .5
 t3 = np.random.rand(30, 1) - .5

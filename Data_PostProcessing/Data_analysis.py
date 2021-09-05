@@ -190,7 +190,7 @@ class Plotter(Grid, AUVData, SINMOD):
             colormax = np.amax(self.sal_auv)
 
             ax = fig.add_subplot(gs[i, 0])
-            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=self.sal_auv[ind], vmin = colormin, vmax = colormax)
+            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=self.sal_auv[ind], vmin = colormin, vmax = colormax, cmap = "Paired")
             ax.set(title="AUV salinity data at {:.1f} metre".format(self.depth_obs[i]))
             ax.set_box_aspect(1)
             ax.set_xlabel("Lon [deg]")
@@ -200,7 +200,7 @@ class Plotter(Grid, AUVData, SINMOD):
             ax = fig.add_subplot(gs[i, 1])
             coordinates = np.hstack((self.lat_auv[ind].reshape(-1, 1), self.lon_auv[ind].reshape(-1, 1)))
             sal_temp, temp_temp = self.getSINMODFromCoordsDepth(coordinates, self.depth_obs[i])
-            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=sal_temp, vmin = colormin, vmax = colormax)
+            im = ax.scatter(self.lon_auv[ind], self.lat_auv[ind], c=sal_temp, vmin = colormin, vmax = colormax, cmap = "Paired")
             ax.set(title="SINMOD salinity data at {:.1f} metre".format(self.depth_obs[i]))
             ax.set_box_aspect(1)
             ax.set_xlabel("Lon [deg]")
@@ -239,6 +239,7 @@ class Plotter(Grid, AUVData, SINMOD):
         print(self.ind_section_end)
 
     def plot3dscatter(self):
+        import plotly.express as px
         self.separate_data()
         self.makepath(self.figpath + "Scatter3D/")
         for i in range(len(self.ind_section_start)):
@@ -252,7 +253,7 @@ class Plotter(Grid, AUVData, SINMOD):
                         size=4,
                         color=self.sal_auv[self.ind_section_start[i]:self.ind_section_end[i]].squeeze(),
                         coloraxis="coloraxis",
-                        showscale=False
+                        showscale=True
                     ),
                     line=dict(
                         color='darkblue',
@@ -261,7 +262,7 @@ class Plotter(Grid, AUVData, SINMOD):
                 ),
                 row=1, col=1,
             )
-            fig.update_coloraxes(colorscale="jet")
+            fig.update_coloraxes(colorscale=px.colors.qualitative.Set1)
             fig.update_layout(
                 scene={
                     'aspectmode': 'manual',
@@ -277,88 +278,88 @@ class Plotter(Grid, AUVData, SINMOD):
             plotly.offline.plot(fig, filename=self.figpath + "Scatter3D/Mission_{:02d}.html".format(i), auto_open=False)
 
 
-class Kriger(AUVData, SINMOD, Prior):
-    def __init__(self):
-        AUVData.__init__(self)
-        SINMOD.__init__(self)
-        Prior.__init__(self)
-
-    def latlon2xy(self, lat, lon):
-        x = self.deg2rad(lat - self.lat_origin) / 2 / np.pi * self.circumference
-        y = self.deg2rad(lon - self.lon_origin) / 2 / np.pi * self.circumference * np.cos(self.deg2rad(lat))
-        # x_, y_ = self.R.T @ np.vstack(x, y) # convert it back
-        return x, y
-
-    def myround(self, value, base = 1.):
-        return base * np.round(value / base)
-
-    def Matern_cov(self, sigma, eta, H):
-        return sigma ** 2 * (1 + eta * H) * np.exp(-eta * H)
-
-    def compute_H(self, grid1, grid2, ksi):
-        X1 = grid1[:, 0].reshape(-1, 1)
-        Y1 = grid1[:, 1].reshape(-1, 1)
-        Z1 = grid1[:, -1].reshape(-1, 1)
-        X2 = grid2[:, 0].reshape(-1, 1)
-        Y2 = grid2[:, 1].reshape(-1, 1)
-        Z2 = grid2[:, -1].reshape(-1, 1)
-
-        distX = X1 @ np.ones([1, X2.shape[0]]) - np.ones([X1.shape[0], 1]) @ X2.T
-        distY = Y1 @ np.ones([1, Y2.shape[0]]) - np.ones([Y1.shape[0], 1]) @ Y2.T
-        distXY = distX ** 2 + distY ** 2
-        distZ = Z1 @ np.ones([1, Z2.shape[0]]) - np.ones([Z1.shape[0], 1]) @ Z2.T
-        dist = np.sqrt(distXY + (ksi * distZ) ** 2)
-        return dist
-
-    def compute_obs(self):
-        xobs, yobs = self.latlon2xy(self.lat_auv, self.lon_auv)
-        zobs = self.myround(self.dauv, base = .5)
-        xobs = xobs.reshape(-1, 1)
-        yobs = yobs.reshape(-1, 1)
-        zobs = zobs.reshape(-1, 1)
-        self.obs = np.hstack((xobs, yobs, zobs))
-        H_obs = self.compute_H(self.obs, self.obs, self.ksi)
-        self.Sigma_obs = self.Matern_cov(self.sigma_sal, self.eta, H_obs) + self.tau_sal ** 2 * np.identity(H_obs.shape[0])
-
-    def compute_grid_obs(self):
-        H_grid_obs = self.compute_H(self.grid, self.obs, self.ksi)
-        self.Sigma_grid_obs = self.Matern_cov(self.sigma_sal, self.eta, H_grid_obs)
-
-    def getObsData(self):
-        d_obs = self.myround(self.dauv, base = .5)
-        d_obs[d_obs < .5] = .5
-        obs_data = []
-        for i in range(len(d_obs)):
-            print(i)
-            sal_sinmod, temp_sinmod = self.getSINMODFromCoordsDepth(np.array((self.lat_auv[i], self.lon_auv[i])).reshape(1, -1), d_obs[i])
-            k = np.where(self.depth_obs == d_obs[i])[0][0]
-            print(k)
-            print(sal_sinmod)
-            obs_data.append(self.beta0[k, 0] + self.beta1[k, 0] * sal_sinmod)
-        self.obs_data = np.array(obs_data).reshape(-1, 1)
-
-    def GPupd(self):
-        self.mu_cond = self.mu_prior_sal + self.Sigma_grid_obs @ np.linalg.solve(self.Sigma_obs, (self.sal_auv - self.obs_data))
-        self.Sigma_cond = self.Sigma_prior_sal - self.Sigma_grid_obs @ np.linalg.solve(self.Sigma_obs, self.Sigma_grid_obs.T)
-
-    def krige(self):
-        print("Now it is kriging the field!!!")
-
-        # First compute the distance for the obs
-        self.compute_obs()
-        self.compute_grid_obs()
-        self.getObsData()
-        self.GPupd()
-        print("Finished kriging")
+# class Kriger(AUVData, SINMOD, Prior):
+#     def __init__(self):
+#         AUVData.__init__(self)
+#         SINMOD.__init__(self)
+#         Prior.__init__(self)
+#
+#     def latlon2xy(self, lat, lon):
+#         x = self.deg2rad(lat - self.lat_origin) / 2 / np.pi * self.circumference
+#         y = self.deg2rad(lon - self.lon_origin) / 2 / np.pi * self.circumference * np.cos(self.deg2rad(lat))
+#         # x_, y_ = self.R.T @ np.vstack(x, y) # convert it back
+#         return x, y
+#
+#     def myround(self, value, base = 1.):
+#         return base * np.round(value / base)
+#
+#     def Matern_cov(self, sigma, eta, H):
+#         return sigma ** 2 * (1 + eta * H) * np.exp(-eta * H)
+#
+#     def compute_H(self, grid1, grid2, ksi):
+#         X1 = grid1[:, 0].reshape(-1, 1)
+#         Y1 = grid1[:, 1].reshape(-1, 1)
+#         Z1 = grid1[:, -1].reshape(-1, 1)
+#         X2 = grid2[:, 0].reshape(-1, 1)
+#         Y2 = grid2[:, 1].reshape(-1, 1)
+#         Z2 = grid2[:, -1].reshape(-1, 1)
+#
+#         distX = X1 @ np.ones([1, X2.shape[0]]) - np.ones([X1.shape[0], 1]) @ X2.T
+#         distY = Y1 @ np.ones([1, Y2.shape[0]]) - np.ones([Y1.shape[0], 1]) @ Y2.T
+#         distXY = distX ** 2 + distY ** 2
+#         distZ = Z1 @ np.ones([1, Z2.shape[0]]) - np.ones([Z1.shape[0], 1]) @ Z2.T
+#         dist = np.sqrt(distXY + (ksi * distZ) ** 2)
+#         return dist
+#
+#     def compute_obs(self):
+#         xobs, yobs = self.latlon2xy(self.lat_auv, self.lon_auv)
+#         zobs = self.myround(self.dauv, base = .5)
+#         xobs = xobs.reshape(-1, 1)
+#         yobs = yobs.reshape(-1, 1)
+#         zobs = zobs.reshape(-1, 1)
+#         self.obs = np.hstack((xobs, yobs, zobs))
+#         H_obs = self.compute_H(self.obs, self.obs, self.ksi)
+#         self.Sigma_obs = self.Matern_cov(self.sigma_sal, self.eta, H_obs) + self.tau_sal ** 2 * np.identity(H_obs.shape[0])
+#
+#     def compute_grid_obs(self):
+#         H_grid_obs = self.compute_H(self.grid, self.obs, self.ksi)
+#         self.Sigma_grid_obs = self.Matern_cov(self.sigma_sal, self.eta, H_grid_obs)
+#
+#     def getObsData(self):
+#         d_obs = self.myround(self.dauv, base = .5)
+#         d_obs[d_obs < .5] = .5
+#         obs_data = []
+#         for i in range(len(d_obs)):
+#             print(i)
+#             sal_sinmod, temp_sinmod = self.getSINMODFromCoordsDepth(np.array((self.lat_auv[i], self.lon_auv[i])).reshape(1, -1), d_obs[i])
+#             k = np.where(self.depth_obs == d_obs[i])[0][0]
+#             print(k)
+#             print(sal_sinmod)
+#             obs_data.append(self.beta0[k, 0] + self.beta1[k, 0] * sal_sinmod)
+#         self.obs_data = np.array(obs_data).reshape(-1, 1)
+#
+#     def GPupd(self):
+#         self.mu_cond = self.mu_prior_sal + self.Sigma_grid_obs @ np.linalg.solve(self.Sigma_obs, (self.sal_auv - self.obs_data))
+#         self.Sigma_cond = self.Sigma_prior_sal - self.Sigma_grid_obs @ np.linalg.solve(self.Sigma_obs, self.Sigma_grid_obs.T)
+#
+#     def krige(self):
+#         print("Now it is kriging the field!!!")
+#
+#         # First compute the distance for the obs
+#         self.compute_obs()
+#         self.compute_grid_obs()
+#         self.getObsData()
+#         self.GPupd()
+#         print("Finished kriging")
 
 
 
 
 SINMOD_datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/samples_2020.05.01.nc"
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Data/"
+# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/fig/'
 
-# datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/Data/"
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/fig/'
 
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/"
@@ -367,15 +368,15 @@ datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Da
 # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/June17/Data/"
 # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Adaptive/fig/'
 
-# b = Plotter()
-a = Kriger()
+a = Plotter()
+# a = Kriger()
 a.setpath_AUVdata(datapath)
 a.setpath_SINMOD(SINMOD_datapath)
 a.extractData()
 a.load_sinmod()
 # a.krige()
-# b.plotCrossPlot()
-# a.plot3dscatter()
+# a.plotCrossPlot()
+a.plot3dscatter()
 
 #%%
 
