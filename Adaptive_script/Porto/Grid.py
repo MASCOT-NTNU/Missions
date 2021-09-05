@@ -254,7 +254,7 @@ class GridPoly(Grid, WaypointNode):
         print("Polygon: ", self.polygon.shape)
         print("Points desired: ", self.pointsPr)
         print("Debug mode: ", self.debug)
-        print("fig path: ", self.figpath)
+        print("fig path: ", GridPoly.figpath)
         t1 = time.time()
         self.getGridPoly()
         t2 = time.time()
@@ -322,7 +322,8 @@ class GridPoly(Grid, WaypointNode):
             plt.ylabel("Lat [deg]")
             plt.title(
                 "Step No. {:04d}, added {:1d} new points, {:1d} total points in the grid".format(self.counter_plot, 6, 6))
-            plt.savefig(self.figpath + "I_{:04d}.png".format(self.counter_plot))
+
+            plt.savefig(GridPoly.figpath + "I_{:04d}.png".format(self.counter_plot))
             plt.close("all")
         WaypointNode_start = WaypointNode(len(start_node), start_node, self.loc_start)
         Allwaypoints = self.getAllWaypoints(WaypointNode_start)
@@ -364,7 +365,7 @@ class GridPoly(Grid, WaypointNode):
                     plt.title("Step No. {:04d}, added {:1d} new points, {:1d} total points in the grid".format(self.counter_plot,
                                                                                                          length_new,
                                                                                                          self.counter_grid))
-                    plt.savefig(self.figpath + "I_{:04d}.png".format(self.counter_plot))
+                    plt.savefig(GridPoly.figpath + "I_{:04d}.png".format(self.counter_plot))
                     plt.close("all")
                 Subwaypoint = WaypointNode(len(subsubwaypoint), subsubwaypoint, waypoint_node.subwaypoint_loc[i])
                 self.getAllWaypoints(Subwaypoint)

@@ -12,7 +12,7 @@ plt.rcParams.update({'font.style': 'oblique'})
 import pandas as pd
 import numpy as np
 from Adaptive_script.Porto.Grid import Grid
-from Adaptive_script.Porto.Prior import Prior
+# from Adaptive_script.Porto.Prior import Prior
 
 class AUVData:
     '''

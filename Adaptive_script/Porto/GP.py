@@ -9,8 +9,9 @@ __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
 import numpy as np
-from Adaptive_script.Porto.Grid import Grid
-class GaussianProcess(Grid):
+from Adaptive_script.Porto.Grid import Grid, GridPoly
+
+class GaussianProcess(GridPoly):
     '''
     Gaussian Process
     '''

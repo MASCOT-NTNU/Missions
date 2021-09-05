@@ -443,6 +443,14 @@ t = h5py.File('/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_HDF/Merge
 print(np.array(t.get("lat")))
 #%%
 
+# mic = sr.Microphone()
+# print(sr.Microphone.list_microphone_names())
+# with mic as source:
+#     r.adjust_for_ambient_noise(source)
+#     audio = r.listen(source)
+
+#%%
+
 t = np.arange(12).reshape(3, 4)
 t = t[np.newaxis, :]
 f = np.arange(24).reshape(2, 3, 4)
