@@ -416,9 +416,18 @@ class DataGetter2(Mat2HDF5, DataHandler_Delft3D, GridPoly):
     '''
     data_path = None
     data_path_new = None
+    polygon = np.array([[41.12902, -8.69901],
+                        [41.12382, -8.68799],
+                        [41.12642, -8.67469],
+                        [41.12071, -8.67189],
+                        [41.11743, -8.68336],
+                        [41.11644, -8.69869],
+                        [41.12295, -8.70283],
+                        [41.12902, -8.69901]])
 
     def __init__(self, data_path):
-        GridPoly.__init__(self, debug = False)
+        GridPoly.__init__(self, polygon = DataGetter2.polygon, debug = False)
+        self.plotGridonMap(self.grid_poly)
         self.data_path = data_path
         self.loaddata()
         self.select_data()
@@ -469,7 +478,10 @@ class DataGetter2(Mat2HDF5, DataHandler_Delft3D, GridPoly):
 
     def save_selected_data(self):
         t1 = time.time()
-        data_file = h5py.File(self.data_path[:-10] + "Selected/Selected.h5", 'w')
+        if os.path.exists(self.data_path[:-10] + "Selected/Selected_Prior2.h5"):
+            os.system("rm -rf " + self.data_path[:-10] + "Selected/Selected_Prior2.h5")
+            print("File is removed: path is clean" + self.data_path[:-10] + "Selected/Selected_Prior2.h5")
+        data_file = h5py.File(self.data_path[:-10] + "Selected/Selected_Prior2.h5", 'w')
         data_file.create_dataset("lat", data = self.lat_selected)
         data_file.create_dataset("lon", data = self.lon_selected)
         data_file.create_dataset("depth", data = self.depth_selected)
@@ -479,10 +491,8 @@ class DataGetter2(Mat2HDF5, DataHandler_Delft3D, GridPoly):
         t2 = time.time()
         print("Finished data creation, time consumed: ", t2 - t1)
 
-data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Delft3D.h5'
-a = DataGetter2(data_path)
-
-#%%
+# data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Delft3D.h5'
+# a = DataGetter2(data_path)
 
 class Prior2(GridPoly):
     '''
@@ -490,11 +500,10 @@ class Prior2(GridPoly):
     '''
     data_path = None
     depth_obs = None
-    depth_tolerance = .35 # tolerance between measurements
+
     def __init__(self, data_path, depth_obs):
         self.data_path = data_path
         self.depth_obs = depth_obs
-        # GridPoly.__init__(self, debug = False)
         self.loaddata()
         pass
 
@@ -519,15 +528,33 @@ class Prior2(GridPoly):
         print("Loading data takes: ", t2 - t1)
 
     def gatherData2Layers(self):
-        self.salinity_layers = np.empty((self.lat.shape[0], len(self.depth_obs)))
-        self.depth_layers = np.empty((self.lat.shape[0], len(self.depth_obs)))
-        for i in range(len(self.depth_obs)):
-            self.ind_depth = (self.depth_ave < self.depth_obs[i] + self.depth_tolerance) & (self.depth_ave > self.depth_obs[i] - self.depth_tolerance)
-            # print(self.depth_obs[i] + self.depth_tolerance)
-            # print(self.depth_obs[i] - self.depth_tolerance)
-            # plt.plot(self.depth_ave[self.ind_depth])
-            # plt.show()
-
+        print("Now start to gathering data...")
+        self.salinity_layers_ave = np.empty((0, len(self.depth_obs)))
+        self.depth_layers_ave = np.empty((0, len(self.depth_obs)))
+        self.lat_layers = np.empty((0, len(self.depth_obs)))
+        self.lon_layers = np.empty((0, len(self.depth_obs)))
+        t1 = time.time()
+        for i in range(self.lat.shape[0]):
+            temp_salinity_ave = []
+            temp_depth_ave = []
+            temp_lat = []
+            temp_lon = []
+            for j in range(len(self.depth_obs)):
+                ind_depth = np.abs(self.depth_ave[i, :] - self.depth_obs[j]).argmin()
+                temp_salinity_ave.append(self.salinity_ave[i, ind_depth])
+                temp_depth_ave.append(self.depth_ave[i, ind_depth])
+                temp_lat.append(self.lat[i, ind_depth])
+                temp_lon.append(self.lon[i, ind_depth])
+            self.salinity_layers_ave = np.append(self.salinity_layers_ave, np.array(temp_salinity_ave).reshape(1, -1), axis = 0)
+            self.depth_layers_ave = np.append(self.depth_layers_ave, np.array(temp_depth_ave).reshape(1, -1), axis = 0)
+            self.lat_layers = np.append(self.lat_layers, np.array(temp_lat).reshape(1, -1), axis = 0)
+            self.lon_layers = np.append(self.lon_layers, np.array(temp_lon).reshape(1, -1), axis = 0)
+        t2 = time.time()
+        print("Data gathered correctly, it takes ", t2 - t1)
+        print("salinity: ", self.salinity_layers_ave.shape)
+        print("depth: ", self.depth_layers_ave.shape)
+        print("lat: ", self.lat_layers.shape)
+        print("lon: ", self.lon_layers.shape)
 
     def getVariogram(self):
         '''
@@ -557,11 +584,11 @@ class Prior2(GridPoly):
         t2 = time.time()
 
 
-data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Selected/Selected.h5'
+data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Selected/Selected_Prior2.h5'
 depth_obs = [-.5, -1.25, -2.0]
 a = Prior2(data_path, depth_obs)
-# a.gatherData2Layers()
-a.getVariogram()
+a.gatherData2Layers()
+# a.getVariogram()
 
 
 
