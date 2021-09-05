@@ -258,6 +258,7 @@ class GridPoly(Grid, WaypointNode):
         t1 = time.time()
         self.getGridPoly()
         t2 = time.time()
+        self.N = len(self.grid_poly)
         print("Grid discretisation takes: {:.2f} seconds".format(t2 - t1))
 
     def revisit(self, loc):
