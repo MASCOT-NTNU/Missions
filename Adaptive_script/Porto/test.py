@@ -7,6 +7,7 @@ import imc_ros_interface
 from imc_ros_interface.msg import Temperature, Salinity, EstimatedState
 from Grid import GridPoly, Grid
 from GP import GaussianProcess, GP_Poly
+import time
 
 class AUV(Grid):
     def __init__(self):
@@ -274,22 +275,23 @@ class PathPlanner(AUV, DataAssimilator):
 
 
 class PathPlanner_Polygon(AUV, DataAssimilator, GP_Poly):
-    xstart, ystart, zstart = [None, None, None]
-    xnow, ynow, znow = [None, None, None]
-    xpre, ypre, zpre = [None, None, None]
-    xcand, ycand, zcand = [None, None, None]
-    xnext, ynext, znext = [None, None, None]
+    lat_start, lon_start, depth_start = [None, None, None]
+    lat_now, lon_now, depth_now = [None, None, None]
+    lat_pre, lon_pre, depth_pre = [None, None, None]
+    lat_cand, lon_cand, depth_cand = [None, None, None]
+    lat_next, lon_next, depth_next = [None, None, None]
     mu_cond, Sigma_cond, F = [None, None, None]
     mu_prior, Sigma_prior = [None, None]
-    lat_next, lon_next, depth_next = [None, None, None]
     travelled_waypoints = None
     Total_waypoints = 10
+    distance_neighbours = np.sqrt(GP_Poly.distance_poly ** 2 + GP_Poly.depth_obs ** 2)
 
     def __init__(self):
         AUV.__init__(self)
         DataAssimilator.__init__(self)
         GP_Poly.__init__(self)
         print("AUV is set up correctly")
+        print("range of neighbours: ", self.distance_neighbours)
         self.travelled_waypoints = 0
         self.load_prior()
         # self.move_to_starting_loc()
@@ -311,19 +313,7 @@ class PathPlanner_Polygon(AUV, DataAssimilator, GP_Poly):
         print("lat loc: ", self.lat_loc.shape)
         print("lon loc: ", self.lon_loc.shape)
         print("depth loc: ", self.depth_loc.shape)
-
-    def ravel_index(self, loc):
-        x, y, z = loc
-        ind = int(z * self.N1 * self.N2 + y * self.N1 + x)
-        return ind
-
-    def unravel_index(self, ind):
-        zind = np.floor(ind / (self.N1 * self.N2))
-        residual = ind - zind * (self.N1 * self.N2)
-        yind = np.floor(residual / self.N1)
-        xind = residual - yind * self.N1
-        loc = [int(xind), int(yind), int(zind)]
-        return loc
+        print("N: ", self.N)
 
     def updateF(self, ind):
         self.F = np.zeros([1, self.N])
@@ -339,37 +329,40 @@ class PathPlanner_Polygon(AUV, DataAssimilator, GP_Poly):
         EP_Prior = self.EP_1D(self.mu_prior, self.Sigma_prior, self.Threshold_S)
         ep_criterion = 0.5 # excursion probability close to 0.5
         ind = (np.abs(EP_Prior - ep_criterion)).argmin()
-        # loc = self.unravel_index(ind)
-
-        self.xstart, self.ystart, self.zstart = loc
+        self.lat_start = self.lat_loc[ind]
+        self.lon_start = self.lon_loc[ind]
+        self.depth_start = self.depth_loc[ind]
         self.updateF(ind)
-        self.xnext, self.ynext, self.znext = self.xstart, self.ystart, self.zstart
-        self.getNextWaypoint()
+        self.lat_next, self.lon_next, self.depth_next = self.lat_start, self.lon_start, self.depth_start
         self.auv_handler.setWaypoint(self.deg2rad(self.lat_next), self.deg2rad(self.lon_next), self.depth_next)
         self.updateWaypoint()
         self.updateWaypoint()
 
     def find_candidates_loc(self):
-        x_ind_l = [self.xnow - 1 if self.xnow > 0 else self.xnow]
-        x_ind_u = [self.xnow + 1 if self.xnow < self.N1 - 1 else self.xnow]
-        y_ind_l = [self.ynow - 1 if self.ynow > 0 else self.ynow]
-        y_ind_u = [self.ynow + 1 if self.ynow < self.N2 - 1 else self.ynow]
-        z_ind_l = [self.znow - 1 if self.znow > 0 else self.znow]
-        z_ind_u = [self.znow + 1 if self.znow < self.N3 - 1 else self.znow]
-
-        x_ind_v = np.unique(np.vstack((x_ind_l, self.xnow, x_ind_u)))
-        y_ind_v = np.unique(np.vstack((y_ind_l, self.ynow, y_ind_u)))
-        z_ind_v = np.unique(np.vstack((z_ind_l, self.znow, z_ind_u)))
-
-        self.xcand, self.ycand, self.zcand = np.meshgrid(x_ind_v, y_ind_v, z_ind_v)
-        self.xcand = self.xcand.reshape(-1, 1)
-        self.ycand = self.ycand.reshape(-1, 1)
-        self.zcand = self.zcand.reshape(-1, 1)
+        '''
+        find the candidates location based on distance coverage
+        '''
+        self.distance_lat = self.lat_loc - self.lat_now
+        self.distance_lon = self.lon_loc - self.lon_now
+        self.distance_depth = self.depth_loc - self.depth_now
+        self.distance_total = np.sqrt(self.distance_lat ** 2 + self.distance_lon ** 2 + self.distance_depth ** 2)
+        self.ind_cand = np.where(self.distance_total <= self.distance_neighbours + 1)[0] # 1 here refers to the tolerance
+        print("ind cand: ", self.ind_cand)
+        self.lat_cand = self.lat_loc[self.ind_cand]
+        self.lon_cand = self.lon_loc[self.ind_cand]
+        self.depth_cand = self.depth_loc[self.ind_cand]
+        print("lat cand: ", self.lat_cand)
+        print("lon cand: ", self.lon_cand)
+        print("depth cand: ", self.depth_cand)
 
     def GPupd(self, y_sampled):
+        print("Updating the field...")
+        t1 = time.time()
         C = self.F @ self.Sigma_cond @ self.F.T + self.R_sal
         self.mu_cond = self.mu_cond + self.Sigma_cond @ self.F.T @ np.linalg.solve(C, (y_sampled - self.F @ self.mu_cond))
         self.Sigma_cond = self.Sigma_cond - self.Sigma_cond @ self.F.T @ np.linalg.solve(C, self.F @ self.Sigma_cond)
+        t2 = time.time()
+        print("Updating takes: ", t2 - t1)
 
     def EIBV_1D(self, threshold, mu, Sig, F, R):
         Sigxi = Sig @ F.T @ np.linalg.solve(F @ Sig @ F.T + R, F @ Sig)
@@ -383,26 +376,25 @@ class PathPlanner_Polygon(AUV, DataAssimilator, GP_Poly):
         return IntA
 
     def find_next_EIBV_1D(self, mu, Sig):
-
         # filter the candidates to smooth the AUV path planning
+        print("Trying to find the next waypoint...")
+        t1 = time.time()
         id = []
-        dx1 = self.xnow - self.xpre
-        dy1 = self.ynow - self.ypre
-        dz1 = self.znow - self.zpre
-        vec1 = np.array([dx1, dy1, dz1])
-        for i in self.xcand:
-            for j in self.ycand:
-                for z in self.zcand:
-                    if i == self.xnow and j == self.ynow and z == self.znow:
-                        continue
-                    dx2 = i - self.xnow
-                    dy2 = j - self.ynow
-                    dz2 = z - self.znow
-                    vec2 = np.array([dx2, dy2, dz2])
-                    if np.dot(vec1, vec2) >= 0:
-                        id.append(self.ravel_index([i, j, z]))
-                    else:
-                        continue
+        dlat1 = self.lat_now - self.lat_pre
+        dlon1 = self.lon_now - self.lon_pre
+        ddepth1 = self.depth_now - self.depth_pre
+        vec1 = np.array([dlat1, dlon1, ddepth1])
+        for i in range(len(self.lat_cand)):
+            if self.lat_cand[i] == self.lat_now and self.lon_cand[i] == self.lon_now and self.depth_cand[i] == self.depth_now:
+                continue
+            dlat2 = self.lat_cand[i] - self.lat_now
+            dlon2 = self.lon_cand[i] - self.lon_now
+            ddepth2 = self.depth_cand[i] - self.depth_now
+            vec2 = np.array([dlat2, dlon2, ddepth2])
+            if np.dot(vec1, vec2) >= 0:
+                id.append(self.ind_cand[i])
+            else:
+                continue
         id = np.unique(np.array(id))
         print(id)
 
@@ -413,20 +405,19 @@ class PathPlanner_Polygon(AUV, DataAssimilator, GP_Poly):
             F[0, id[k]] = True
             eibv.append(self.EIBV_1D(self.Threshold_S, mu, Sig, F, self.R_sal))
             print(eibv)
-        ind_desired = np.argmin(np.array(eibv))
+        ind_desired = self.ind_cand[np.argmin(np.array(eibv))]
         print(ind_desired)
-        self.xnext, self.ynext, self.znext = self.unravel_index(id[ind_desired])
-
-    def getNextWaypoint(self):
-        x_loc, y_loc = self.R @ np.vstack((self.xnext * self.dx, self.ynext * self.dy))  # converted xp/yp with distance inside
-        self.lat_next = self.lat_origin + self.rad2deg(x_loc * np.pi * 2.0 / self.circumference)
-        self.lon_next = self.lon_origin + self.rad2deg(y_loc * np.pi * 2.0 / (self.circumference * np.cos(self.deg2rad(self.lat_next))))
-        self.depth_next = self.depth_obs[self.znext]
-        print("Next way point: ", self.lat_next, self.lon_next, self.depth_next)
+        t2 = time.time()
+        self.lat_next = self.lat_cand[ind_desired]
+        self.lon_next = self.lon_cand[ind_desired]
+        self.depth_next = self.depth_cand[ind_desired]
+        print("Found next waypoint: ", self.lat_next, self.lon_next, self.depth_next)
+        print("Finding next waypoint takes: ", t2 - t1)
+        self.updateF(ind_desired)
 
     def updateWaypoint(self):
-        self.xpre, self.ypre, self.zpre = self.xnow, self.ynow, self.znow
-        self.xnow, self.ynow, self.znow = self.xnext, self.ynext, self.znext
+        self.lat_pre, self.lon_pre, self.depth_pre = self.lat_now, self.lon_now, self.depth_now
+        self.lat_now, self.lon_now, self.depth_now = self.lat_next, self.lon_next, self.depth_next
 
     def run(self):
         while not rospy.is_shutdown():
@@ -441,17 +432,9 @@ class PathPlanner_Polygon(AUV, DataAssimilator, GP_Poly):
                     print(self.salinity[-10:])
                     sal_sampled = np.mean(self.salinity[-10:])  # take the past ten samples and average
                     print(sal_sampled)
-                    self.GPupd(sal_sampled)
+                    self.GPupd(sal_sampled) # update the field when it arrives the specified location
                     self.find_candidates_loc()
                     self.find_next_EIBV_1D(self.mu_cond, self.Sigma_cond)
-                    self.getNextWaypoint()
-
-                    ind_next = self.ravel_index([self.xnext, self.ynext, self.znext])
-                    print(self.xstart, self.ystart, self.zstart)
-                    print(self.xnow, self.ynow, self.znow)
-                    print(self.xpre, self.ypre, self.zpre)
-                    print(self.xnext, self.ynext, self.znext)
-                    self.updateF(ind_next)
                     self.updateWaypoint()
                     self.travelled_waypoints += 1
 
