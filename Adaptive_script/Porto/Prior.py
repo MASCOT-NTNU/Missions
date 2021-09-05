@@ -498,13 +498,13 @@ class Prior2(GridPoly):
     '''
     Prior2 is build based on the 3D data forcasting, no wind data is available.
     '''
-    data_path = None
-    depth_obs = None
+    data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Selected/Selected_Prior2.h5'
+    depth_obs = [-.5, -1.25, -2.0]
 
-    def __init__(self, data_path, depth_obs):
-        self.data_path = data_path
-        self.depth_obs = depth_obs
+    def __init__(self):
         self.loaddata()
+        self.gatherData2Layers()
+
         pass
 
     def loaddata(self):
@@ -583,11 +583,7 @@ class Prior2(GridPoly):
             print(np.mean(self.range_coef), np.mean(self.sill_coef), np.mean(self.nugget_coef))
         t2 = time.time()
 
-
-data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Selected/Selected_Prior2.h5'
-depth_obs = [-.5, -1.25, -2.0]
-a = Prior2(data_path, depth_obs)
-a.gatherData2Layers()
+# a = Prior2()
 # a.getVariogram()
 
 
