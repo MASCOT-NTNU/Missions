@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from Adaptive_script.Porto.Grid import GridPoly
 
 # a = GridPoly()
@@ -55,6 +57,22 @@ t3 = np.random.rand(30, 1) - .5
 tt = np.sqrt(t** 2+ t2**2 + t3 ** 2)
 np.where(tt < .5)[0]
 
+#%%
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/In-situ/pmel-20170813T154236.000-lauv-xplore-1.nc"
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/In-situ/pmel-20170813T152758.000-lauv-xplore-2.nc"
+
+import netCDF4
+import numpy as np
+file = netCDF4.Dataset(datapath)
+lat = np.array(file['lat']).reshape(-1, 1)
+lon = np.array(file['lon']).reshape(-1, 1)
+depth = np.array(file['depth']).reshape(-1, 1)
+salinity = np.array(file['sal']).reshape(-1, 1)
+
+import matplotlib.pyplot as plt
+plt.scatter(lon, lat, c = salinity, cmap = "Paired")
+plt.colorbar()
+plt.show()
 
 
 

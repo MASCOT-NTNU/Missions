@@ -291,6 +291,19 @@ wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Wind/wind_
 # # a.getfiles() # only used when the data file is not created
 # a.mergedata()
 # a.getdata4wind(wind_dir = "North", wind_level = "Calm")
+#%%
+
+# plt.scatter(a.lon_merged, a.lat_merged, c = (np.mean(a.salinity_merged[0], axis = 0) + np.mean(a.salinity_merged[1], axis = 0) + np.mean(a.salinity_merged[2], axis = 0) + np.mean(a.salinity_merged[3], axis = 0))/4, cmap = "Paired")
+# plt.plot(a.polygon[:, 1], a.polygon[:, 0], 'k-')
+# plt.colorbar()
+# plt.xlabel("Lon [deg]")
+# plt.ylabel("Lat [deg]")
+# plt.title("Polygon selection")
+# plt.savefig(figpath + "poly_selection.pdf")
+# plt.show()
+
+
+
 
 class Prior1(GridPoly):
     '''
@@ -366,6 +379,10 @@ class Prior1(GridPoly):
             residual = self.salinity_ave - self.salinity[np.random.randint(0, self.salinity.shape[0]), :]
             V_v = Variogram(coordinates=np.hstack((x, y)), values=residual, n_lags=20, maxlag=3000, use_nugget=True)
             coef = V_v.cof
+            if i == 500:
+                fig = V_v.plot()
+                figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Presentation/MASCOT/Sept6/fig/"
+                fig.savefig(figpath + "variogram.pdf")
             self.range_coef.append(coef[0])
             self.sill_coef.append(coef[1])
             self.nugget_coef.append(coef[2])
@@ -409,6 +426,44 @@ class Prior1(GridPoly):
 # a.getData4Grid()
 # a.plot_select_region()
 
+
+
+# #%%
+# figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Presentation/MASCOT/Sept6/fig/"
+# plt.scatter(a.lon, a.lat, c = a.salinity_ave, vmin = 27, vmax = 35, cmap = "Paired")
+# plt.xlabel("Lon [deg]")
+# plt.ylabel("Lat [deg]")
+# plt.title("Polygon data visualisation")
+# plt.colorbar()
+# plt.savefig(figpath + "polygon.pdf")
+# plt.show()
+
+
+
+# import seaborn as sns
+# sns.displot(a.range_coef, kind = 'kde', label = "Distribution of range coefficient")
+# plt.axvline(np.mean(a.range_coef), c = 'r', label = "Mean of nugget coefficient: {:.2f}".format(np.mean(a.range_coef)))
+# plt.axvline(500, c = 'b', label = "range coef == 500")
+# plt.xlabel("Range coef")
+# plt.legend()
+# plt.savefig(figpath + "range.pdf")
+# plt.show()
+#
+# sns.displot(a.sill_coef, kind = 'kde', label = "Distribution of range coefficient")
+# plt.axvline(np.mean(a.sill_coef), c = 'r', label = "Mean of nugget coefficient: {:.2f}".format(np.mean(a.sill_coef)))
+# plt.xlabel("Sill coef")
+# plt.legend()
+# plt.savefig(figpath + "sill.pdf")
+# plt.show()
+#
+# sns.displot(a.nugget_coef, kind = 'kde', label = "Distribution of range coefficient")
+# plt.axvline(np.mean(a.nugget_coef), c = 'r', label = "Mean of nugget coefficient: {:.2f}".format(np.mean(a.nugget_coef)))
+# plt.xlabel("Nugget coef")
+# plt.legend()
+# plt.savefig(figpath + "nugget.pdf")
+# plt.show()
+
+#%%
 
 class DataGetter2(Mat2HDF5, DataHandler_Delft3D, GridPoly):
     '''
@@ -493,6 +548,19 @@ class DataGetter2(Mat2HDF5, DataHandler_Delft3D, GridPoly):
 
 # data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Delft3D.h5'
 # a = DataGetter2(data_path)
+#
+# #%%
+# import matplotlib.pyplot as plt
+# plt.scatter(a.lon[:, :, 0], a.lat[:, :, 0], c = a.salinity_ave[:, :, 0], cmap = "Paired")
+# plt.plot(a.polygon[:, 1], a.polygon[:, 0], 'r-')
+# plt.colorbar()
+# plt.xlabel("Lon [deg]")
+# plt.ylabel("Lat [deg]")
+# plt.title("Polygon selection")
+# plt.savefig(figpath + "poly.pdf")
+# plt.show()
+
+
 
 class Prior2(GridPoly):
     '''
@@ -580,11 +648,55 @@ class Prior2(GridPoly):
                 self.range_coef.append(coef[0])
                 self.sill_coef.append(coef[1])
                 self.nugget_coef.append(coef[2])
+                if i == self.number_frames - 1:
+                    fig = V_v.plot()
+                    fig.savefig(figpath + "variogram_depth.pdf")
             print(np.mean(self.range_coef), np.mean(self.sill_coef), np.mean(self.nugget_coef))
         t2 = time.time()
 
 # a = Prior2()
 # a.getVariogram()
 
+# #%%
+# # plt.scatter(a.lon_layers[:, 0], a.lat_layers[:, 0], c = a.salinity_layers_ave[:, 0], cmap = "Paired")
+# # plt.colorbar()
+# # plt.show()
+# from skgstat import Variogram
+# j = 0
+# print(np.random.randint(0, a.salinity.shape[0]))
+# ind = np.random.randint(0, a.salinity.shape[0])
+# ind = 208
+# a.residual = a.salinity_ave[j, :] - a.salinity[ind, j, :]
+# V_v = Variogram(
+#     coordinates=np.hstack((np.zeros_like(a.depth_ave[j, :]).reshape(-1, 1), a.depth_ave[j, :].reshape(-1, 1))),
+#     values=a.residual, n_lags=40, maxlag=15, use_nugget=True)
+# fig = V_v.plot()
+# fig.savefig(figpath + "variogram_depth.pdf")
+# plt.show()
+
+#%%
+
+# import seaborn as sns
+# sns.displot(a.range_coef, kind = 'kde', label = "Distribution of range coefficient")
+# plt.axvline(np.mean(a.range_coef), c = 'r', label = "Mean of range coefficient: {:.2f}".format(np.mean(a.range_coef)))
+# # plt.axvline(500, c = 'b', label = "range coef == 500")
+# plt.xlabel("Range coef")
+# plt.legend()
+# plt.savefig(figpath + "range_depth.pdf")
+# plt.show()
+#
+# sns.displot(a.sill_coef, kind = 'kde', label = "Distribution of range coefficient")
+# plt.axvline(np.mean(a.sill_coef), c = 'r', label = "Mean of sill coefficient: {:.2f}".format(np.mean(a.sill_coef)))
+# plt.xlabel("Sill coef")
+# plt.legend()
+# plt.savefig(figpath + "sill_depth.pdf")
+# plt.show()
+#
+# sns.displot(a.nugget_coef, kind = 'kde', label = "Distribution of range coefficient")
+# plt.axvline(np.mean(a.nugget_coef), c = 'r', label = "Mean of nugget coefficient: {:.2f}".format(np.mean(a.nugget_coef)))
+# plt.xlabel("Nugget coef")
+# plt.legend()
+# plt.savefig(figpath + "nugget_depth.pdf")
+# plt.show()
 
 
