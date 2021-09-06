@@ -478,14 +478,15 @@ if __name__ == "__main__":
     datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/")
     # datahandler.plot_grouppeddata()
     # datahandler.plot_grid_on_data(Grid())
-    datahandler.plotscatter3D(layers=5, frame = -1)
+    datahandler.plotscatter3D(layers=1, frame = -1)
     # datahandler.plot3Danimation()
     # datahandler.plot_surface_timeseries() # it has problems, needs to be fixed
 
 
-    # plt.figure(figsize = (10, 10))
-    # plt.scatter(datahandler.lon[:, :, 0], datahandler.lat[:, :, 0], c = np.mean(datahandler.salinity[:, :, :, 0], axis = 0), vmin = 15, vmax = 28, cmap = "Paired")
-    # plt.colorbar()
-    # plt.show()
+# plt.figure(figsize = (10, 10))
+# plt.scatter(datahandler.lon[:, :, 0], datahandler.lat[:, :, 0], c = np.mean(datahandler.salinity[:, :, :, 0], axis = 0), vmin = 15, vmax = 28, cmap = "Paired")
+#
+# plt.colorbar()
+# plt.show()
 
 

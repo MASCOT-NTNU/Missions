@@ -17,7 +17,9 @@ class PathPlanner_Polygon(GP_Poly):
     Total_waypoints = 60
     distance_neighbours = np.sqrt(GP_Poly.distance_poly ** 2 + (GP_Poly.depth_obs[1] - GP_Poly.depth_obs[0]) ** 2)
 
-    def __init__(self):
+    def __init__(self, Simulation = False):
+        self.SIMULATION = Simulation
+        print("Simulation mode: ", self.SIMULATION)
         GP_Poly.__init__(self)
         print("AUV is set up correctly")
         print("range of neighbours: ", self.distance_neighbours)
@@ -133,6 +135,9 @@ class PathPlanner_Polygon(GP_Poly):
             eibv.append(self.EIBV_1D(self.Threshold_S, mu, Sig, F, self.R_sal))
         ind_desired = np.argmin(np.array(eibv))
         t2 = time.time()
+
+        if self.SIMULATION:
+            pass
         self.lat_next = self.lat_cand[ind_desired]
         self.lon_next = self.lon_cand[ind_desired]
         self.depth_next = self.depth_cand[ind_desired]
