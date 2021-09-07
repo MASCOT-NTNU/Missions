@@ -1,10 +1,13 @@
 import time
+import matplotlib.pyplot as plt
+import h5py
 import numpy as np
 from scipy.stats import mvn, norm
-from Adaptive_script.Porto.Grid import GridPoly
+# from Adaptive_script.Porto.Grid import GridPoly
 from Adaptive_script.Porto.GP import GP_Poly
 
-class PathPlanner_Polygon(GP_Poly):
+
+class Simulator(GP_Poly):
     lat_start, lon_start, depth_start = [None, None, None]
     lat_now, lon_now, depth_now = [None, None, None]
     lat_pre, lon_pre, depth_pre = [None, None, None]
@@ -15,38 +18,65 @@ class PathPlanner_Polygon(GP_Poly):
     travelled_waypoints = None
     data_path_waypoint = []
     Total_waypoints = 10
-    distance_neighbours = np.sqrt(GP_Poly.distance_poly ** 2 + (GP_Poly.depth_obs[1] - GP_Poly.depth_obs[0]) ** 2)
+    data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_HDF/Merged/Merged_09_North_Calm.h5"
 
     def __init__(self, Simulation = False):
         self.SIMULATION = Simulation
         print("Simulation mode: ", self.SIMULATION)
-        GP_Poly.__init__(self)
-        print("AUV is set up correctly")
+        GP_Poly.__init__(self, debug = False)
+        self.distance_neighbours = np.sqrt(GP_Poly.distance_poly ** 2 + (GP_Poly.depth_obs[1] - GP_Poly.depth_obs[0]) ** 2)
         print("range of neighbours: ", self.distance_neighbours)
         self.travelled_waypoints = 0
+        self.checkSingularity()
         self.load_prior()
-        self.move_to_starting_loc()
-        self.run()
+        self.plot_prior()
+        # self.move_to_starting_loc()
+        # self.run()
+
+    def checkSingularity(self):
+        import numpy as np
+        x, y = self.latlon2xy(self.lat, self.lon, self.lat_origin, self.lon_origin)
+        x = x.reshape(-1, 1)
+        y = y.reshape(-1, 1)
+        grid = np.hstack((y, x))
+        import scipy.spatial.distance as scdist
+        t = scdist.cdist(grid, grid)
+        from Adaptive_script.Porto.usr_func import Matern_cov
+        S = Matern_cov(4, 4.5/600, t)
+        print(["The covariance matrix is " + "Positive " if np.all(np.linalg.eigvals(S) > 0) else "Singular"])
 
     def load_prior(self):
-        print("Prior for salinity is loaded correctly!!!")
-        self.mu_prior = self.salinity_layers_ave.reshape(-1, 1)
+        self.mu_prior = self.salinity[0, :].reshape(-1, 1)
         self.Sigma_prior = self.Sigma_sal
+        self.mu_real = self.mu_prior + np.linalg.cholesky(self.Sigma_prior) @ np.random.randn(len(self.mu_prior)).reshape(-1, 1)
         self.mu_cond = self.mu_prior
         self.Sigma_cond = self.Sigma_prior
-        self.lat_loc = self.lat_layers.reshape(-1, 1)
-        self.lon_loc = self.lon_layers.reshape(-1, 1)
-        self.depth_loc = self.depth_layers_ave.reshape(-1, 1)
-        self.salinity_loc = self.salinity_layers_ave.reshape(-1, 1)
-        self.N = len(self.lat_loc)
+        self.N = len(self.mu_prior)
+        print("Prior for salinity is loaded correctly!!!")
         print("mu_prior shape is: ", self.mu_prior.shape)
         print("Sigma_prior shape is: ", self.Sigma_prior.shape)
         print("mu_cond shape is: ", self.mu_cond.shape)
         print("Sigma_cond shape is: ", self.Sigma_cond.shape)
-        print("lat loc: ", self.lat_loc.shape)
-        print("lon loc: ", self.lon_loc.shape)
-        print("depth loc: ", self.depth_loc.shape)
         print("N: ", self.N)
+
+    def plot_prior(self):
+        plt.figure(figsize = (30, 15))
+        plt.subplot(131)
+        plt.scatter(self.lon, self.lat, c = self.mu_prior, cmap = "Paired")
+        plt.colorbar()
+        plt.title("Prior mean")
+        plt.xlabel("Lon [deg]")
+        plt.ylabel("Lat [deg]")
+        plt.subplot(132)
+        plt.imshow(self.Sigma_prior)
+        plt.colorbar()
+        plt.subplot(133)
+        plt.scatter(self.lon, self.lat, c=self.mu_real, cmap="Paired")
+        plt.colorbar()
+        plt.title("Prior mean")
+        plt.xlabel("Lon [deg]")
+        plt.ylabel("Lat [deg]")
+        plt.show()
 
     def updateF(self, ind):
         self.F = np.zeros([1, self.N])
@@ -172,19 +202,9 @@ class PathPlanner_Polygon(GP_Poly):
 
 # if __name__ == "__main__":
     # a = PathPlanner()
-a = PathPlanner_Polygon()
+a = Simulator()
 print("Mission complete!!!")
 
-#%%
-import matplotlib.pyplot as plt
 
-plt.scatter(a.lon_l[a.data_path_waypoint], a.lat_loc[a.data_path_waypoint], c = a.salinity_loc[a.data_path_waypoint], cmap = "Paired")
-plt.colorbar()
-plt.show()
-
-#%%
-plt.scatter(a.lon_layers[:, 0], a.lat_layers[:, 0], c = a.salinity_layers_ave[:, 0], cmap = "Paired")
-plt.colorbar()
-plt.show()
 
 

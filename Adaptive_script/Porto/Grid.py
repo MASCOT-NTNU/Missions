@@ -221,13 +221,14 @@ class GridPoly(Grid, WaypointNode):
     generate the polygon grid with equal-distance from one to another
     '''
     distance_poly = 60  # [m], distance between two neighbouring points
+    depth_obs = [-.5, -1.25, -2] # [m], distance in depth, depth to be explored
     polygon = None
     loc_start = None
     counter_plot = 0  # counter for plot number
     counter_grid = 0  # counter for grid points
     debug = True
     voiceCtrl = False
-    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/fig/P5/"
+    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/fig/"
 
     def __init__(self, polygon = np.array([[41.12251, -8.707745],
                                         [41.12413, -8.713079],
@@ -239,6 +240,8 @@ class GridPoly(Grid, WaypointNode):
                                         [41.11198, -8.710787],
                                         [41.11764, -8.710245],
                                         [41.12251, -8.707745]]), debug = True, voiceCtrl = False):
+        if debug:
+            self.checkFolder()
         self.lat_origin, self.lon_origin = 41.061874, -8.650977 # origin location
         self.grid_poly = []
         self.pointsPr = 1000  # points per layer
@@ -248,18 +251,44 @@ class GridPoly(Grid, WaypointNode):
         self.polygon_path = mplPath.Path(self.polygon)
         self.angle_poly = self.deg2rad(np.arange(0, 6) * 60)  # angles for polygon
         self.getPolygonArea()
+
         print("Grid polygon is activated!")
         print("Distance between neighbouring points: ", self.distance_poly)
+        print("Depth to be observed: ", self.depth_obs)
         print("Starting location: ", self.loc_start)
         print("Polygon: ", self.polygon.shape)
         print("Points desired: ", self.pointsPr)
         print("Debug mode: ", self.debug)
-        print("fig path: ", GridPoly.figpath)
+        print("fig path: ", self.figpath)
         t1 = time.time()
         self.getGridPoly()
         t2 = time.time()
-
         print("Grid discretisation takes: {:.2f} seconds".format(t2 - t1))
+        # self.checkSingular()
+
+    # def checkSingular(self):
+    #     x, y = self.latlon2xy(self.grid_poly[:, 0], self.grid_poly[:, 1], self.lat_origin, self.lon_origin)
+    #     x = x.reshape(-1, 1)
+    #     y = y.reshape(-1, 1)
+    #     grid = np.hstack((y, x))
+    #     import scipy.spatial.distance as scdist
+    #     t = scdist.cdist(grid, grid)
+    #     print(["Positive " if np.all(np.linalg.eigvals(t) > 0) else "Singular"])
+    #     plt.figure()
+    #     plt.plot(self.grid_poly[:, 1], self.grid_poly[:, 0], 'k.')
+    #     plt.title("grid discretisation")
+    #     plt.show()
+
+    def checkFolder(self):
+        i = 0
+        while os.path.exists(self.figpath + "P%s" % i):
+            i += 1
+        self.figpath = self.figpath + "P%s" % i
+        if not os.path.exists(self.figpath):
+            print(self.figpath + " is created")
+            os.mkdir(self.figpath)
+        else:
+            print(self.figpath + " is already existed")
 
     def revisit(self, loc):
         '''
@@ -280,8 +309,8 @@ class GridPoly(Grid, WaypointNode):
         '''
         get new locations around the current location 
         '''
-        lat_delta, lon_delta = self.xy2latlon(self.distance_poly * np.cos(self.angle_poly),
-                                              self.distance_poly * np.sin(self.angle_poly), 0, 0)
+        lat_delta, lon_delta = self.xy2latlon(self.distance_poly * np.sin(self.angle_poly),
+                                              self.distance_poly * np.cos(self.angle_poly), 0, 0)
         return lat_delta + loc[0], lon_delta + loc[1]
 
     def getStartLocation(self):
@@ -314,6 +343,7 @@ class GridPoly(Grid, WaypointNode):
 
         if self.debug:
             self.counter_plot = self.counter_plot + 1
+            print(self.counter_grid)
             plt.figure(figsize=(10, 10))
             temp1 = np.array(self.grid_poly)
             plt.plot(temp1[:, 1], temp1[:, 0], 'k.')
@@ -324,7 +354,7 @@ class GridPoly(Grid, WaypointNode):
             plt.title(
                 "Step No. {:04d}, added {:1d} new points, {:1d} total points in the grid".format(self.counter_plot, 6, 6))
 
-            plt.savefig(GridPoly.figpath + "I_{:04d}.png".format(self.counter_plot))
+            plt.savefig(self.figpath + "/I_{:04d}.png".format(self.counter_plot))
             plt.close("all")
         WaypointNode_start = WaypointNode(len(start_node), start_node, self.loc_start)
         Allwaypoints = self.getAllWaypoints(WaypointNode_start)
@@ -355,6 +385,7 @@ class GridPoly(Grid, WaypointNode):
             if len(subsubwaypoint) > 0:
                 if self.debug:
                     self.counter_plot = self.counter_plot + 1
+                    print(self.counter_grid)
                     plt.figure(figsize=(10, 10))
                     temp1 = np.array(self.grid_poly)
                     plt.plot(temp1[:, 1], temp1[:, 0], 'k.')
@@ -366,7 +397,7 @@ class GridPoly(Grid, WaypointNode):
                     plt.title("Step No. {:04d}, added {:1d} new points, {:1d} total points in the grid".format(self.counter_plot,
                                                                                                          length_new,
                                                                                                          self.counter_grid))
-                    plt.savefig(GridPoly.figpath + "I_{:04d}.png".format(self.counter_plot))
+                    plt.savefig(self.figpath + "/I_{:04d}.png".format(self.counter_plot))
                     plt.close("all")
                 Subwaypoint = WaypointNode(len(subsubwaypoint), subsubwaypoint, waypoint_node.subwaypoint_loc[i])
                 self.getAllWaypoints(Subwaypoint)
@@ -376,8 +407,8 @@ class GridPoly(Grid, WaypointNode):
 
     def getPolygonArea(self):
         area = 0
-        prev = self.polygon[-1]
-        for i in range(self.polygon.shape[0]):
+        prev = self.polygon[-2]
+        for i in range(self.polygon.shape[0] - 1):
             now = self.polygon[i]
             xnow, ynow = GridPoly.latlon2xy(now[0], now[1], self.lat_origin, self.lon_origin)
             xpre, ypre = GridPoly.latlon2xy(prev[0], prev[1], self.lat_origin, self.lon_origin)
@@ -475,18 +506,63 @@ class GridPoly(Grid, WaypointNode):
 #                     [41.11764, -8.710245],
 #                     [41.12251, -8.707745]])
 
+# polygon = np.array([[0, 0],
+#                     [.001, .005],
+#                     [.005, .01],
+#                     [.01, .01],
+#                     [.007, .003],
+#                     [.011, -.003],
+#                     [.013, -.002],
+#                     [.013, -.005],
+#                     [.01, -.006],
+#                     [.004, -.004],
+#                     [0, 0]])
 
-# a = GridPoly(debug = False)
-# a = GridPoly(debug = False)
-# t1 = time.time()
-# a.getGridPoly()
-# t2 = time.time()
-# print("Time consumed: ", t2 - t1)
-# a.plotGridonMap(a.grid_poly)
-# os.system("say finished")
-# a = Grid()
-# a.checkGridCoord()
-# a.checkBox()
+# polygon = np.array([[41.142246, -8.689333],
+#                     [41.140181, -8.689711],
+#                     [41.148664, -8.703608],
+#                     [41.136460, -8.702222],
+#                     [41.142246, -8.689333]])
+
+if __name__ == "__main__":
+    a = GridPoly(debug = False)
+    lat = a.grid_poly[:, 0]
+    lon = a.grid_poly[:, 1]
+    x, y = a.latlon2xy(lat, lon, a.lat_origin, a.lon_origin)
+    x = x.reshape(-1, 1)
+    y = y.reshape(-1, 1)
+    grid = np.hstack((y, x))
+    import scipy.spatial.distance as scdist
+    t = scdist.cdist(grid, grid)
+    # print(np.linalg.cholesky(t))
+    from Adaptive_script.Porto.usr_func import *
+    Sigma = Matern_cov(2, 4.5/600, t)
+
+    plt.figure()
+    plt.plot(a.grid_poly[:, 1], a.grid_poly[:, 0], 'k.')
+    plt.title("grid discretisation")
+    plt.show()
+
+    plt.figure()
+    plt.imshow(Sigma, cmap = "Paired")
+    plt.colorbar()
+    plt.title("Covariance matrix is " + "Positive definite" if np.all(np.linalg.eigvals(Sigma) > 0) else "Singular")
+    plt.xlabel("y")
+    plt.ylabel("x")
+    # plt.savefig(a.figpath + "Sigma.pdf")
+    plt.show()
+
+    print(np.linalg.cholesky(Sigma))
+    # a = GridPoly(debug = False)
+    # t1 = time.time()
+    # a.getGridPoly()
+    # t2 = time.time()
+    # print("Time consumed: ", t2 - t1)
+    # a.plotGridonMap(a.grid_poly)
+    # os.system("say finished")
+    # a = Grid()
+    # a.checkGridCoord()
+    # a.checkBox()
 
 
 
