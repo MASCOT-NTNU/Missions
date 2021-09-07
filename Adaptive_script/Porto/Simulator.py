@@ -14,7 +14,7 @@ class PathPlanner_Polygon(GP_Poly):
     mu_prior, Sigma_prior = [None, None]
     travelled_waypoints = None
     data_path_waypoint = []
-    Total_waypoints = 60
+    Total_waypoints = 10
     distance_neighbours = np.sqrt(GP_Poly.distance_poly ** 2 + (GP_Poly.depth_obs[1] - GP_Poly.depth_obs[0]) ** 2)
 
     def __init__(self, Simulation = False):
@@ -170,19 +170,21 @@ class PathPlanner_Polygon(GP_Poly):
 
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # a = PathPlanner()
-    a = PathPlanner_Polygon()
-    print("Mission complete!!!")
+a = PathPlanner_Polygon()
+print("Mission complete!!!")
 
 #%%
 import matplotlib.pyplot as plt
 
-plt.scatter(a.lon_loc[a.data_path_waypoint], a.lat_loc[a.data_path_waypoint], c = a.salinity_loc[a.data_path_waypoint], cmap = "Paired")
+plt.scatter(a.lon_l[a.data_path_waypoint], a.lat_loc[a.data_path_waypoint], c = a.salinity_loc[a.data_path_waypoint], cmap = "Paired")
 plt.colorbar()
 plt.show()
 
 #%%
-plt.plot(a.data_path_waypoint)
+plt.scatter(a.lon_layers[:, 0], a.lat_layers[:, 0], c = a.salinity_layers_ave[:, 0], cmap = "Paired")
+plt.colorbar()
 plt.show()
+
 
