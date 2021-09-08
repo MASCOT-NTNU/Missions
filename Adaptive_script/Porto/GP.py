@@ -10,21 +10,21 @@ __status__ = "UnderDevelopment"
 
 import time
 import numpy as np
-from Adaptive_script.Porto.Prior import Prior1
+from Adaptive_script.Porto.Prior import Prior1, Prior2
 
-class GP_Poly(Prior1):
+class GP_Poly(Prior2):
     '''
     Gaussian Process
     '''
 
     # coef for salinity
-    sigma_sal = np.sqrt(4) # scaling coef in matern kernel for salinity
-    tau_sal = np.sqrt(.3) # iid noise
-    Threshold_S = 28 # threshold for salinity
+    sigma_sal = np.sqrt(.1) # scaling coef in matern kernel for salinity
+    tau_sal = np.sqrt(.01) # iid noise
+    Threshold_S = 33 # threshold for salinity
 
     # coef shared in common
     eta = 4.5 / 600 # coef in matern kernel
-    ksi = 600 / 13 # scaling factor in 3D
+    ksi = 600 / 2 # scaling factor in 3D
 
     # compute distance matrix and covariance matrix
     distanceMatrix = None
@@ -35,7 +35,7 @@ class GP_Poly(Prior1):
     R_sal = np.diagflat(noise_sal)  # diag not anymore support constructing matrix from vector
 
     def __init__(self, debug = False):
-        Prior1.__init__(self, debug = False)
+        Prior2.__init__(self, debug = False)
         print("Here comes the Gaussian process setup!")
         t1 = time.time()
         self.getDistanceMatrix()
@@ -70,8 +70,8 @@ class GP_Poly(Prior1):
         '''
         :return: Distance matrix with scaling the depth direction
         '''
-        lat = self.lat.reshape(-1, 1)
-        lon = self.lon.reshape(-1, 1)
+        lat = self.lat_selected[:, 0].reshape(-1, 1)
+        lon = self.lon_selected[:, 0].reshape(-1, 1)
         # depth = self.depth.reshape(-1, 1)
         x, y = self.latlon2xy(lat, lon, self.lat_origin, self.lon_origin)
         x = x.reshape(-1, 1)
