@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
-from progress.bar import IncrementalBar
+# from progress.bar import IncrementalBar
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly

@@ -169,25 +169,25 @@ data_folder = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/"
 data_folder_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_HDF/"
 wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Wind/wind_data.txt"
 
-if __name__ == "__main__":
-    a = DataGetter(data_folder, "09", data_folder_new, wind_path)
-    # # # a.getfiles() # only used when the data file is not created
-    # a.mergedata()
-    # a.getdata4wind(wind_dir = "North", wind_level = "Calm")
-    # a.checkSingularity()
-    x, y = a.latlon2xy(a.grid_poly[:, 0], a.grid_poly[:, 1], a.lat_origin, a.lon_origin)
-    x = x.reshape(-1, 1)
-    y = y.reshape(-1, 1)
-    grid = np.hstack((y, x))
-    import scipy.spatial.distance as scdist
+# if __name__ == "__main__":
+    # a = DataGetter(data_folder, "09", data_folder_new, wind_path)
+    # # # # a.getfiles() # only used when the data file is not created
+    # # a.mergedata()
+    # # a.getdata4wind(wind_dir = "North", wind_level = "Calm")
+    # # a.checkSingularity()
+    # x, y = a.latlon2xy(a.grid_poly[:, 0], a.grid_poly[:, 1], a.lat_origin, a.lon_origin)
+    # x = x.reshape(-1, 1)
+    # y = y.reshape(-1, 1)
+    # grid = np.hstack((y, x))
+    # import scipy.spatial.distance as scdist
+    #
+    # t = scdist.cdist(grid, grid)
+    # from Adaptive_script.Porto.usr_func import *
+    # Sigma = Matern_cov(2, 4.5/600, t)
+    #
+    # print(["Positive " if np.all(np.linalg.eigvals(Sigma) > 0) else "Singular"])
 
-    t = scdist.cdist(grid, grid)
-    from Adaptive_script.Porto.usr_func import *
-    Sigma = Matern_cov(2, 4.5/600, t)
 
-    print(["Positive " if np.all(np.linalg.eigvals(Sigma) > 0) else "Singular"])
-
- #%%
 # plt.scatter(a.lon_merged, a.lat_merged, c = (np.mean(a.salinity_merged[0], axis = 0) + np.mean(a.salinity_merged[1], axis = 0) + np.mean(a.salinity_merged[2], axis = 0) + np.mean(a.salinity_merged[3], axis = 0))/4, cmap = "Paired")
 # plt.plot(a.polygon[:, 1], a.polygon[:, 0], 'k-')
 # plt.colorbar()
@@ -321,7 +321,7 @@ class Prior1(GridPoly):
 # a.getData4Grid()
 # a.plot_select_region()
 
-#%%
+
 
 # #%%
 # figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Presentation/MASCOT/Sept6/fig/"
@@ -334,7 +334,7 @@ class Prior1(GridPoly):
 # plt.show()
 
 
-#%%
+
 # import seaborn as sns
 # sns.displot(a.range_coef, kind = 'kde', label = "Distribution of range coefficient")
 # plt.axvline(np.mean(a.range_coef), c = 'r', label = "Mean of nugget coefficient: {:.2f}".format(np.mean(a.range_coef)))
@@ -366,23 +366,28 @@ class DataGetter2(GridPoly):
     '''
     data_path = None
     data_path_new = None
-    polygon = np.array([[41.12902, -8.69901],
-                        [41.12382, -8.68799],
-                        [41.12642, -8.67469],
-                        [41.12071, -8.67189],
-                        [41.11743, -8.68336],
-                        [41.11644, -8.69869],
-                        [41.12295, -8.70283],
-                        [41.12902, -8.69901]])
+    polygon = np.array([[41.0962, -8.71576],
+                        [41.0951, -8.67648],
+                        [41.1113, -8.67843],
+                        [41.1146, -8.71163],
+                        [41.0962, -8.71576]])
+    # polygon = np.array([[41.12902, -8.69901],
+    #                     [41.12382, -8.68799],
+    #                     [41.12642, -8.67469],
+    #                     [41.12071, -8.67189],
+    #                     [41.11743, -8.68336],
+    #                     [41.11644, -8.69869],
+    #                     [41.12295, -8.70283],
+    #                     [41.12902, -8.69901]])
 
     def __init__(self, data_path):
         GridPoly.__init__(self, polygon = DataGetter2.polygon, debug = False)
-        self.plotGridonMap(self.grid_poly)
+        # self.plotGridonMap(self.grid_poly)
         self.data_path = data_path
         self.loaddata()
         # self.plot_polygon_grid_data()
         self.select_data_simulator()
-        # self.save_selected_data()
+        self.save_selected_data()
 
     def loaddata(self):
         print("Loading the 3D data...")
@@ -392,8 +397,8 @@ class DataGetter2(GridPoly):
         self.lon = np.array(self.data.get('lon'))
         self.depth = np.array(self.data.get('depth'))
         self.salinity = np.array(self.data.get('salinity'))
-        self.salinity_ave = np.nanmean(self.salinity, axis = 0)
-        self.depth_ave = np.nanmean(self.depth, axis = 0)
+        self.salinity_ave = np.mean(self.salinity, axis = 0) # nanmean sometimes can induce problems
+        self.depth_ave = np.mean(self.depth, axis = 0)
         print("3D data is loaded correctly!")
         print("lat: ", self.lat.shape)
         print("lon: ", self.lon.shape)
@@ -468,34 +473,24 @@ class DataGetter2(GridPoly):
 
     def select_data_simulator(self):
         t1 = time.time()
-        self.lat_selected = []
-        self.lon_selected = []
-        self.depth_selected = []
-        self.salinity_selected = []
-        for i in range(len(self.depth_obs)):
-            for j in range(len(self.grid_poly)):
-                print(j)
-                lat_diff = self.lat - self.grid_poly[j, 0]
-                lon_diff = self.lon - self.grid_poly[j, 1]
-                depth_diff = self.depth_ave - self.depth_obs[i]
-                dist_diff = lat_diff ** 2 + lon_diff ** 2 + depth_diff ** 2
+        self.lat_selected = np.zeros([len(self.grid_poly), len(self.depth_obs)])
+        self.lon_selected = np.zeros([len(self.grid_poly), len(self.depth_obs)])
+        self.depth_selected = np.zeros([len(self.grid_poly), len(self.depth_obs)])
+        self.salinity_selected = np.zeros([len(self.grid_poly), len(self.depth_obs)])
+        self.depth_mean = np.nanmean(self.depth_ave, axis = (0, 1))
+        for i in range(len(self.grid_poly)):
+            for j in range(len(self.depth_obs)):
+                temp_depth = np.abs(self.depth_mean - self.depth_obs[j])
+                depth_ind = np.where(temp_depth == temp_depth.min())[0][0]
+                lat_diff = self.lat[:, :, depth_ind] - self.grid_poly[i, 0]
+                lon_diff = self.lon[:, :, depth_ind] - self.grid_poly[i, 1]
+                dist_diff = lat_diff ** 2 + lon_diff ** 2
                 row_ind = np.where(dist_diff == np.nanmin(dist_diff))[0]
                 col_ind = np.where(dist_diff == np.nanmin(dist_diff))[1]
-                depth_ind = np.where(dist_diff == np.nanmin(dist_diff))[2]
-                print(row_ind, col_ind, depth_ind)
-                print([np.mean(self.lat[row_ind, col_ind, depth_ind]),
-                       np.mean(self.lon[row_ind, col_ind, depth_ind]),
-                       np.mean(self.depth_ave[row_ind, col_ind, depth_ind]),
-                       np.mean(self.salinity_ave[row_ind, col_ind, depth_ind])
-                       ])
-                self.lat_selected.append(np.mean(self.lat[row_ind, col_ind, depth_ind]))
-                self.lon_selected.append(np.mean(self.lon[row_ind, col_ind, depth_ind]))
-                self.depth_selected.append(np.mean(self.depth_ave[row_ind, col_ind, depth_ind]))
-                self.salinity_selected.append(np.mean(self.salinity_ave[row_ind, col_ind, depth_ind]))
-        self.lat_selected = np.array(self.lat_selected)
-        self.lon_selected = np.array(self.lon_selected)
-        self.depth_selected = np.array(self.depth_selected)
-        self.salinity_selected = np.array(self.salinity_selected)
+                self.lat_selected[i, j] = self.grid_poly[i, 0]
+                self.lon_selected[i, j] = self.grid_poly[i, 1]
+                self.depth_selected[i, j] = self.depth_obs[j]
+                self.salinity_selected[i, j] = self.salinity_ave[row_ind, col_ind, depth_ind]
         t2 = time.time()
         print("Data polygon selection is complete! Time consumed: ", t2 - t1)
         print("lat_selected: ", self.lat_selected.shape)
@@ -518,14 +513,28 @@ class DataGetter2(GridPoly):
         t2 = time.time()
         print("Finished data creation, time consumed: ", t2 - t1)
 
-# data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Delft3D.h5'
-# a = DataGetter2(data_path)
+if __name__ == "__main__":
+    data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Delft3D.h5'
+    a = DataGetter2(data_path)
+    import matplotlib.pyplot as plt
+    ind_depth = 0
+    # plt.scatter(a.lon[:, :, ind_depth], a.lat[:, :, ind_depth], c = a.salinity_ave[:, :, ind_depth], vmin = 31, vmax = 36, cmap = "Paired")
+    plt.scatter(a.lon[:, :, ind_depth], a.lat[:, :, ind_depth], c = a.salinity_ave[:, :, ind_depth], vmin = 31, vmax = 36, cmap = "Paired")
+    # plt.scatter(a.grid_poly[:, 1], a.grid_poly[:, 0])
+    plt.plot(a.polygon[:, 1], a.polygon[:, 0], 'r-', label = "Polygon")
+    plt.colorbar()
+    plt.xlabel("Lon [deg]")
+    plt.ylabel("Lat [deg]")
+    plt.title("Polygon selection")
+    # plt.legend()
+    # plt.savefig(figpath + "poly.pdf")
+    plt.show()
 
-#%%
+
 # import matplotlib.pyplot as plt
-# ind_depth = 0
-# # plt.scatter(a.lon[:, :, ind_depth], a.lat[:, :, ind_depth], c = a.salinity_ave[:, :, ind_depth], vmin = 10, vmax = 28, cmap = "Paired")
-# plt.scatter(a.lon_selected, a.lat_selected, c = a.salinity_selected, vmin = 10, vmax = 28, cmap = "Paired")
+# ind_depth = 2
+# # plt.scatter(a.lon[:, :, ind_depth], a.lat[:, :, ind_depth], c = a.salinity_ave[:, :, ind_depth], vmin = 31, vmax = 36, cmap = "Paired")
+# plt.scatter(a.lon_selected[:, ind_depth], a.lat_selected[:, ind_depth], c = a.salinity_selected[:, ind_depth], vmin = 31, vmax = 36, cmap = "Paired")
 # # plt.scatter(a.grid_poly[:, 1], a.grid_poly[:, 0])
 # plt.plot(a.polygon[:, 1], a.polygon[:, 0], 'r-', label = "Polygon")
 # plt.colorbar()
@@ -537,7 +546,7 @@ class DataGetter2(GridPoly):
 # plt.show()
 
 
-#%%
+
 class Prior2(GridPoly):
     '''
     Prior2 is build based on the 3D data forcasting, no wind data is available.
@@ -545,29 +554,28 @@ class Prior2(GridPoly):
     data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Selected/Selected_Prior2.h5'
     depth_obs = [-.5, -1.25, -2.0]
 
-    def __init__(self):
+    def __init__(self, debug = False):
         self.loaddata()
-        self.gatherData2Layers()
-
+        # self.gatherData2Layers()
         pass
 
     def loaddata(self):
         print("Loading the 3D data...")
         t1 = time.time()
         self.data = h5py.File(self.data_path, 'r')
-        self.lat = np.array(self.data.get('lat'))
-        self.lon = np.array(self.data.get('lon'))
-        self.depth = np.array(self.data.get('depth'))
-        self.salinity = np.array(self.data.get('salinity'))
-        self.salinity_ave = np.array(self.data.get('salinity_ave'))
-        self.depth_ave = np.array(self.data.get('depth_ave'))
+        self.lat_selected = np.array(self.data.get('lat_selected'))
+        self.lon_selected = np.array(self.data.get('lon_selected'))
+        self.depth_selected = np.array(self.data.get('depth_selected'))
+        self.salinity_selected = np.array(self.data.get('salinity_selected'))
+        # self.salinity_ave = np.array(self.data.get('salinity_ave'))
+        # self.depth_ave = np.array(self.data.get('depth_ave'))
         print("3D data is loaded correctly!")
-        print("lat: ", self.lat.shape)
-        print("lon: ", self.lon.shape)
-        print("depth: ", self.depth.shape)
-        print("salinity: ", self.salinity.shape)
-        print("depth ave: ", self.depth_ave.shape)
-        print("salinity ave: ", self.salinity_ave.shape)
+        print("lat_selected: ", self.lat_selected.shape)
+        print("lon_selected: ", self.lon_selected.shape)
+        print("depth_selected: ", self.depth_selected.shape)
+        print("salinity_selected: ", self.salinity_selected.shape)
+        # print("depth ave: ", self.depth_ave.shape)
+        # print("salinity ave: ", self.salinity_ave.shape)
         t2 = time.time()
         print("Loading data takes: ", t2 - t1)
 

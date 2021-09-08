@@ -17,3 +17,6 @@
 - depth needs to be negative in Delft3D data to be able to compute
 - selected lat and lon need to use grid, not from data, otherwise it will have singularity problem
 - singular in distance matrix, may not cause singular in covariance matrix, since it can differ becasue of the exponential item
+
+- empty eibv
+- possibly get stuck, long term overshoot
