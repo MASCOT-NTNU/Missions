@@ -220,7 +220,7 @@ class GridPoly(Grid, WaypointNode):
     '''
     generate the polygon grid with equal-distance from one to another
     '''
-    distance_poly = 60  # [m], distance between two neighbouring points
+    distance_poly = 100  # [m], distance between two neighbouring points
     depth_obs = [-.5, -1.25, -2] # [m], distance in depth, depth to be explored
     polygon = None
     loc_start = None
@@ -525,9 +525,20 @@ class GridPoly(Grid, WaypointNode):
 #                     [41.142246, -8.689333]])
 
 if __name__ == "__main__":
-    a = GridPoly(debug = False)
-    lat = a.grid_poly[:, 0]
-    lon = a.grid_poly[:, 1]
+    a = GridPoly(polygon = np.array([[41.12902, -8.69901],
+                        [41.12382, -8.68799],
+                        [41.12642, -8.67469],
+                        [41.12071, -8.67189],
+                        [41.11743, -8.68336],
+                        [41.11644, -8.69869],
+                        [41.12295, -8.70283],
+                        [41.12902, -8.69901]]), debug = False)
+    lat = a.grid_poly[:, 0].reshape(-1, 1)
+    lon = a.grid_poly[:, 1].reshape(-1, 1)
+    grid_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/grid.txt"
+    grid = np.hstack((lat, lon))
+    np.savetxt(grid_path, grid, delimiter = ",")
+
     x, y = a.latlon2xy(lat, lon, a.lat_origin, a.lon_origin)
     x = x.reshape(-1, 1)
     y = y.reshape(-1, 1)
