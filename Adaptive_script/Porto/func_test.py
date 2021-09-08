@@ -12,9 +12,33 @@ lat = np.array(data['lat']).reshape(-1, 1)
 lon = np.array(data['lon']).reshape(-1, 1)
 salinity = np.array(data['sal']).reshape(-1, 1)
 import matplotlib.pyplot as plt
-plt.scatter(lon, lat, c = salinity, vmin = 33, cmap = "Paired")
+plt.scatter(lon, lat, c = salinity, vmin = 33, vmax = 36, cmap = "Paired")
 plt.colorbar()
 plt.show()
+
+#%%
+lat_origin, lon_origin = 41.10251, -8.669811
+circumference = 40075000
+def deg2rad(deg):
+    return deg / 180 * np.pi
+def rad2deg(rad):
+    return rad / np.pi * 180
+def latlon2xy(lat, lon, lat_origin, lon_origin):
+    x = deg2rad(lat - lat_origin) / 2 / np.pi * circumference
+    y = deg2rad(lon - lon_origin) / 2 / np.pi * circumference * np.cos(deg2rad(lat))
+    # x_, y_ = self.R.T @ np.vstack(x, y) # convert it back
+    return x, y
+x, y = latlon2xy(lat, lon, lat_origin, lon_origin)
+x = x.reshape(-1, 1)
+y = y.reshape(-1, 1)
+
+ind = np.random.randint(0, x.shape[0] - 1, size = 100) # take out only 5000 random locations, otherwise it takes too long to run
+S_sample = salinity.reshape(-1, 1) # sample each frame
+residual = S_sample
+V_v = Variogram(coordinates = np.hstack((x[ind], y[ind])), values = residual[ind].squeeze(), n_lags = 20, maxlag = 3000, use_nugget=True)
+
+V_v.plot()
+print(V_v)
 
 #%%
 # check_path(figpath)
