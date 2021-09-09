@@ -8,7 +8,6 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
-
 import time
 import os
 import h5py
@@ -321,8 +320,6 @@ class Prior1(GridPoly):
 # a.getData4Grid()
 # a.plot_select_region()
 
-
-
 # #%%
 # figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Presentation/MASCOT/Sept6/fig/"
 # plt.scatter(a.lon, a.lat, c = a.salinity_ave, vmin = 27, vmax = 35, cmap = "Paired")
@@ -333,8 +330,6 @@ class Prior1(GridPoly):
 # # plt.savefig(figpath + "polygon.pdf")
 # plt.show()
 
-
-
 # import seaborn as sns
 # sns.displot(a.range_coef, kind = 'kde', label = "Distribution of range coefficient")
 # plt.axvline(np.mean(a.range_coef), c = 'r', label = "Mean of nugget coefficient: {:.2f}".format(np.mean(a.range_coef)))
@@ -343,14 +338,14 @@ class Prior1(GridPoly):
 # plt.legend()
 # plt.savefig(figpath + "range.pdf")
 # plt.show()
-#
+
 # sns.displot(a.sill_coef, kind = 'kde', label = "Distribution of range coefficient")
 # plt.axvline(np.mean(a.sill_coef), c = 'r', label = "Mean of nugget coefficient: {:.2f}".format(np.mean(a.sill_coef)))
 # plt.xlabel("Sill coef")
 # plt.legend()
 # plt.savefig(figpath + "sill.pdf")
 # plt.show()
-#
+
 # sns.displot(a.nugget_coef, kind = 'kde', label = "Distribution of range coefficient")
 # plt.axvline(np.mean(a.nugget_coef), c = 'r', label = "Mean of nugget coefficient: {:.2f}".format(np.mean(a.nugget_coef)))
 # plt.xlabel("Nugget coef")
@@ -359,18 +354,17 @@ class Prior1(GridPoly):
 # plt.show()
 
 
-from Adaptive_script.Porto.Grid import GridPoly
 class DataGetter2(GridPoly):
     '''
     Get data according to date specified and wind direction
     '''
     data_path = None
     data_path_new = None
-    polygon = np.array([[41.0962, -8.71576],
-                        [41.0951, -8.67648],
-                        [41.1113, -8.67843],
-                        [41.1146, -8.71163],
-                        [41.0962, -8.71576]])
+    polygon = np.array([[41.09, -8.70],
+                        [41.09, -8.675],
+                        [41.11, -8.675],
+                        [41.11, -8.70],
+                        [41.09, -8.70]])
     # polygon = np.array([[41.12902, -8.69901],
     #                     [41.12382, -8.68799],
     #                     [41.12642, -8.67469],
@@ -387,6 +381,7 @@ class DataGetter2(GridPoly):
         self.loaddata()
         # self.plot_polygon_grid_data()
         self.select_data_simulator()
+        # self.plotscatter3D(1)
         self.save_selected_data()
 
     def loaddata(self):
@@ -408,6 +403,49 @@ class DataGetter2(GridPoly):
         print("salinity ave: ", self.salinity_ave.shape)
         t2 = time.time()
         print("Loading data takes: ", t2 - t1)
+
+    def plotscatter3D(self, layers, frame = -1):
+        import plotly.express as px
+        Lon = self.lon[:, :, :layers].reshape(-1, 1)
+        Lat = self.lat[:, :, :layers].reshape(-1, 1)
+        Depth = self.depth[0, :, :, :layers].reshape(-1, 1)
+        if frame == -1:
+            sal_val = np.mean(self.salinity[:, :, :, :layers], axis=0).reshape(-1, 1)
+        else:
+            sal_val = self.salinity[frame, :, :, :layers].reshape(-1, 1)
+        print(sal_val.shape)
+        # Make 3D plot # #
+        fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
+        fig.add_trace(
+            go.Scatter3d(
+                x=Lon.squeeze(), y=Lat.squeeze(), z=Depth.squeeze(),
+                mode='markers',
+                marker=dict(
+                    size=4,
+                    color=sal_val.squeeze(),
+                    colorscale = px.colors.qualitative.Light24, # to have quantitified colorbars and colorscales
+                    showscale=True
+                ),
+            ),
+            row=1, col=1,
+        )
+        fig.update_layout(
+            scene={
+                'aspectmode': 'manual',
+                'xaxis_title': 'Lon [deg]',
+                'yaxis_title': 'Lat [deg]',
+                'zaxis_title': 'Depth [m]',
+                'aspectratio': dict(x=1, y=1, z=.5),
+            },
+            showlegend=True,
+            title="Delft 3D data visualisation",
+            # scene_camera_eye=camera,
+        )
+        if frame == -1:
+            plotly.offline.plot(fig, filename=self.figpath + "Data_ave.html", auto_open=False)
+        else:
+            plotly.offline.plot(fig, filename=self.figpath + "Data_{:d}.html".format(frame), auto_open=False)
+        # fig.write_image(self.figpath + "Scatter3D/S_{:04}.png".format(frame), width=1980, height=1080, engine = "orca")
 
     def filterNaN(self):
         self.lat_filtered = np.empty((0, 1))
@@ -513,39 +551,6 @@ class DataGetter2(GridPoly):
         t2 = time.time()
         print("Finished data creation, time consumed: ", t2 - t1)
 
-if __name__ == "__main__":
-    data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Delft3D.h5'
-    a = DataGetter2(data_path)
-    import matplotlib.pyplot as plt
-    ind_depth = 0
-    # plt.scatter(a.lon[:, :, ind_depth], a.lat[:, :, ind_depth], c = a.salinity_ave[:, :, ind_depth], vmin = 31, vmax = 36, cmap = "Paired")
-    plt.scatter(a.lon[:, :, ind_depth], a.lat[:, :, ind_depth], c = a.salinity_ave[:, :, ind_depth], vmin = 31, vmax = 36, cmap = "Paired")
-    # plt.scatter(a.grid_poly[:, 1], a.grid_poly[:, 0])
-    plt.plot(a.polygon[:, 1], a.polygon[:, 0], 'r-', label = "Polygon")
-    plt.colorbar()
-    plt.xlabel("Lon [deg]")
-    plt.ylabel("Lat [deg]")
-    plt.title("Polygon selection")
-    # plt.legend()
-    # plt.savefig(figpath + "poly.pdf")
-    plt.show()
-
-
-# import matplotlib.pyplot as plt
-# ind_depth = 2
-# # plt.scatter(a.lon[:, :, ind_depth], a.lat[:, :, ind_depth], c = a.salinity_ave[:, :, ind_depth], vmin = 31, vmax = 36, cmap = "Paired")
-# plt.scatter(a.lon_selected[:, ind_depth], a.lat_selected[:, ind_depth], c = a.salinity_selected[:, ind_depth], vmin = 31, vmax = 36, cmap = "Paired")
-# # plt.scatter(a.grid_poly[:, 1], a.grid_poly[:, 0])
-# plt.plot(a.polygon[:, 1], a.polygon[:, 0], 'r-', label = "Polygon")
-# plt.colorbar()
-# plt.xlabel("Lon [deg]")
-# plt.ylabel("Lat [deg]")
-# plt.title("Polygon selection")
-# # plt.legend()
-# # plt.savefig(figpath + "poly.pdf")
-# plt.show()
-
-
 
 class Prior2(GridPoly):
     '''
@@ -638,49 +643,36 @@ class Prior2(GridPoly):
             print(np.mean(self.range_coef), np.mean(self.sill_coef), np.mean(self.nugget_coef))
         t2 = time.time()
 
-# a = Prior2()
-# a.getVariogram()
+        import seaborn as sns
+        sns.displot(a.range_coef, kind = 'kde', label = "Distribution of range coefficient")
+        plt.axvline(np.mean(a.range_coef), c = 'r', label = "Mean of range coefficient: {:.2f}".format(np.mean(a.range_coef)))
+        # plt.axvline(500, c = 'b', label = "range coef == 500")
+        plt.xlabel("Range coef")
+        plt.legend()
+        plt.savefig(figpath + "range_depth.pdf")
+        plt.show()
 
-# #%%
-# # plt.scatter(a.lon_layers[:, 0], a.lat_layers[:, 0], c = a.salinity_layers_ave[:, 0], cmap = "Paired")
-# # plt.colorbar()
-# # plt.show()
-# from skgstat import Variogram
-# j = 0
-# print(np.random.randint(0, a.salinity.shape[0]))
-# ind = np.random.randint(0, a.salinity.shape[0])
-# ind = 208
-# a.residual = a.salinity_ave[j, :] - a.salinity[ind, j, :]
-# V_v = Variogram(
-#     coordinates=np.hstack((np.zeros_like(a.depth_ave[j, :]).reshape(-1, 1), a.depth_ave[j, :].reshape(-1, 1))),
-#     values=a.residual, n_lags=40, maxlag=15, use_nugget=True)
-# fig = V_v.plot()
-# fig.savefig(figpath + "variogram_depth.pdf")
-# plt.show()
+        sns.displot(a.sill_coef, kind = 'kde', label = "Distribution of range coefficient")
+        plt.axvline(np.mean(a.sill_coef), c = 'r', label = "Mean of sill coefficient: {:.2f}".format(np.mean(a.sill_coef)))
+        plt.xlabel("Sill coef")
+        plt.legend()
+        plt.savefig(figpath + "sill_depth.pdf")
+        plt.show()
 
-#%%
+        sns.displot(a.nugget_coef, kind = 'kde', label = "Distribution of range coefficient")
+        plt.axvline(np.mean(a.nugget_coef), c = 'r', label = "Mean of nugget coefficient: {:.2f}".format(np.mean(a.nugget_coef)))
+        plt.xlabel("Nugget coef")
+        plt.legend()
+        plt.savefig(figpath + "nugget_depth.pdf")
+        plt.show()
 
-# import seaborn as sns
-# sns.displot(a.range_coef, kind = 'kde', label = "Distribution of range coefficient")
-# plt.axvline(np.mean(a.range_coef), c = 'r', label = "Mean of range coefficient: {:.2f}".format(np.mean(a.range_coef)))
-# # plt.axvline(500, c = 'b', label = "range coef == 500")
-# plt.xlabel("Range coef")
-# plt.legend()
-# plt.savefig(figpath + "range_depth.pdf")
-# plt.show()
-#
-# sns.displot(a.sill_coef, kind = 'kde', label = "Distribution of range coefficient")
-# plt.axvline(np.mean(a.sill_coef), c = 'r', label = "Mean of sill coefficient: {:.2f}".format(np.mean(a.sill_coef)))
-# plt.xlabel("Sill coef")
-# plt.legend()
-# plt.savefig(figpath + "sill_depth.pdf")
-# plt.show()
-#
-# sns.displot(a.nugget_coef, kind = 'kde', label = "Distribution of range coefficient")
-# plt.axvline(np.mean(a.nugget_coef), c = 'r', label = "Mean of nugget coefficient: {:.2f}".format(np.mean(a.nugget_coef)))
-# plt.xlabel("Nugget coef")
-# plt.legend()
-# plt.savefig(figpath + "nugget_depth.pdf")
-# plt.show()
+
+if __name__ == "__main__":
+    data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Delft3D.h5'
+    a = DataGetter2(data_path)
+    # a = Prior2()
+    # plt.scatter(a.lon_selected, a.lat_selected, c=a.salinity_selected, vmin=33, vmax=36, cmap="Paired")
+    # plt.colorbar()
+    # plt.show()
 
 

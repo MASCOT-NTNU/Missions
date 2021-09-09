@@ -35,9 +35,9 @@ class Simulator(GP_Poly):
         self.travelled_waypoints = 0
         # self.checkSingularity()
         self.load_prior()
-        # self.plot_prior()
-        self.move_to_starting_loc()
-        self.run()
+        self.plot_prior()
+        # self.move_to_starting_loc()
+        # self.run()
 
     def checkFolder(self):
         i = 0
@@ -87,7 +87,7 @@ class Simulator(GP_Poly):
     def plot_prior(self):
         plt.figure(figsize = (40, 10))
         plt.subplot(121)
-        plt.scatter(self.lon_selected[:, 0], self.lat_selected[:, 0], c = self.mu_prior, vmin = 30, vmax = 36, s = 500, alpha = .5, cmap = "Paired")
+        plt.scatter(self.lon_selected[:, 0], self.lat_selected[:, 0], c = self.mu_prior,  vmax = 36, s = 500, alpha = .5, cmap = "Paired")
         plt.colorbar()
         plt.title("Prior mean")
         plt.xlabel("Lon [deg]")
@@ -96,7 +96,7 @@ class Simulator(GP_Poly):
         # plt.imshow(self.Sigma_prior)
         # plt.colorbar()
         plt.subplot(122)
-        plt.scatter(self.lon_selected[:, 0], self.lat_selected[:, 0], c=self.mu_real, vmin = 30, vmax = 36, s = 500, alpha = .5, cmap="Paired")
+        plt.scatter(self.lon_selected[:, 0], self.lat_selected[:, 0], c=self.mu_real, vmax = 36, s = 500, alpha = .5, cmap="Paired")
         plt.colorbar()
         plt.title("true mean")
         plt.xlabel("Lon [deg]")
@@ -306,7 +306,7 @@ class Simulator(GP_Poly):
 
 # if __name__ == "__main__":
     # a = PathPlanner()
-a = Simulator(Simulation=True)
+a = Simulator(Simulation=False)
 print("Mission complete!!!")
 
 
