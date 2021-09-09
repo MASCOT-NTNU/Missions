@@ -18,12 +18,12 @@ class GP_Poly(Prior2):
     '''
 
     # coef for salinity
-    sigma_sal = np.sqrt(.1) # scaling coef in matern kernel for salinity
-    tau_sal = np.sqrt(.01) # iid noise
-    Threshold_S = 33 # threshold for salinity
+    sigma_sal = np.sqrt(.01) # scaling coef in matern kernel for salinity
+    tau_sal = np.sqrt(.001) # iid noise
+    Threshold_S = 34.5 # threshold for salinity
 
     # coef shared in common
-    eta = 4.5 / 600 # coef in matern kernel
+    eta = 4.5 / 400 # coef in matern kernel
     ksi = 600 / 2 # scaling factor in 3D
 
     # compute distance matrix and covariance matrix
