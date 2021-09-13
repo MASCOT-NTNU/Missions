@@ -18,12 +18,12 @@ class GP_Poly(Prior2):
     '''
 
     # coef for salinity
-    sigma_sal = np.sqrt(.01) # scaling coef in matern kernel for salinity
-    tau_sal = np.sqrt(.001) # iid noise
-    Threshold_S = 34.5 # threshold for salinity
+    sigma_sal = np.sqrt(4) # scaling coef in matern kernel for salinity
+    tau_sal = np.sqrt(.03) # iid noise
+    Threshold_S = 34 # threshold for salinity
 
     # coef shared in common
-    eta = 4.5 / 400 # coef in matern kernel
+    eta = 4.5 / 600 # coef in matern kernel
     ksi = 600 / 2 # scaling factor in 3D
 
     # compute distance matrix and covariance matrix
@@ -50,21 +50,6 @@ class GP_Poly(Prior2):
         print("Threshold_S: ", self.Threshold_S)
         print("eta: ", self.eta)
         print("ksi: ", self.ksi)
-
-    def set_sigma_sal(self, value):
-        self.sigma_sal = value
-
-    def set_tau_sal(self, value):
-        self.tau_sal = value
-
-    def set_Threshold_S(self, value):
-        self.Threshold_S = value
-
-    def set_eta(self, value):
-        self.sigma_sal = value
-
-    def set_ksi(self, value):
-        self.sigma_sal = value
 
     def getDistanceMatrix(self):
         '''

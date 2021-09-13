@@ -393,7 +393,7 @@ class PathPlanner_Polygon(AUV, DataAssimilator, GP_Poly):
             dlon2 = self.lon_cand[i] - self.lon_now
             ddepth2 = self.depth_cand[i] - self.depth_now
             vec2 = np.array([dlat2, dlon2, ddepth2])
-            if np.dot(vec1, vec2) >= 0:
+            if np.dot(vec1, vec2) > 0:
                 id.append(self.ind_cand[i])
             else:
                 continue
