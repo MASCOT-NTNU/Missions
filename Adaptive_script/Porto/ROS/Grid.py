@@ -11,16 +11,8 @@ __status__ = "UnderDevelopment"
 import time
 import numpy as np
 import os
-from gmplot import GoogleMapPlotter
-from matplotlib.colors import Normalize
-from matplotlib.cm import ScalarMappable
 import matplotlib.pyplot as plt
 import matplotlib.path as mplPath # used to determine whether a point is inside the grid or not
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-import plotly
-plotly.io.orca.config.executable = '/usr/local/bin/orca'
-plotly.io.orca.config.save()
 
 '''
 Goal of the script is to make the class structure
@@ -30,7 +22,6 @@ Path planner: plan the next waypoint
 
 This grid generation will generate the polygon grid as desired, using non-binary tree with recursion, it is very efficient
 '''
-
 
 class WaypointNode:
     '''
@@ -43,7 +34,6 @@ class WaypointNode:
         self.subwaypoint_len = subwaypoints_len
         self.subwaypoint_loc = subwaypoints_loc
         self.waypoint_loc = waypoint_loc
-
 
 class GridPoly(WaypointNode):
     '''
@@ -61,9 +51,9 @@ class GridPoly(WaypointNode):
     counter_grid = 0  # counter for grid points
     debug = True
     voiceCtrl = False
-    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/fig/"
+    figpath = None
 
-    def __init__(self, polygon = np.array([[41.12251, -8.707745],
+    def __init__(self, polygon = np.array([[41.12251, -8.707745], # default polygon, needs to be updated
                                         [41.12413, -8.713079],
                                         [41.11937, -8.715101],
                                         [41.11509, -8.717317],
@@ -81,9 +71,8 @@ class GridPoly(WaypointNode):
         self.debug = debug
         self.voiceCtrl = voiceCtrl
         self.polygon_path = mplPath.Path(self.polygon)
-        self.angle_poly = self.deg2rad(np.arange(0, 6) * 60)  # angles for polygon
+        self.angle_poly = self.deg2rad(np.arange(0, 6) * 60)  # angles for polygon, can be changed to have more points
         self.getPolygonArea()
-
         print("Grid polygon is activated!")
         print("Distance between neighbouring points: ", self.distance_poly)
         print("Depth to be observed: ", self.depth_obs)
@@ -98,6 +87,8 @@ class GridPoly(WaypointNode):
         print("Grid discretisation takes: {:.2f} seconds".format(t2 - t1))
 
     def checkFolder(self):
+        self.figpath = os.getcwd() + "/fig/"
+        print("figpath: ", self.figpath)
         i = 0
         while os.path.exists(self.figpath + "P%s" % i):
             i += 1
@@ -224,7 +215,7 @@ class GridPoly(WaypointNode):
 
     def getPolygonArea(self):
         area = 0
-        prev = self.polygon[-2]
+        prev = self.polygon[-1]
         for i in range(self.polygon.shape[0] - 1):
             now = self.polygon[i]
             xnow, ynow = GridPoly.latlon2xy(now[0], now[1], self.lat_origin, self.lon_origin)
@@ -235,31 +226,6 @@ class GridPoly(WaypointNode):
         print("Area: ", self.PolyArea / 1e6, " km2")
         if self.voiceCtrl:
             os.system("say Area is: {:.1f} squared kilometers".format(self.PolyArea / 1e6))
-
-    def plotGridonMap(self, grid):
-        def color_scatter(gmap, lats, lngs, values=None, colormap='coolwarm',
-                          size=None, marker=False, s=None, **kwargs):
-            def rgb2hex(rgb):
-                """ Convert RGBA or RGB to #RRGGBB """
-                rgb = list(rgb[0:3])  # remove alpha if present
-                rgb = [int(c * 255) for c in rgb]
-                hexcolor = '#%02x%02x%02x' % tuple(rgb)
-                return hexcolor
-
-            if values is None:
-                colors = [None for _ in lats]
-            else:
-                cmap = plt.get_cmap(colormap)
-                norm = Normalize(vmin=min(values), vmax=max(values))
-                scalar_map = ScalarMappable(norm=norm, cmap=cmap)
-                colors = [rgb2hex(scalar_map.to_rgba(value)) for value in values]
-            for lat, lon, c in zip(lats, lngs, colors):
-                gmap.scatter(lats=[lat], lngs=[lon], c=c, size=size, marker=marker, s=s, **kwargs)
-        initial_zoom = 12
-        apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
-        gmap = GoogleMapPlotter(grid[0, 0], grid[0, 1], initial_zoom, apikey=apikey)
-        color_scatter(gmap, grid[:, 0], grid[:, 1], np.zeros_like(grid[:, 0]), size=20, colormap='hsv')
-        gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
 
     @staticmethod
     def deg2rad(deg):
@@ -287,16 +253,4 @@ class GridPoly(WaypointNode):
         x2, y2 = GridPoly.latlon2xy(coord2[0], coord2[1], GridPoly.lat_origin, GridPoly.lon_origin)
         dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
         return dist
-
-    @staticmethod
-    def checkGridCoord(lat_origin, lon_origin, lat, lon):
-        initial_zoom = 12
-        apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
-        gmap = GoogleMapPlotter(lat_origin, lon_origin, initial_zoom, map_type='satellite', apikey=apikey)
-        gmap.scatter(lat, lon, color='#99ff00', size=20, marker=False)
-        gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
-
-
-
-
 
