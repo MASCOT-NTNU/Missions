@@ -25,7 +25,7 @@ class Mat2HDF5:
         # data_path_new contains the path for the new hdf5 file
         self.data_path = data_path
         self.data_path_new = data_path_new
-        self.loaddata()
+        # self.loaddata()
 
     def loaddata(self):
         '''
@@ -78,25 +78,27 @@ class DataMerger(Mat2HDF5):
     def __init__(self, data_folder, data_folder_new):
         self.data_folder = data_folder
         self.data_folder_new = data_folder_new
-        self.mergeAll()
+        # self.mergeAll()
 
     def mergeAll(self):
-        i = 0
         for s in os.listdir(self.data_folder):
-            if i == 2:
-                break
-
             if s.endswith(".mat"):
                 print(s)
                 self.data_path = self.data_folder + s
-                t = Mat2HDF5(self.data_path, self.data_path + "/test/")
-            i = i + 1
+                t = Mat2HDF5(self.data_path, self.data_path[:-4] + ".h5")
+                t.loaddata()
+                t.mat2hdf()
 
+if __name__ == "__main__":
+#     data_folder = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Sep_Prior/'
+    data_folder = "/Volumes/LaCie/MASCOT/Data/"
+    data_folder_new = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Sep_Prior/New'
+    a = DataMerger(data_folder, data_folder_new)
 # data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat'
 # data_path_new = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Delft3D.h5'
 # a = Mat2HDF5(data_path, data_path_new)
 # a.mat2hdf()
-
+#%%
 class DataHandler_Delft3D:
     data_path = None
     data = None
