@@ -54,28 +54,6 @@ data = np.hstack((lat[ind_nnan].reshape(-1, 1), lon[ind_nnan].reshape(-1, 1), de
 np.savetxt("test.txt", data, delimiter = ',')
 
 #%%
-import time
-t1 = time.time()
-data = np.loadtxt("test.txt", delimiter = ",")
-lat = data[:, 0].reshape(-1, 1)
-lon = data[:, 1].reshape(-1, 1)
-depth = data[:, 2].reshape(-1, 1)
-salinity = data[:, 3].reshape(-1, 1)
-t2 = time.time()
-print(t2 - t1)
-print(lat.shape)
-#%%
-# threshold = 33
-# salinity[salinity < 33] = 0
-# salinity[salinity >= 33] = 1
-plt.scatter(lon, lat, c = salinity, cmap = "Paired")
-plt.axvline(-8.70)
-plt.axvline(-8.675)
-plt.axhline(41.110)
-plt.axhline(41.09)
-
-plt.colorbar()
-plt.show()
 
 
 #%%

@@ -164,9 +164,10 @@ class DataGetter(Mat2HDF5, DataHandler_Delft3D, GridPoly):
     #     print(["Positive " if np.all(np.linalg.eigvals(t) > 0) else "Singular"])
 
 
-data_folder = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/"
-data_folder_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_HDF/"
+# data_folder = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2/"
+# data_folder_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_HDF/"
 wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Wind/wind_data.txt"
+
 
 # if __name__ == "__main__":
     # a = DataGetter(data_folder, "09", data_folder_new, wind_path)
