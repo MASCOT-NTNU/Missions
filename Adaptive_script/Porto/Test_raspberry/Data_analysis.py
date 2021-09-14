@@ -5,8 +5,10 @@ import mat73
 import os
 import h5py
 import pandas as pd
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
+
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly
@@ -15,6 +17,7 @@ plotly.io.orca.config.save()
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams.update({'font.size': 12})
 plt.rcParams.update({'font.style': 'oblique'})
+
 
 class Mat2HDF5:
     data_path = None
@@ -25,7 +28,7 @@ class Mat2HDF5:
         # data_path_new contains the path for the new hdf5 file
         self.data_path = data_path
         self.data_path_new = data_path_new
-        # self.loaddata()
+        self.loaddata()
 
     def loaddata(self):
         '''
@@ -71,34 +74,11 @@ class Mat2HDF5:
         print("Time consumed: ", t2 - t1, " seconds.")
         os.system("say finished data conversion, it takes {:.1f} seconds.".format(t2 - t1))
 
-class DataMerger(Mat2HDF5):
-    data_folder = None
-    data_folder_new = None
-
-    def __init__(self, data_folder, data_folder_new):
-        self.data_folder = data_folder
-        self.data_folder_new = data_folder_new
-        # self.mergeAll()
-
-    def mergeAll(self):
-        for s in os.listdir(self.data_folder):
-            if s.endswith(".mat"):
-                print(s)
-                self.data_path = self.data_folder + s
-                t = Mat2HDF5(self.data_path, self.data_path[:-4] + ".h5")
-                t.loaddata()
-                t.mat2hdf()
-
-if __name__ == "__main__":
-#     data_folder = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Sep_Prior/'
-    data_folder = "/Volumes/LaCie/MASCOT/Data/"
-    data_folder_new = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Sep_Prior/New'
-    a = DataMerger(data_folder, data_folder_new)
 # data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat'
 # data_path_new = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Delft3D.h5'
 # a = Mat2HDF5(data_path, data_path_new)
 # a.mat2hdf()
-#%%
+
 class DataHandler_Delft3D:
     data_path = None
     data = None
@@ -119,8 +99,8 @@ class DataHandler_Delft3D:
             if self.voiceControl:
                 os.system("say Fine mode is activated")
             print("Fine mode is activated!")
-        self.data_path = datapath
-        self.wind_path = windpath
+        self.set_datapath(datapath)
+        self.set_windpath(windpath)
         self.load_data()
         self.load_wind()
         self.merge_data()
@@ -128,6 +108,10 @@ class DataHandler_Delft3D:
     def set_figpath(self, figpath):
         self.figpath = figpath
         print("figpath is set correctly, ", self.figpath)
+
+    def set_datapath(self, path):
+        self.data_path = path
+        print("Path to data is set correctly, ", self.data_path)
 
     def load_data(self):
         t1 = time.time()
@@ -148,6 +132,10 @@ class DataHandler_Delft3D:
         print("Salinity: ", self.salinity.shape)
         print("Date: ", self.string_date)
         print("Time: ", self.timestamp_data.shape)
+
+    def set_windpath(self, path):
+        self.wind_path = path
+        print("Path to wind data is set correctly, ", self.wind_path)
 
     def load_wind(self):
         t1 = time.time()
@@ -248,6 +236,23 @@ class DataHandler_Delft3D:
         print("wind levels: ", len(np.unique(self.wind_level)), np.unique(self.wind_level))
         print("wind directions: ", len(np.unique(self.wind_dir)), np.unique(self.wind_dir))
 
+    def merge_data_explicit(self): # merge the data explicitly
+        self.wind_v = []
+        self.wind_dir = []
+        self.wind_level = []
+        for i in range(len(self.timestamp_data)):
+            id_wind = (np.abs(self.timestamp_wind - self.timestamp_data[i])).argmin()
+            self.wind_v.append(self.wind_speed[id_wind])
+            if self.ROUGH:
+                self.wind_dir.append(self.wind_angle[id_wind]) # here one can choose whether
+                self.wind_level.append(self.wind_speed[id_wind]) # to use rough or not
+            else:
+                self.wind_dir.append(self.wind_angle[id_wind])
+                self.wind_level.append(self.wind_speed[id_wind])
+        print("Data is merged correctly!!")
+        print("wind levels: ", len(np.unique(self.wind_level)))
+        print("wind directions: ", len(np.unique(self.wind_dir)))
+
     def refill_unmatched_data(self, sal_ave):
         fill_row = []
         fill_column = []
@@ -279,6 +284,7 @@ class DataHandler_Delft3D:
         fig = plt.figure(figsize=(len(self.directions) * 10, len(self.levels) * 10))
         gs = GridSpec(ncols=len(self.directions), nrows=len(self.levels), figure=fig)
         counter = 0
+        bar = IncrementalBar("Countdown", max = len(self.levels) * len(self.directions))
         for i in range(len(self.levels)):
             idx = np.where(np.array(self.wind_level) == self.levels[i])[0]
             if len(self.salinity.shape) == 4:
@@ -301,6 +307,7 @@ class DataHandler_Delft3D:
                 ax.set_ylabel('Lat [deg]')
                 ax.set_title(self.levels[i] + " " + self.directions[j])
                 counter = counter + 1
+                bar.next()
                 print(counter)
         if self.ROUGH:
             plt.savefig(self.figpath + "WindCondition/WindCondition_" + self.string_date + "_Rough.png")
@@ -318,6 +325,7 @@ class DataHandler_Delft3D:
         vmax = 35
         Lon = self.lon[:, :, 0].reshape(-1, 1)
         Lat = self.lat[:, :, 0].reshape(-1, 1)
+        bar = IncrementalBar("Countdown", max = self.salinity.shape[0])
         for i in range(self.salinity.shape[0]):
             if len(self.salinity.shape) == 4:
                 S = self.salinity[i, :, :, 0].reshape(-1, 1)
@@ -348,8 +356,10 @@ class DataHandler_Delft3D:
             ax.set_aspect("equal", adjustable="box")
             plt.savefig(self.figpath + "TimeSeries/D_{:04d}.png".format(i))
             plt.close("all")
+            bar.next()
         if self.voiceControl:
             os.system("say Finished plotting time series")
+        bar.finish()
 
     def plotscatter3D(self, layers, frame = -1, camera = dict(x=-1.25, y=-1.25, z=1.25)):
         import plotly.express as px
@@ -397,6 +407,20 @@ class DataHandler_Delft3D:
         if self.voiceControl:
             os.system("say Finished plotting 3D")
         # fig.write_image(self.figpath + "Scatter3D/S_{:04}.png".format(frame), width=1980, height=1080, engine = "orca")
+
+    def plot3Danimation(self): # not finished, need to be finished
+        x_eye = -1.25
+        y_eye = -1.25
+        z_eye = .5
+
+        def rotate_z(x, y, z, theta):
+            w = x + 1j * y
+            return np.real(np.exp(1j * theta) * w), np.imag(np.exp(1j * theta) * w), z
+        for i in range(self.salinity.shape[0]):
+            xe, ye, ze = rotate_z(x_eye, y_eye, z_eye, -i * .005)
+            camera = dict(x=xe, y=ye, z=ze)
+            self.plotscatter3D(i, 5, camera)
+            print(i)
 
     def plot_grid_on_data(self, grid):
         Lon = self.lon[:, :, 0].reshape(-1, 1)
@@ -446,22 +470,19 @@ class DataHandler_Delft3D:
         plotly.offline.plot(fig, filename=self.figpath + "Grid/Data" + ".html",
                             auto_open=False)
 
-
-if __name__ == "__main__":
-    data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Delft3D.h5"
-    wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Wind/wind_data.txt"
-    datahandler = DataHandler_Delft3D(data_path, wind_path, rough = True)
-    datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/")
-    # datahandler.plot_grouppeddata()
-    # datahandler.plot_grid_on_data(Grid())
-    datahandler.plotscatter3D(layers=1, frame = -1)
-    # datahandler.plot3Danimation()
-    # datahandler.plot_surface_timeseries() # it has problems, needs to be fixed
+# data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Delft3D.h5"
+# wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Wind/wind_data.txt"
+# datahandler = DataHandler_Delft3D(data_path, wind_path, rough = True)
+# datahandler.set_figpath("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Delft3D/fig/")
+# datahandler.plot_grouppeddata()
+# datahandler.plot_grid_on_data(Grid())
+# datahandler.plotscatter3D(layers=1, frame = -1)
+# datahandler.plot3Danimation()
+# datahandler.plot_surface_timeseries() # it has problems, needs to be fixed
 
 
 # plt.figure(figsize = (10, 10))
 # plt.scatter(datahandler.lon[:, :, 0], datahandler.lat[:, :, 0], c = np.mean(datahandler.salinity[:, :, :, 0], axis = 0), vmin = 15, vmax = 28, cmap = "Paired")
-#
 # plt.colorbar()
 # plt.show()
 

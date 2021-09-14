@@ -41,19 +41,19 @@ V_v.plot()
 print(V_v)
 
 #%%
-# test logistic regression
+import h5py
+data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Exemplo_Douro/2021-09-14_2021-09-15/WaterProperties.hdf5"
+t = h5py.File(data_path, 'r')
+Grid = t.get("Grid")
+Results = t.get("Results")
+Time = t.get("Time")
+print(Grid.keys())
+lat = Grid.get("Latitude")
+lon = Grid.get("Longitude")
+depth = np.array(Grid.get("VerticalZ").get("Vertical_00001"))
+d = np.array(Grid.get("Bathymetry"))
 
-lat = a.lat[:, :, 0].reshape(-1, 1)
-lon = a.lon[:, :, 0].reshape(-1, 1)
-depth = a.depth_ave[:, :, 0].reshape(-1, 1)
-salinity = a.salinity_ave[:, :, 0].reshape(-1, 1)
-ind_nnan = ~np.isnan(lat) & ~np.isnan(lon) & ~np.isnan(depth) & ~np.isnan(salinity)
 
-data = np.hstack((lat[ind_nnan].reshape(-1, 1), lon[ind_nnan].reshape(-1, 1), depth[ind_nnan].reshape(-1, 1), salinity[ind_nnan].reshape(-1, 1)))
-
-np.savetxt("test.txt", data, delimiter = ',')
-
-#%%
 
 
 #%%
