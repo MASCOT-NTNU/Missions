@@ -1,3 +1,5 @@
+import numpy as np
+
 print("hello world")
 from usr_func import *
 
@@ -42,32 +44,52 @@ print(V_v)
 
 #%%
 import h5py
-data_path = "/Volumes/Extreme SSD/2021/Merged/Merged_East_Mild.h5"
+data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Exemplo_Douro/2021-09-14_2021-09-15/WaterProperties.hdf5"
 t = h5py.File(data_path, 'r')
-lat = t.get("lat")
-lon = t.get("lon")
-depth = t.get("depth")
-salinity = t.get("salinity")
-import matplotlib.pyplot as plt
-
-plt.scatter(lon[:, :, 0], lat[:, :, 0], c = np.mean(salinity, axis = 0)[:, :, 0], cmap = "Paired")
+grid = t.get("Grid")
+z = grid.get("VerticalZ")
+z_0 = np.array(z.get("Vertical_00005"))
+print(z_0)
+# plt.plot(z_0.flatten())
+# plt.show()
+lat = grid.get("Latitude")
+lon = grid.get("Longitude")
+plt.scatter(lon[:-1, :-1], lat[:-1, :-1], c = z_0[0, :, :], vmin = 0, vmax = 30, cmap = "Paired")
 plt.colorbar()
 plt.show()
+# import matplotlib.pyplot as plt
+result = t.get("Results")
+salinity = result.get("salinity").get('salinity_00001')
+print(salinity.shape)
+plt.figure()
+plt.scatter(lon[:-1, :-1], lat[:-1, :-1], c = salinity[0, :, :],  vmin = 10, vmax = 36, cmap = "Paired")
+plt.show()
+# plt.scatter(lon[:, :, 0], lat[:, :, 0], c = np.mean(salinity, axis = 0)[:, :, 0], cmap = "Paired")
+# plt.colorbar()
+# plt.show()
 
+#%%
+s = a.timestamp_data[a.ind_selected]
+ebby_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Tide/ebby.txt"
+ebby = np.loadtxt(ebby_path, delimiter=", ")
+
+for i in range(len(s)):
+    ind = np.where(s[i] < ebby[:, 0])[0][0] - 1
+    if s[i] < ebby[ind, 1]:
+        print("check: ", datetime.fromtimestamp(s[i]))
+        print("high: ", datetime.fromtimestamp(ebby[ind, 0]))
+        print("low: ", datetime.fromtimestamp(ebby[ind, 1]))
 
 
 #%%
-from sklearn.linear_model import LogisticRegression
-
-X = np.hstack((lat, lon, lon ** 2, lon **3 , lon ** 4, lon ** 5))
-y = salinity.flatten()
-clf = LogisticRegression().fit(X, y)
-print(clf.score(X, y))
-print(clf.coef_, clf.intercept_)
-coef = clf.coef_
-beta0 = clf.intercept_
-
-lat_y = - (coef[0, 1] * lon + coef[0, 2] * lon ** 2 + beta0) / coef[0, 0]
-plt.scatter(lon, lat, c = salinity, cmap = "Paired")
-plt.plot(lon, lat_y, 'r-')
+import h5py
+data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/Merged/Merged_North_Heavy_2016_SEP_1.h5"
+data = h5py.File(data_path, 'r')
+lat = data.get("lat")
+lon = data.get("lon")
+depth = data.get("depth")
+salinity = data.get("salinity")
+plt.scatter(lon[:, :, 0], lat[:, :, 0], c = salinity[:, :, 0], cmap = "Paired")
+plt.colorbar()
 plt.show()
+
