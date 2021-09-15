@@ -1,4 +1,15 @@
+# ! /usr/bin/env python3
+__author__ = "Yaolin Ge"
+__copyright__ = "Copyright 2021, The MASCOT Project, NTNU (https://wiki.math.ntnu.no/mascot)"
+__credits__ = ["Yaolin Ge"]
+__license__ = "MIT"
+__version__ = "1.0.1"
+__maintainer__ = "Yaolin Ge"
+__email__ = "yaolin.ge@ntnu.no"
+__status__ = "UnderDevelopment"
+
 import rospy
+import h5py
 import numpy as np
 from scipy.stats import mvn, norm
 from auv_handler import AuvHandler
@@ -12,7 +23,6 @@ from datetime import datetime
 
 class AUV(GridPoly):
     def __init__(self):
-        GridPoly.__init__(self)
         self.node_name = 'MASCOT'
         rospy.init_node(self.node_name, anonymous=True)
         self.rate = rospy.Rate(1)  # 1Hz
@@ -40,37 +50,38 @@ class AUV(GridPoly):
         self.currentSalinity = msg.value.data
 
     def EstimatedStateCB(self, msg):
-        offset_north = msg.lat.data - self.deg2rad(self.lat_origin)
-        offset_east = msg.lon.data - self.deg2rad(self.lon_origin)
-        N = offset_north * self.circumference / (2.0 * np.pi)
-        E = offset_east * self.circumference * np.cos(self.deg2rad(self.lat_origin)) / (2.0 * np.pi)
+        offset_north = msg.lat.data - GridPoly.deg2rad(GridPoly.lat_origin)
+        offset_east = msg.lon.data - GridPoly.deg2rad(GridPoly.lon_origin)
+        N = offset_north * GridPoly.circumference / (2.0 * np.pi)
+        E = offset_east * GridPoly.circumference * np.cos(GridPoly.deg2rad(GridPoly.lat_origin)) / (2.0 * np.pi)
         D = msg.z.data
         self.vehicle_pos = [N, E, D]
 
-class DataAssimilator(GP_Poly):
-    salinity = []
-    temperature = []
-    path = []
-    timestamp = []
+class DataAssimilator(GridPoly):
+    data_salinity = []
+    data_temperature = []
+    data_path_waypoints = []
+    data_timestamp = []
     def __init__(self):
-        GP_Poly.__init__(self)
+        self.createDataPath()
+        print("Mission data folder is created: ", self.data_path_mission)
         print("Data collector is initialised correctly")
 
     def append_salinity(self, value):
-        DataAssimilator.salinity.append(value)
+        DataAssimilator.data_salinity.append(value)
 
     def append_temperature(self, value):
-        DataAssimilator.temperature.append(value)
+        DataAssimilator.data_temperature.append(value)
 
     def append_path(self, value):
-        DataAssimilator.path.append(value)
+        DataAssimilator.data_path_waypoints.append(value)
 
     def append_timestamp(self, value):
-        DataAssimilator.timestamp.append(value)
+        DataAssimilator.data_timestamp.append(value)
 
-    def initialiseDataPath(self):
+    def createDataPath(self):
         self.date_string = datetime.now().strftime("%Y_%m%d_%H%M")
-        self.data_path_mission = "Data/" + self.date_string + "/"
+        self.data_path_mission = os.getcwd() + "/Data/Pre_survey_data_on_" + self.date_string
         if not os.path.exists(self.data_path_mission):
             print("New data path is created: ", self.data_path_mission)
             os.mkdir(self.data_path_mission)
@@ -78,25 +89,26 @@ class DataAssimilator(GP_Poly):
             print("Folder is already existing, no need to create! ")
 
     def save_data(self):
-        self.salinity = np.array(self.salinity).reshape(-1, 1)
-        self.temperature = np.array(self.temperature).reshape(-1, 1)
-        self.path = np.array(self.path).reshape(-1, 3)
-        self.timestamp = np.array(self.timestamp).reshape(-1, 1)
 
-        np.savetxt(self.data_path_mission + "data_salinity.txt", self.salinity, delimiter=",")
-        np.savetxt(self.data_path_mission + "data_temperature.txt", self.temperature, delimiter=",")
-        np.savetxt(self.data_path_mission + "data_path.txt", self.path, delimiter=",")
-        np.savetxt(self.data_path_mission + "data_timestamp.txt", self.timestamp, delimiter=",")
+        self.data_salinity = np.array(self.data_salinity).reshape(-1, 1)
+        self.data_temperature = np.array(self.data_temperature).reshape(-1, 1)
+        self.data_path_waypoints = np.array(self.data_path_waypoints).reshape(-1, 3)
+        self.data_timestamp = np.array(self.data_timestamp).reshape(-1, 1)
+
+        np.savetxt(self.data_path_mission + "/data_salinity.txt", self.data_salinity, delimiter=", ")
+        np.savetxt(self.data_path_mission + "/data_temperature.txt", self.data_temperature, delimiter=", ")
+        np.savetxt(self.data_path_mission + "/data_path.txt", self.data_path_waypoints, delimiter=", ")
+        np.savetxt(self.data_path_mission + "/data_timestamp.txt", self.data_timestamp, delimiter=", ")
 
     def vehpos2latlon(self, x, y, lat_origin, lon_origin):
         if lat_origin <= 10:
-            lat_origin = self.rad2deg(lat_origin)
-            lon_origin = self.rad2deg(lon_origin)
-        lat = lat_origin + self.rad2deg(x * np.pi * 2.0 / self.circumference)
-        lon = lon_origin + self.rad2deg(y * np.pi * 2.0 / (self.circumference * np.cos(self.deg2rad(lat))))
+            lat_origin = GridPoly.rad2deg(lat_origin)
+            lon_origin = GridPoly.rad2deg(lon_origin)
+        lat = lat_origin + GridPoly.rad2deg(x * np.pi * 2.0 / GridPoly.circumference)
+        lon = lon_origin + GridPoly.rad2deg(y * np.pi * 2.0 / (GridPoly.circumference * np.cos(GridPoly.deg2rad(lat))))
         return lat, lon
 
-class PathPlanner_Polygon(AUV, DataAssimilator):
+class PathPlanner_Polygon(AUV, DataAssimilator, GP_Poly):
     ind_start, ind_now, ind_pre, ind_cand, ind_next = [0, 0, 0, 0, 0]  # only use index to make sure it is working properly
     mu_cond, Sigma_cond, F = [None, None, None]  # conditional mean
     mu_prior, Sigma_prior = [None, None]  # prior mean and covariance matrix
@@ -113,17 +125,21 @@ class PathPlanner_Polygon(AUV, DataAssimilator):
         AUV.__init__(self)
         DataAssimilator.__init__(self)
         print("range of neighbours: ", self.distance_neighbours)
-        self.travelled_waypoints = 0
+        GP_Poly.__init__(self)
+        self.prior_corrected_path = "Data/Pre_survey_data_on_2021_0915_1520/prior_corrected.txt"
+        self.prior_path = "Prior_polygon.h5"
         self.load_prior()
-        # self.move_to_starting_loc()
-        # self.run()
+        self.travelled_waypoints = 0
+        self.move_to_starting_loc()
+        self.run()
 
     def load_prior(self):
-        self.lat_loc = self.lat_selected.reshape(-1, 1)  # select the top layer for simulation
-        self.lon_loc = self.lon_selected.reshape(-1, 1)
-        self.depth_loc = self.depth_selected.reshape(-1, 1)
-        self.salinity_loc = self.salinity_selected.reshape(-1, 1)
-        self.mu_prior = self.salinity_loc
+        self.data_set = h5py.File(self.prior_path, 'r')
+        self.lat_loc = np.array(self.data_set.get("lat_selected")).reshape(-1, 1)
+        self.lon_loc = np.array(self.data_set.get("lon_selected")).reshape(-1, 1)
+        self.depth_loc = np.array(self.data_set.get("depth_selected")).reshape(-1, 1)
+        self.salinity_prior_corrected = np.loadtxt(self.prior_corrected_path, delimiter = ", ").reshape(-1, 1)
+        self.mu_prior = self.salinity_prior_corrected
         self.Sigma_prior = self.Sigma_sal
         print("Sigma_prior: ", self.Sigma_prior.shape)
         print("Sigma sal: ", self.Sigma_sal.shape)
@@ -269,8 +285,8 @@ class PathPlanner_Polygon(AUV, DataAssimilator):
                 print(self.auv_handler.getState())
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the current location")
-                    print(self.salinity[-10:])
-                    sal_sampled = np.mean(self.salinity[-10:])  # take the past ten samples and average
+                    print(self.data_salinity[-10:])
+                    sal_sampled = np.mean(self.data_salinity[-10:])  # take the past ten samples and average
                     print(sal_sampled)
                     self.GPupd(sal_sampled)  # update the field when it arrives the specified location
                     self.find_candidates_loc()

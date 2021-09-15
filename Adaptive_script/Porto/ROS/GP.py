@@ -10,9 +10,9 @@ __status__ = "UnderDevelopment"
 
 import time
 import numpy as np
-from Adaptive_script.Porto.Prior import Prior1, Prior2
+from Prior import Prior
 
-class GP_Poly(Prior2):
+class GP_Poly(Prior):
     '''
     Gaussian Process
     '''
@@ -35,7 +35,7 @@ class GP_Poly(Prior2):
     R_sal = np.diagflat(noise_sal)  # diag not anymore support constructing matrix from vector
 
     def __init__(self, debug = False):
-        Prior2.__init__(self, debug = False)
+        Prior.__init__(self, debug = False)
         print("Here comes the Gaussian process setup!")
         t1 = time.time()
         self.getDistanceMatrix()
