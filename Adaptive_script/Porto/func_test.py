@@ -42,17 +42,17 @@ print(V_v)
 
 #%%
 import h5py
-data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Exemplo_Douro/2021-09-14_2021-09-15/WaterProperties.hdf5"
+data_path = "/Volumes/Extreme SSD/2021/Merged/Merged_East_Mild.h5"
 t = h5py.File(data_path, 'r')
-Grid = t.get("Grid")
-Results = t.get("Results")
-Time = t.get("Time")
-print(Grid.keys())
-lat = Grid.get("Latitude")
-lon = Grid.get("Longitude")
-depth = np.array(Grid.get("VerticalZ").get("Vertical_00001"))
-d = np.array(Grid.get("Bathymetry"))
+lat = t.get("lat")
+lon = t.get("lon")
+depth = t.get("depth")
+salinity = t.get("salinity")
+import matplotlib.pyplot as plt
 
+plt.scatter(lon[:, :, 0], lat[:, :, 0], c = np.mean(salinity, axis = 0)[:, :, 0], cmap = "Paired")
+plt.colorbar()
+plt.show()
 
 
 

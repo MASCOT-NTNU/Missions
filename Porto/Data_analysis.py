@@ -71,34 +71,34 @@ class Mat2HDF5:
         print("Time consumed: ", t2 - t1, " seconds.")
         os.system("say finished data conversion, it takes {:.1f} seconds.".format(t2 - t1))
 
-class DataMerger(Mat2HDF5):
-    data_folder = None
-    data_folder_new = None
+# class DataMerger(Mat2HDF5): # only used for converting all mat to hdf5
+#     data_folder = None
+#     data_folder_new = None
+#
+#     def __init__(self, data_folder, data_folder_new):
+#         self.data_folder = data_folder
+#         self.data_folder_new = data_folder_new
+#         # self.mergeAll()
+#
+#     def mergeAll(self):
+#         for s in os.listdir(self.data_folder):
+#             if s.endswith(".mat"):
+#                 print(s)
+#                 self.data_path = self.data_folder + s
+#                 t = Mat2HDF5(self.data_path, self.data_path[:-4] + ".h5")
+#                 t.loaddata()
+#                 t.mat2hdf()
 
-    def __init__(self, data_folder, data_folder_new):
-        self.data_folder = data_folder
-        self.data_folder_new = data_folder_new
-        # self.mergeAll()
-
-    def mergeAll(self):
-        for s in os.listdir(self.data_folder):
-            if s.endswith(".mat"):
-                print(s)
-                self.data_path = self.data_folder + s
-                t = Mat2HDF5(self.data_path, self.data_path[:-4] + ".h5")
-                t.loaddata()
-                t.mat2hdf()
-
-if __name__ == "__main__":
+# if __name__ == "__main__":
 #     data_folder = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Sep_Prior/'
-    data_folder = "/Volumes/LaCie/MASCOT/Data/"
-    data_folder_new = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Sep_Prior/New'
-    a = DataMerger(data_folder, data_folder_new)
+#     data_folder = "/Volumes/LaCie/MASCOT/Data/"
+#     data_folder_new = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Sep_Prior/New'
+#     a = DataMerger(data_folder, data_folder_new)
 # data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_3D_salinity-021.mat'
 # data_path_new = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Delft3D.h5'
 # a = Mat2HDF5(data_path, data_path_new)
 # a.mat2hdf()
-#%%
+
 class DataHandler_Delft3D:
     data_path = None
     data = None
@@ -192,7 +192,7 @@ class DataHandler_Delft3D:
 
     def windspeed2level(self, wind_speed):
         speeds = np.array([0, 2.5, 10])
-        self.levels = ['Mild', 'Moderate', 'Great']
+        self.levels = ['Mild', 'Moderate', 'Heavy']
         id = len(speeds[speeds < wind_speed]) - 1
         return self.levels[id]
 
@@ -203,8 +203,8 @@ class DataHandler_Delft3D:
         return self.directions[id]
 
     def windspeed2levelRough(self, wind_speed):
-        speeds = np.array([0, 2.5])
-        self.levels = ['Calm', 'Windy']
+        speeds = np.array([0, 2.5, 6])
+        self.levels = ['Mild', 'Moderate', 'Heavy']
         id = len(speeds[speeds < wind_speed]) - 1
         return self.levels[id]
 
@@ -220,13 +220,13 @@ class DataHandler_Delft3D:
         '''
         return self.deg2rad(270 - nautical_angle)
 
-    def wind2uv(self, wind_speed, wind_angle):
+    def wind2uv(self, wind_speed, wind_angle): # convert wind to uv coord
         wind_angle = self.angle2angle(wind_angle)
         u = wind_speed * np.cos(wind_angle)
         v = wind_speed * np.sin(wind_angle)
         return u, v
 
-    def uv2wind(self, u, v):
+    def uv2wind(self, u, v): # convert uv coord to wind again
         wind_speed = np.sqrt(u ** 2 + v ** 2)
         wind_angle = self.angle2angle(self.rad2deg(np.arctan2(v, u))) # v is the speed component in y, u is the speed component in x, cartisian normal
         return wind_speed, wind_angle
