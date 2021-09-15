@@ -12,120 +12,13 @@ import time
 import os
 import h5py
 import numpy as np
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import plotly
-import plotly.express as px
 import matplotlib.pyplot as plt
-plotly.io.orca.config.executable = '/usr/local/bin/orca'
-plotly.io.orca.config.save()
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams.update({'font.size': 12})
 plt.rcParams.update({'font.style': 'oblique'})
 
-from Porto.Data_analysis import Mat2HDF5, DataHandler_Delft3D
+
 from Adaptive_script.Porto.Grid import GridPoly
-
-
-class DataGetter(Mat2HDF5, DataHandler_Delft3D, GridPoly):
-    '''
-    Get data according to date specified and wind direction
-    '''
-    data_folder = None
-    data_folder_new = None
-    wind_path = None
-
-    def __init__(self, data_folder, data_folder_new, wind_path):
-        # GridPoly.__init__(self, debug = False)
-        self.depth_layers = 5 # top five layers will be chosen for saving the data, to make sure it has enough space to operate
-        self.data_folder = data_folder
-        self.data_folder_new = data_folder_new
-        self.wind_path = wind_path
-        self.mergedata()
-        self.getAllPriorData()
-        pass
-
-    def mergedata(self):
-        t1 = time.time()
-        self.lat = [] # used to append all the data for all the months
-        self.lon = []
-        self.depth = []
-        self.salinity = []
-        self.wind_dir = []
-        self.wind_level = []
-        self.file_string = []
-        counter = 0
-        for file in os.listdir(self.data_folder):
-            if file.endswith(".h5"):
-                print(file)
-                datahandler = DataHandler_Delft3D(self.data_folder + file, self.wind_path, rough = True, voiceControl = False)
-                self.file_string.append(file[3:7])
-                self.lat.append(datahandler.lat)
-                self.lon.append(datahandler.lon)
-                self.depth.append(datahandler.depth)
-                self.salinity.append(datahandler.salinity)
-                self.wind_dir.append(datahandler.wind_dir)
-                self.wind_level.append(datahandler.wind_level)
-                print("lat: ", datahandler.lat.shape)
-                print("lon: ", datahandler.lon.shape)
-                print("depth: ", datahandler.depth.shape)
-                print("salinity", datahandler.salinity.shape)
-                print("wind_dir: ", np.array(self.wind_dir[counter]).shape, len(self.wind_dir))
-                print("wind_level: ", np.array(self.wind_level[counter]).shape, len(self.wind_level))
-                counter = counter + 1
-        self.lat_merged = np.mean(self.lat, axis = 0)[:, :, :self.depth_layers] # merged lat, with one fixed dimension, 410, 260, 5
-        self.lon_merged = np.mean(self.lon, axis = 0)[:, :, :self.depth_layers] # merged lon, with one fixed dimension, 410, 260, 5
-        print("lat_merged: ", self.lat_merged.shape)
-        print("lon_merged: ", self.lon_merged.shape)
-        t2 = time.time()
-        print(t2 - t1)
-
-    def getdata4wind(self, wind_dir, wind_level):
-        print("Wind direction selected: ", wind_dir)
-        print("Wind level selected: ", wind_level)
-        length_frames = 0
-        self.salinity_merged = np.empty_like(self.lat_merged)
-        self.depth_merged = np.empty_like(self.lon_merged)
-        print("Before adding new axis")
-        print("salinity_merged: ", self.salinity_merged.shape)
-        print("depth_merged: ", self.depth_merged.shape)
-        self.salinity_merged = self.salinity_merged[np.newaxis, :]
-        self.depth_merged = self.depth_merged[np.newaxis, :]
-        print("After adding new axis")
-        print("salinity_merged: ", self.salinity_merged.shape)
-        print("depth_merged: ", self.depth_merged.shape)
-        for i in range(len(self.depth)):
-            self.ind_selected = (np.array(self.wind_dir) == wind_dir) & (np.array(self.wind_level) == wind_level) # indices for selecting the time frames
-            # self.ind_selected = np.array(self.wind_dir_merged[i]) == wind_dir # only use wind_direction, since it is hard to pick both satisfying criteria
-            if np.any(self.ind_selected):
-                print("Found ", wind_dir, wind_level, " {:d} timeframes are used to average".format(np.sum(self.ind_selected)))
-                self.salinity_merged = np.concatenate((self.salinity_merged, self.salinity[i][self.ind_selected[i]][:, :, :, :self.depth_layers]), axis = 0)
-                self.depth_merged = np.concatenate((self.depth_merged, self.depth[i][self.ind_selected[i]][:, :, :, :self.depth_layers]), axis = 0)
-                length_frames = length_frames + sum(self.ind_selected)
-            else:
-                print("Not enough data, no corresponding ", wind_dir, wind_level, "data is found in " + self.file_string[i])
-
-        t1 = time.time()
-        if os.path.exists(self.data_folder_new + "Merged_" + wind_dir + "_" + wind_level + ".h5"):
-            print("rm -rf " + self.data_folder_new + "Merged_" + wind_dir + "_" + wind_level + ".h5")
-            os.system("rm -rf " + self.data_folder_new + "Merged_" + wind_dir + "_" + wind_level + ".h5")
-        data_file = h5py.File(self.data_folder_new + "Merged_" + wind_dir + "_" + wind_level + ".h5", 'w')
-        data_file.create_dataset("lat", data = self.lat_merged)
-        data_file.create_dataset("lon", data = self.lon_merged)
-        data_file.create_dataset("depth", data = self.depth_merged)
-        data_file.create_dataset("salinity", data = self.salinity_merged)
-        t2 = time.time()
-        print("Finished data creation! Time consumed: ", t2 - t1)
-
-    def getAllPriorData(self):
-        wind_dirs = ['East', 'South', 'West', 'North'] # get wind_data for all conditions
-        wind_levels = ['Mild', 'Moderate', 'Heavy'] # get data for all conditions
-        # wind_dirs = ['East'] # get wind_data for all conditions
-        # wind_levels = ['Mild'] # get data for all conditions
-        for wind_dir in wind_dirs:
-            for wind_level in wind_levels:
-                self.getdata4wind(wind_dir, wind_level)
-
 
 
 class Prior(GridPoly):
@@ -135,12 +28,21 @@ class Prior(GridPoly):
     data_path = None
     fig_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Region/"
     debug = True
+    polygon = np.array([[41.0999, -8.7283],
+                        [41.1135, -8.7229],
+                        [41.1143, -8.7333],
+                        [41.0994, -8.7470],
+                        [41.0999, -8.7283]])
 
     def __init__(self, debug = False):
         self.debug = debug
-        GridPoly.__init__(self, debug = self.debug)
-        self.data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_HDF/Merged/Merged_09_North_Calm.h5"
+        GridPoly.__init__(self, polygon = self.polygon, debug = self.debug)
+        self.data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/Merged_all/North_Moderate_all.h5"
+        self.prior_data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/"
         self.loaddata()
+        # self.select_polygon()
+        self.extract_data_for_grid_poly()
+        self.checkPolyData()
 
     def loaddata(self):
         print("Loading the merged data...")
@@ -150,105 +52,66 @@ class Prior(GridPoly):
         self.lon = np.array(self.data.get('lon'))
         self.depth = np.array(self.data.get('depth'))
         self.salinity = np.array(self.data.get('salinity'))
-        self.salinity_ave = np.mean(self.salinity, axis = 0)
-        self.depth_ave = np.mean(self.depth, axis = 0)
         print("Merged data is loaded correctly!")
         print("lat: ", self.lat.shape)
         print("lon: ", self.lon.shape)
         print("depth: ", self.depth.shape)
         print("salinity: ", self.salinity.shape)
-        print("depth ave: ", self.depth_ave.shape)
-        print("salinity ave: ", self.salinity_ave.shape)
         t2 = time.time()
         print("Loading data takes: ", t2 - t1)
-        # self.filterNaN()
 
-    def filterNaN(self):
-        self.lat_filtered = np.empty((0, 1))
-        self.lon_filtered = np.empty((0, 1))
-        self.depth_filtered = np.empty((0, 1))
-        self.salinity_filtered = np.empty((0, 1))
-        print("Before filtering!")
-        print("lat: ", self.lat.shape)
-        print("lon: ", self.lon.shape)
-        print("depth: ", self.depth.shape)
-        print("salinity: ", self.salinity.shape)
-        for i in range(len(self.lat)):
-            if np.isnan(self.lat[i]) or np.isnan(self.lon[i]) or np.isnan(self.depth_ave[i]) or np.isnan(self.salinity_ave[i]):
-                pass
-            else:
-                self.lat_filtered = np.append(self.lat_filtered, self.lat[i])
-                self.lon_filtered = np.append(self.lon_filtered, self.lon[i])
-                self.depth_filtered = np.append(self.depth_filtered, self.depth_ave[i])
-                self.salinity_filtered = np.append(self.salinity_filtered, self.salinity_ave[i])
-        print("Filtered correctly:")
-        print("lat: ", self.lat_filtered.shape)
-        print("lon: ", self.lon_filtered.shape)
-        print("depth: ", self.depth_filtered.shape)
-        print("salinity: ", self.salinity_filtered.shape)
+    def select_polygon(self):
+        plt.figure()
+        plt.scatter(self.lon[:, :, 0], self.lat[:, :, 0], c = self.salinity[:, :, 0], vmin = 15, vmax = 33, cmap = "Paired")
+        plt.axvline(-8.75)
+        plt.axvline(-8.70)
+        plt.axhline(41.1)
+        plt.axhline(41.115)
+        plt.colorbar()
+        plt.show()
 
-    def getVariogramLateral(self):
-        from skgstat import Variogram
-        x, y = self.latlon2xy(self.lat, self.lon, self.lat_origin, self.lon_origin)
-        x = x.reshape(-1, 1)
-        y = y.reshape(-1, 1)
-        self.range_coef = []
-        self.sill_coef = []
-        self.nugget_coef = []
-        self.number_frames = 1000
+    def extract_data_for_grid_poly(self):
         t1 = time.time()
-        for i in range(self.number_frames):
-            print(i)
-            residual = self.salinity_ave - self.salinity[np.random.randint(0, self.salinity.shape[0]), :]
-            V_v = Variogram(coordinates=np.hstack((x, y)), values=residual, n_lags=20, maxlag=3000, use_nugget=True)
-            coef = V_v.cof
-            if i == 500:
-                fig = V_v.plot()
-                figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Presentation/MASCOT/Sept6/fig/"
-                fig.savefig(figpath + "variogram.pdf")
-            self.range_coef.append(coef[0])
-            self.sill_coef.append(coef[1])
-            self.nugget_coef.append(coef[2])
+        self.lat_selected = np.zeros([len(self.grid_poly), len(self.depth_obs)])
+        self.lon_selected = np.zeros([len(self.grid_poly), len(self.depth_obs)])
+        self.depth_selected = np.zeros([len(self.grid_poly), len(self.depth_obs)])
+        self.salinity_selected = np.zeros([len(self.grid_poly), len(self.depth_obs)])
+        self.depth_mean = np.nanmean(self.depth, axis = (0, 1)) # find the mean depth of each layer
+        for i in range(len(self.grid_poly)):
+            for j in range(len(self.depth_obs)):
+                temp_depth = np.abs(self.depth_mean - self.depth_obs[j])
+                depth_ind = np.where(temp_depth == temp_depth.min())[0][0]
+                lat_diff = self.lat[:, :, depth_ind] - self.grid_poly[i, 0]
+                lon_diff = self.lon[:, :, depth_ind] - self.grid_poly[i, 1]
+                dist_diff = lat_diff ** 2 + lon_diff ** 2
+                row_ind = np.where(dist_diff == np.nanmin(dist_diff))[0]
+                col_ind = np.where(dist_diff == np.nanmin(dist_diff))[1]
+                self.lat_selected[i, j] = self.grid_poly[i, 0]
+                self.lon_selected[i, j] = self.grid_poly[i, 1]
+                self.depth_selected[i, j] = self.depth_obs[j]
+                self.salinity_selected[i, j] = self.salinity[row_ind, col_ind, depth_ind]
+
+        print("lat_selected: ", self.lat_selected.shape)
+        print("lon_selected: ", self.lon_selected.shape)
+        print("depth_selected: ", self.depth_selected.shape)
+        print("salinity_selected: ", self.salinity_selected.shape)
+        data_file = h5py.File(self.prior_data_path + "Prior_polygon.h5", 'w')
+        data_file.create_dataset("lat_selected", data = self.lat_selected)
+        data_file.create_dataset("lon_selected", data = self.lon_selected)
+        data_file.create_dataset("depth_selected", data = self.depth_selected)
+        data_file.create_dataset("salinity_selected", data = self.salinity_selected)
         t2 = time.time()
-        print(t2 - t1)
-        print(sum(self.range_coef)/len(self.range_coef), sum(self.sill_coef)/len(self.sill_coef), sum(self.nugget_coef)/len(self.nugget_coef))
+        print("Data polygon selection is complete! Time consumed: ", t2 - t1)
 
-    def plot_select_region(self):
-        # fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
-        fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
-        fig.add_trace(
-            go.Scatter3d(
-                x=self.lon_filtered.flatten(), y=self.lat_filtered.flatten(), z=np.zeros_like(self.lat_filtered.flatten()),
-                mode='markers',
-                marker=dict(
-                    size=4,
-                    color=self.salinity_filtered.flatten(),
-                    colorscale=px.colors.qualitative.Light24,
-                    showscale=True
-                ),
-            ),
-            row=1, col=1,
-        )
-        fig.update_layout(
-            scene={
-                'aspectmode': 'manual',
-                'xaxis_title': 'Lon [deg]',
-                'yaxis_title': 'Lat [deg]',
-                'zaxis_title': 'Depth [m]',
-                'aspectratio': dict(x=1, y=1, z=.5),
-            },
-            showlegend=False,
-            title="Prior"
-        )
-        plotly.offline.plot(fig, filename=self.fig_path + "Prior1.html",
-                            auto_open=True)
+    def checkPolyData(self):
+        plt.figure(figsize = (20, 10))
+        for i in range(self.lat_selected.shape[1]):
+            plt.subplot(1, 3, i + 1)
+            plt.scatter(self.lon_selected[:, i], self.lat_selected[:, i], c = self.salinity_selected[:, i], vmin = 34, vmax = 36, cmap = "Paired")
+            plt.colorbar()
+        plt.show()
 
-
-data_folder = "/Volumes/Extreme SSD/2021/"
-data_folder_new = "/Volumes/Extreme SSD/2021/Merged/"
-wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Wind/wind_data.txt"
-
-# if __name__ == "__main__":
-a = DataGetter(data_folder, data_folder_new, wind_path)
+if __name__ == "__main__":
+    a = Prior()
 
 
