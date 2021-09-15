@@ -36,121 +36,96 @@ class DataGetter(Mat2HDF5, DataHandler_Delft3D, GridPoly):
     wind_path = None
 
     def __init__(self, data_folder, data_folder_new, wind_path):
-        GridPoly.__init__(self, debug = False)
+        # GridPoly.__init__(self, debug = False)
+        self.depth_layers = 5 # top five layers will be chosen for saving the data, to make sure it has enough space to operate
         self.data_folder = data_folder
         self.data_folder_new = data_folder_new
         self.wind_path = wind_path
+        self.mergedata()
+        self.getAllPriorData()
         pass
 
     def mergedata(self):
         t1 = time.time()
-        lat = []
-        lon = []
-        depth = []
-        salinity = []
-        wind_dir = []
-        wind_level = []
+        self.lat = [] # used to append all the data for all the months
+        self.lon = []
+        self.depth = []
+        self.salinity = []
+        self.wind_dir = []
+        self.wind_level = []
         self.file_string = []
-        for file in os.listdir(self.data_folder_new):
+        counter = 0
+        for file in os.listdir(self.data_folder):
             if file.endswith(".h5"):
-                datahandler = DataHandler_Delft3D(self.data_folder_new + file, self.wind_path, rough = True, voiceControl = False)
+                print(file)
+                datahandler = DataHandler_Delft3D(self.data_folder + file, self.wind_path, rough = True, voiceControl = False)
                 self.file_string.append(file[3:7])
-                # datahandler.merge_data_explicit()
-                lat.append(datahandler.lat)
-                lon.append(datahandler.lon)
-                depth.append(datahandler.depth)
-                salinity.append(datahandler.salinity)
-                wind_dir.append(datahandler.wind_dir)
-                wind_level.append(datahandler.wind_level)
-                print(datahandler.lat.shape)
-                print(datahandler.lon.shape)
-                print(datahandler.depth.shape)
-                print(datahandler.salinity.shape)
-                print("wind_dir: ", np.array(wind_dir).shape, len(wind_dir))
-                print("wind_level: ", np.array(wind_level).shape, len(wind_level))
-        print("Here comes the merging!")
-        self.lat_merged = np.mean(np.mean(lat, axis = 0)[:-1, :-1, :], axis = 2)
-        self.lon_merged = np.mean(np.mean(lon, axis = 0)[:-1, :-1, :], axis = 2)
-        self.depth_merged = depth
-        self.salinity_merged = salinity
-        self.wind_dir_merged = wind_dir
-        self.wind_level_merged = wind_level
+                self.lat.append(datahandler.lat)
+                self.lon.append(datahandler.lon)
+                self.depth.append(datahandler.depth)
+                self.salinity.append(datahandler.salinity)
+                self.wind_dir.append(datahandler.wind_dir)
+                self.wind_level.append(datahandler.wind_level)
+                print("lat: ", datahandler.lat.shape)
+                print("lon: ", datahandler.lon.shape)
+                print("depth: ", datahandler.depth.shape)
+                print("salinity", datahandler.salinity.shape)
+                print("wind_dir: ", np.array(self.wind_dir[counter]).shape, len(self.wind_dir))
+                print("wind_level: ", np.array(self.wind_level[counter]).shape, len(self.wind_level))
+                counter = counter + 1
+        self.lat_merged = np.mean(self.lat, axis = 0)[:, :, :self.depth_layers] # merged lat, with one fixed dimension, 410, 260, 5
+        self.lon_merged = np.mean(self.lon, axis = 0)[:, :, :self.depth_layers] # merged lon, with one fixed dimension, 410, 260, 5
+        print("lat_merged: ", self.lat_merged.shape)
+        print("lon_merged: ", self.lon_merged.shape)
         t2 = time.time()
         print(t2 - t1)
 
     def getdata4wind(self, wind_dir, wind_level):
         print("Wind direction selected: ", wind_dir)
         print("Wind level selected: ", wind_level)
-        self.row_ind = []
-        self.col_ind = []
-        for i in range(self.grid_poly.shape[0]):
-            self.temp_latlon = (self.lat_merged - self.grid_poly[i, 0]) ** 2 + (self.lon_merged - self.grid_poly[i, 1]) ** 2
-            self.row_ind.append(np.where(self.temp_latlon == np.nanmin(self.temp_latlon))[0][0])
-            self.col_ind.append(np.where(self.temp_latlon == np.nanmin(self.temp_latlon))[1][0])
-        self.lat_selected = self.grid_poly[:, 0] # here use the grid lat, instead of the data lat
-        self.lon_selected = self.grid_poly[:, 1]
-        self.depth_selected = np.empty_like(self.lat_selected)
-        self.salinity_selected = np.empty_like(self.lat_selected)
-        self.salinity_selected = self.salinity_selected[np.newaxis, :]
-        self.depth_selected = self.depth_selected[np.newaxis, :]
-        print(self.depth_selected.shape)
-        print(self.salinity_selected.shape)
         length_frames = 0
-        for i in range(len(self.depth_merged)):
-            # self.ind_selected = (np.array(self.wind_dir_merged) == wind_dir) & (np.array(self.wind_level_merged) == wind_level)
-            self.ind_selected = np.array(self.wind_dir_merged[i]) == wind_dir # only use wind_direction, since it is hard to pick both satisfying criteria
-            if sum(self.ind_selected) > 0:
-                print("Found ", wind_dir, wind_level, "data in " + self.file_string[i] + self.date_string + ", {:d} timeframes are used to average".format(sum(self.ind_selected)))
-                self.salinity_selected = np.concatenate((self.salinity_selected, self.salinity_merged[i][self.ind_selected][:, self.row_ind, self.col_ind]), axis = 0)
-                self.depth_selected = np.concatenate((self.depth_selected, np.mean(self.depth_merged[i], axis = 3)[self.ind_selected][:, self.row_ind, self.col_ind]), axis = 0)
+        self.salinity_merged = np.empty_like(self.lat_merged)
+        self.depth_merged = np.empty_like(self.lon_merged)
+        print("Before adding new axis")
+        print("salinity_merged: ", self.salinity_merged.shape)
+        print("depth_merged: ", self.depth_merged.shape)
+        self.salinity_merged = self.salinity_merged[np.newaxis, :]
+        self.depth_merged = self.depth_merged[np.newaxis, :]
+        print("After adding new axis")
+        print("salinity_merged: ", self.salinity_merged.shape)
+        print("depth_merged: ", self.depth_merged.shape)
+        for i in range(len(self.depth)):
+            self.ind_selected = (np.array(self.wind_dir) == wind_dir) & (np.array(self.wind_level) == wind_level) # indices for selecting the time frames
+            # self.ind_selected = np.array(self.wind_dir_merged[i]) == wind_dir # only use wind_direction, since it is hard to pick both satisfying criteria
+            if np.any(self.ind_selected):
+                print("Found ", wind_dir, wind_level, " {:d} timeframes are used to average".format(np.sum(self.ind_selected)))
+                self.salinity_merged = np.concatenate((self.salinity_merged, self.salinity[i][self.ind_selected[i]][:, :, :, :self.depth_layers]), axis = 0)
+                self.depth_merged = np.concatenate((self.depth_merged, self.depth[i][self.ind_selected[i]][:, :, :, :self.depth_layers]), axis = 0)
                 length_frames = length_frames + sum(self.ind_selected)
             else:
                 print("Not enough data, no corresponding ", wind_dir, wind_level, "data is found in " + self.file_string[i])
 
-        if length_frames == 0:
-            print("Not engouth data")
-            print("The time average for the entire month including all frames is instead used! Wind condition is ignored")
-            for i in range(len(self.depth_merged)):
-                self.salinity_selected = np.concatenate((self.salinity_selected, self.salinity_merged[i][:, self.row_ind, self.col_ind]), axis = 0)
-                self.depth_selected = np.concatenate((self.depth_selected, np.mean(self.depth_merged[0], axis = 3)[:, self.row_ind, self.col_ind]), axis = 0)
-                length_frames = length_frames + len(self.salinity_merged[i].shape[0])
-            print("{:d} frames are used to find the average".format(length_frames))
         t1 = time.time()
-        if os.path.exists(self.data_folder_new + "Merged/Merged_" + self.date_string + "_" + wind_dir + "_" + wind_level + ".h5"):
-            print("rm -rf ../Data/Porto/D2_HDF/Merged/Merged_" + self.date_string + "_" + wind_dir + "_" + wind_level + ".h5")
-            os.system("rm -rf ../Data/Porto/D2_HDF/Merged/Merged_" + self.date_string + "_" + wind_dir + "_" + wind_level + ".h5")
-        data_file = h5py.File(self.data_folder_new + "Merged/Merged_" + self.date_string + "_" + wind_dir + "_" + wind_level + ".h5", 'w')
-        data_file.create_dataset("lat", data = self.lat_selected)
-        data_file.create_dataset("lon", data = self.lon_selected)
-        data_file.create_dataset("depth", data = self.depth_selected)
-        data_file.create_dataset("salinity", data = self.salinity_selected)
+        if os.path.exists(self.data_folder_new + "Merged_" + wind_dir + "_" + wind_level + ".h5"):
+            print("rm -rf " + self.data_folder_new + "Merged_" + wind_dir + "_" + wind_level + ".h5")
+            os.system("rm -rf " + self.data_folder_new + "Merged_" + wind_dir + "_" + wind_level + ".h5")
+        data_file = h5py.File(self.data_folder_new + "Merged_" + wind_dir + "_" + wind_level + ".h5", 'w')
+        data_file.create_dataset("lat", data = self.lat_merged)
+        data_file.create_dataset("lon", data = self.lon_merged)
+        data_file.create_dataset("depth", data = self.depth_merged)
+        data_file.create_dataset("salinity", data = self.salinity_merged)
         t2 = time.time()
         print("Finished data creation! Time consumed: ", t2 - t1)
 
-    def getfiles(self):
-        self.FOUND = False
-        for file in os.listdir(self.data_folder):
-            if file.endswith(".mat"):
-                if len(self.date_string) == 2:
-                    if self.date_string in file[7:9]:
-                        print("Found file: ")
-                        print(file)
-                        self.FOUND = True
-                        data_mat = Mat2HDF5(self.data_folder + file, self.data_folder_new + file[:-4] + ".h5")
-                        data_mat.mat2hdf()
-                else:
-                    if self.date_string in file[3:9]:
-                        print("Found file: ")
-                        print(file)
-                        data_mat = Mat2HDF5(self.data_folder + file, self.data_folder_new + file[:-4] + ".h5")
-                        data_mat.mat2hdf()
-                        self.FOUND = True
+    def getAllPriorData(self):
+        wind_dirs = ['East', 'South', 'West', 'North'] # get wind_data for all conditions
+        wind_levels = ['Mild', 'Moderate', 'Heavy'] # get data for all conditions
+        # wind_dirs = ['East'] # get wind_data for all conditions
+        # wind_levels = ['Mild'] # get data for all conditions
+        for wind_dir in wind_dirs:
+            for wind_level in wind_levels:
+                self.getdata4wind(wind_dir, wind_level)
 
-        if not self.FOUND:
-            if len(self.date_string) == 2:
-                print("There is no month ", self.date_string, ", file does not exist, please check!")
-            else:
-                print("There is no date ", self.date_string, ", file does not exist, please check!")
 
 
 class Prior(GridPoly):
@@ -269,7 +244,11 @@ class Prior(GridPoly):
                             auto_open=True)
 
 
-data_folder = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Sep_Prior/"
-data_folder_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Sep_Prior/Merged/"
+data_folder = "/Volumes/Extreme SSD/2021/"
+data_folder_new = "/Volumes/Extreme SSD/2021/Merged/"
 wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Wind/wind_data.txt"
+
+# if __name__ == "__main__":
+a = DataGetter(data_folder, data_folder_new, wind_path)
+
 
