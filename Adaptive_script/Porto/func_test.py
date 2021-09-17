@@ -44,6 +44,8 @@ print(V_v)
 
 #%%
 import h5py
+import numpy as np
+import matplotlib.pyplot as plt
 data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Exemplo_Douro/2021-09-14_2021-09-15/WaterProperties.hdf5"
 t = h5py.File(data_path, 'r')
 grid = t.get("Grid")
@@ -63,6 +65,8 @@ salinity = result.get("salinity").get('salinity_00001')
 print(salinity.shape)
 plt.figure()
 plt.scatter(lon[:-1, :-1], lat[:-1, :-1], c = salinity[0, :, :],  vmin = 10, vmax = 36, cmap = "Paired")
+plt.axvline(-8.7)
+plt.axhline(41.14)
 plt.show()
 # plt.scatter(lon[:, :, 0], lat[:, :, 0], c = np.mean(salinity, axis = 0)[:, :, 0], cmap = "Paired")
 # plt.colorbar()
@@ -156,7 +160,7 @@ def find_nearest_path(a, b):
 find_nearest_path([0, 0], [4, 4])
 
 #%%
-path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/Prior_polygon.h5'
+path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Exemplo_Douro/2021-09-18_2021-09-19/WaterProperties.hdf5'
 
 
 
