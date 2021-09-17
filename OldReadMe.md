@@ -110,3 +110,15 @@ Please contact Yaolin Ge (yaolin.ge@ntnu.no) if you have any questions. ğŸ˜ ğŸ¤
 
 [variogram slides](https://slideplayer.com/slide/8781466/)
 
+[Python statistics](https://towardsdatascience.com/python-statistics-for-beginners-pearson-correlation-coefficient-69c9b1ef17f7)
+
+
+# To use the server remotely with GUI installed
+# GUI:
+- XQuartz launched
+- Use Xterm with:
+  `ssh -Y syvert.math.ntnu.no`
+Then the GUI mode should be activated
+
+
+
