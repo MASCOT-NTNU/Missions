@@ -20,3 +20,4 @@
 
 - empty eibv
 - possibly get stuck, long term overshoot
+- inside auvhander.setwaypoint, it needs to be positive for the depth component

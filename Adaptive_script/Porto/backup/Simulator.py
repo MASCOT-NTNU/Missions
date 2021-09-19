@@ -1,49 +1,69 @@
 import time
+import matplotlib.pyplot as plt
+import h5py
 import numpy as np
 from scipy.stats import mvn, norm
-from Adaptive_script.Porto.Grid import GridPoly
+# from Adaptive_script.Porto.Grid import GridPoly
+from Adaptive_script.Porto.GP import GP_Poly
+import os
 
-class Simulator(GridPoly):
-    lat_start, lon_start, depth_start = [None, None, None]
-    lat_now, lon_now, depth_now = [None, None, None]
-    lat_pre, lon_pre, depth_pre = [None, None, None]
-    lat_cand, lon_cand, depth_cand = [None, None, None]
-    lat_next, lon_next, depth_next = [None, None, None]
-    mu_cond, Sigma_cond, F = [None, None, None]
-    mu_prior, Sigma_prior = [None, None]
-    travelled_waypoints = None
-    data_path_waypoint = []
-    Total_waypoints = 10
+class Simulator(GP_Poly):
+    ind_start, ind_now, ind_pre, ind_cand, ind_next = [0, 0, 0, 0, 0] # only use index to make sure it is working properly
+    mu_cond, Sigma_cond, F = [None, None, None] # conditional mean
+    mu_prior, Sigma_prior = [None, None] # prior mean and covariance matrix
+    travelled_waypoints = None # track how many waypoins have been explored
+    data_path_waypoint = [] # save the waypoint to compare
+    data_path_lat = [] # save the waypoint lat
+    data_path_lon = [] # waypoint lon
+    data_path_depth = [] # waypoint depth
+    Total_waypoints = 100 # total number of waypoints to be explored
+    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Simulation/fig/"
+    # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/D2_HDF/Merged/Merged_09_North_Calm.h5"
+    counter_plot_simulation = 0 # track the plot, will be deleted
 
     def __init__(self, Simulation = False):
         self.SIMULATION = Simulation
         print("Simulation mode: ", self.SIMULATION)
-        GridPoly.__init__(self)
-        self.distance_neighbours = np.sqrt(GridPoly.distance_poly ** 2 + (GridPoly.depth_obs[1] - GridPoly.depth_obs[0]) ** 2)
+        if self.SIMULATION:
+            self.checkFolder()
+        GP_Poly.__init__(self, debug = False)
+        self.distance_neighbours = np.sqrt(GP_Poly.distance_poly ** 2 + (GP_Poly.depth_obs[1] - GP_Poly.depth_obs[0]) ** 2)
         print("range of neighbours: ", self.distance_neighbours)
         self.travelled_waypoints = 0
         self.load_prior()
-        self.move_to_starting_loc()
-        self.run()
+        if self.SIMULATION:
+            self.move_to_starting_loc()
+            self.run()
+
+    def checkFolder(self):
+        i = 0
+        while os.path.exists(self.figpath + "P%s" % i):
+            i += 1
+        self.figpath = self.figpath + "P%s/" % i
+        if not os.path.exists(self.figpath):
+            print(self.figpath + " is created")
+            os.mkdir(self.figpath)
+        else:
+            print(self.figpath + " is already existed")
 
     def load_prior(self):
-        print("Prior for salinity is loaded correctly!!!")
-        self.mu_prior = self.salinity_layers_ave.reshape(-1, 1)
+        self.lat_loc = self.lat_selected.reshape(-1, 1) # select the top layer for simulation
+        self.lon_loc = self.lon_selected.reshape(-1, 1)
+        self.depth_loc = self.depth_selected.reshape(-1, 1)
+        self.salinity_loc = self.salinity_selected.reshape(-1, 1)
+        self.mu_prior = self.salinity_loc
         self.Sigma_prior = self.Sigma_sal
+        print("Sigma_prior: ", self.Sigma_prior.shape)
+        print("Sigma sal: ", self.Sigma_sal.shape)
+        self.mu_real = self.mu_prior + np.linalg.cholesky(self.Sigma_prior) @ np.random.randn(len(self.mu_prior)).reshape(-1, 1)
         self.mu_cond = self.mu_prior
         self.Sigma_cond = self.Sigma_prior
-        self.lat_loc = self.lat_layers.reshape(-1, 1)
-        self.lon_loc = self.lon_layers.reshape(-1, 1)
-        self.depth_loc = self.depth_layers_ave.reshape(-1, 1)
-        self.salinity_loc = self.salinity_layers_ave.reshape(-1, 1)
-        self.N = len(self.lat_loc)
+        self.N = len(self.mu_prior)
+        print("Prior for salinity is loaded correctly!!!")
         print("mu_prior shape is: ", self.mu_prior.shape)
         print("Sigma_prior shape is: ", self.Sigma_prior.shape)
         print("mu_cond shape is: ", self.mu_cond.shape)
         print("Sigma_cond shape is: ", self.Sigma_cond.shape)
-        print("lat loc: ", self.lat_loc.shape)
-        print("lon loc: ", self.lon_loc.shape)
-        print("depth loc: ", self.depth_loc.shape)
         print("N: ", self.N)
 
     def updateF(self, ind):
@@ -59,38 +79,30 @@ class Simulator(GridPoly):
     def move_to_starting_loc(self):
         EP_Prior = self.EP_1D(self.mu_prior, self.Sigma_prior, self.Threshold_S)
         ep_criterion = 0.5 # excursion probability close to 0.5
-        ind = (np.abs(EP_Prior - ep_criterion)).argmin()
-        self.lat_start = self.lat_loc[ind]
-        self.lon_start = self.lon_loc[ind]
-        self.depth_start = self.depth_loc[ind]
-        self.ind_desired = ind
-        self.updateF(ind)
-        self.data_path_waypoint.append(ind)
-        self.lat_next, self.lon_next, self.depth_next = self.lat_start, self.lon_start, self.depth_start
-        self.updateWaypoint()
+        self.ind_start = (np.abs(EP_Prior - ep_criterion)).argmin()
+        if self.ind_start == 0:
+            self.ind_start = np.random.randint(self.N)
+        self.ind_next = self.ind_start
+        self.updateF(self.ind_next)
+        self.data_path_lat.append(self.lat_loc[self.ind_start])
+        self.data_path_lon.append(self.lon_loc[self.ind_start])
         self.updateWaypoint()
 
     def find_candidates_loc(self):
         '''
         find the candidates location based on distance coverage
         '''
-
-        delta_x, delta_y = self.latlon2xy(self.lat_loc, self.lon_loc, self.lat_now, self.lon_now)
-        delta_depth = self.depth_loc - self.depth_now
-        self.distance_total = np.sqrt(delta_x ** 2 + delta_y ** 2 + delta_depth ** 2)
-        self.ind_cand = np.where(self.distance_total <= self.distance_neighbours + 1)[0] # 1 here refers to the tolerance
-        self.lat_cand = self.lat_loc[self.ind_cand]
-        self.lon_cand = self.lon_loc[self.ind_cand]
-        self.depth_cand = self.depth_loc[self.ind_cand]
+        delta_x, delta_y = self.latlon2xy(self.lat_loc, self.lon_loc, self.lat_loc[self.ind_now], self.lon_loc[self.ind_now]) # using the distance
+        delta_z = self.depth_loc - self.depth_loc[self.ind_now] # depth distance in z-direction
+        self.distance_vector = np.sqrt(delta_x ** 2 + delta_y ** 2 + delta_z ** 2)
+        self.ind_cand = np.where(self.distance_vector <= self.distance_neighbours + self.distanceTolerance)[0]
 
     def GPupd(self, y_sampled):
-        print("Updating the field...")
         t1 = time.time()
         C = self.F @ self.Sigma_cond @ self.F.T + self.R_sal
         self.mu_cond = self.mu_cond + self.Sigma_cond @ self.F.T @ np.linalg.solve(C, (y_sampled - self.F @ self.mu_cond))
         self.Sigma_cond = self.Sigma_cond - self.Sigma_cond @ self.F.T @ np.linalg.solve(C, self.F @ self.Sigma_cond)
         t2 = time.time()
-        print("Updating takes: ", t2 - t1)
 
     def EIBV_1D(self, threshold, mu, Sig, F, R):
         Sigxi = Sig @ F.T @ np.linalg.solve(F @ Sig @ F.T + R, F @ Sig)
@@ -104,85 +116,88 @@ class Simulator(GridPoly):
         return IntA
 
     def find_next_EIBV_1D(self, mu, Sig):
-        # filter the candidates to smooth the AUV path planning
-        print("Trying to find the next waypoint...")
+        id = [] # ind vector for containing the filtered desired candidate location
         t1 = time.time()
-        id = []
-        dlat1 = self.lat_now - self.lat_pre
-        dlon1 = self.lon_now - self.lon_pre
-        ddepth1 = self.depth_now - self.depth_pre
-        vec1 = np.array([dlat1, dlon1, ddepth1]).reshape(1, -1)
-        for i in range(len(self.lat_cand)):
-            if self.lat_cand[i] == self.lat_now and self.lon_cand[i] == self.lon_now and self.depth_cand[i] == self.depth_now:
-                continue
-            dlat2 = self.lat_cand[i] - self.lat_now
-            dlon2 = self.lon_cand[i] - self.lon_now
-            ddepth2 = self.depth_cand[i] - self.depth_now
-            vec2 = np.array([dlat2, dlon2, ddepth2]).reshape(-1, 1)
-            if np.dot(vec1, vec2) >= 0:
-                id.append(self.ind_cand[i])
-            else:
-                continue
+        dx1, dy1 = self.latlon2xy(self.lat_loc[self.ind_now], self.lon_loc[self.ind_now], self.lat_loc[self.ind_pre], self.lon_loc[self.ind_pre])
+        dz1 = self.depth_loc[self.ind_now] - self.depth_loc[self.ind_pre]
+        lat_cand_plot = []
+        lon_cand_plot = []
+        depth_cand_plot = []
+        vec1 = np.array([dx1, dy1, dz1]).squeeze()
+        print("vec1 :", vec1)
+        for i in range(len(self.ind_cand)):
+            if self.ind_cand[i] != self.ind_now:
+                dx2, dy2 = self.latlon2xy(self.lat_loc[self.ind_cand[i]], self.lon_loc[self.ind_cand[i]], self.lat_loc[self.ind_now], self.lon_loc[self.ind_now])
+                dz2 = self.depth_loc[self.ind_cand[i]] - self.depth_loc[self.ind_now]
+                vec2 = np.array([dx2, dy2, dz2]).squeeze()
+                print("vec2: ", vec2)
+                if np.dot(vec1, vec2) > 0:
+                    print("Product: ", np.dot(vec1, vec2))
+                    id.append(self.ind_cand[i])
+                    lat_cand_plot.append(self.lat_loc[self.ind_cand[i]])
+                    lon_cand_plot.append(self.lon_loc[self.ind_cand[i]])
+                    depth_cand_plot.append(self.depth_loc[self.ind_cand[i]])
+                    print("The candidate location: ", self.ind_cand[i], self.ind_now)
+                    print("Candloc: ", [self.lat_loc[self.ind_cand[i]], self.lon_loc[self.ind_cand[i]]])
+                    print("NowLoc: ", [self.lat_loc[self.ind_now], self.lon_loc[self.ind_now]])
+        print("Before uniquing: ", id)
         id = np.unique(np.array(id))
-
+        print("After uniquing: ", id)
+        self.ind_cand = id
         M = len(id)
         eibv = []
         for k in range(M):
             F = np.zeros([1, self.N])
             F[0, id[k]] = True
             eibv.append(self.EIBV_1D(self.Threshold_S, mu, Sig, F, self.R_sal))
-        ind_desired = np.argmin(np.array(eibv))
         t2 = time.time()
 
-        if self.SIMULATION:
-            pass
-        self.lat_next = self.lat_cand[ind_desired]
-        self.lon_next = self.lon_cand[ind_desired]
-        self.depth_next = self.depth_cand[ind_desired]
-        print("Found next waypoint: ", self.lat_next, self.lon_next, self.depth_next)
+        if len(eibv) == 0: # in case it is in the corner and not found any valid candidate locations
+            print("No valid candidates found: ")
+            self.ind_next = np.abs(self.EP_1D(mu, Sig, self.Threshold_S) - .5).argmin() # if not found next, use the other one
+        else:
+            print("The EIBV for the candidate location: ", np.array(eibv))
+            self.ind_next = self.ind_cand[np.argmin(np.array(eibv))]
+        print("ind_next: ", self.ind_next)
+
+        self.data_path_lat.append(self.lat_loc[self.ind_next])
+        self.data_path_lon.append(self.lon_loc[self.ind_next])
+        self.data_path_depth.append(self.depth_loc[self.ind_next])
         print("Finding next waypoint takes: ", t2 - t1)
-        self.ind_desired = self.ind_cand[ind_desired]
-        self.updateF(self.ind_desired)
-        self.data_path_waypoint.append(self.ind_desired)
+        self.updateF(self.ind_next)
 
     def updateWaypoint(self):
-        self.lat_pre, self.lon_pre, self.depth_pre = self.lat_now, self.lon_now, self.depth_now
-        self.lat_now, self.lon_now, self.depth_now = self.lat_next, self.lon_next, self.depth_next
+        # Since the accurate location of lat lon might have numerical problem for selecting the candidate location
+        # print("Before updating: ")
+        # print("ind pre: ", self.ind_pre)
+        # print("ind now: ", self.ind_now)
+        # print("ind next: ", self.ind_next)
+        self.ind_pre = self.ind_now
+        self.ind_now = self.ind_next
+        # print("After updating: ")
+        # print("ind pre: ", self.ind_pre)
+        # print("ind now: ", self.ind_now)
+        # print("ind next: ", self.ind_next)
 
     def run(self):
-        print("Arrived the current location")
-        print(self.salinity_loc[self.ind_desired])
-        sal_sampled = self.salinity_loc[self.ind_desired] + np.random.rand()  # take the past ten samples and average
-        print(sal_sampled)
+        # print("Arrived the current location")
+        sal_sampled = self.mu_real[self.ind_next]  # take the past ten samples and average
         self.GPupd(sal_sampled) # update the field when it arrives the specified location
         self.find_candidates_loc()
         self.find_next_EIBV_1D(self.mu_cond, self.Sigma_cond)
         self.updateWaypoint()
         self.travelled_waypoints += 1
-
+        print(self.counter_plot_simulation)
         if self.travelled_waypoints >= self.Total_waypoints:
             print("Mission completed!!!")
             return False
         else:
             self.run()
 
-
-
-# if __name__ == "__main__":
-    # a = PathPlanner()
-a = PathPlanner_Polygon()
+# a = Simulator(Simulation=False)
+a = Simulator(Simulation=True)
 print("Mission complete!!!")
 
-#%%
-import matplotlib.pyplot as plt
 
-plt.scatter(a.lon_l[a.data_path_waypoint], a.lat_loc[a.data_path_waypoint], c = a.salinity_loc[a.data_path_waypoint], cmap = "Paired")
-plt.colorbar()
-plt.show()
-
-#%%
-plt.scatter(a.lon_layers[:, 0], a.lat_layers[:, 0], c = a.salinity_layers_ave[:, 0], cmap = "Paired")
-plt.colorbar()
-plt.show()
 
 

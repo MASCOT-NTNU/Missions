@@ -6,6 +6,13 @@ from usr_func import *
 # figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects_practice/ES_3D_scratch/fig/EIBV_2D1_Rule_Based/"
 
 #%%
+grid_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/ROS/grid.txt"
+grid = np.loadtxt(grid_path, delimiter = ", ")
+import matplotlib.pyplot as plt
+plt.scatter(grid[:, 1], grid[:, 0])
+plt.show()
+
+#%%
 data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/In-situ/pmel-20170813T154236.000-lauv-xplore-1.nc'
 # data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/In-situ/pmel-20170813T152758.000-lauv-xplore-2.nc'
 import netCDF4
@@ -46,7 +53,37 @@ print(V_v)
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
-data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Exemplo_Douro/2021-09-14_2021-09-15/WaterProperties.hdf5"
+
+data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/Merged_all/North_Mild_all.h5"
+data = h5py.File(data_path, 'r')
+lat = data.get("lat")
+lon = data.get("lon")
+salinity = data.get("salinity")
+
+plt.scatter(lon[:,:, 0], lat[:, :, 0], c = salinity[:, :, 0], vmin = 26, vmax = 36, cmap = "Paired")
+plt.colorbar()
+plt.show()
+
+#%%
+
+f = open("wind.txt", 'w')
+f.write("wind_dir=North, wind_level=Moderate")
+f.close()
+
+#%%
+f = open ("wind.txt", 'r')
+s = f.read()
+print(s)
+f.close()
+
+
+
+
+#%%
+
+
+
+# data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Exemplo_Douro/2021-09-14_2021-09-15/WaterProperties.hdf5"
 t = h5py.File(data_path, 'r')
 grid = t.get("Grid")
 z = grid.get("VerticalZ")

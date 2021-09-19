@@ -1,0 +1,1 @@
+wind_dir=North, wind_level=Moderate

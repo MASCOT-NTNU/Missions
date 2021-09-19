@@ -57,6 +57,9 @@ It achieves the adaptive sampling by setting the next waypoint to be the one whi
 
 
 ---
+# More detailed log in development can be found in `Doc.md`
+
+---
 
 # Contact
 
