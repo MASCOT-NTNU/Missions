@@ -2,6 +2,8 @@
 
 ## Step I: For polygon selector, things need to be specified, select pycharm = False, use terminal to launch the script:
 
+### New data needs to be loaded from MARETEC, which are updated during the mission day
+
 python3 Polygon_Selector.py
 
 pycharm = False
@@ -16,9 +18,6 @@ wind_level = "Moderate" # [Mild, Moderate, Heavy]
 
 Done on my laptop:
 run polygon selector, to select the polygon, threshold --> polygon.txt
-run Grid, to select the polygon, and generate the grid --> grid.txt
-run data extractor, which takes out the data from the grid, and save it in a separate data file --> prior.hdf5
-
 
 Onboard:
 threshold needs to be set based on the gradient.
@@ -44,11 +43,21 @@ Laptop:
 - Polygon_Selector
 - Prior
 - Pathdesigner_initialsurvey
-- GP, so no need for onboard computation
+- GP, so no need for onboard computation, will be saved to text file
 - data analysis for both delft3d and auv measurements
 - variogram along lateral and vertical direction
 
+Step:
+Run Polygon_Selector
+Run Prior
+Run GP
+Run Pathdesigner_initialsurvey
 
 
 Onboard:
+- Pre_surveyor:
+  input: path_initial_survey, path for the initial survey
+  output: corrected prior, with lat, lon, depth, sal.
 - MASCOT
+  input: mu prior, sigma prior,
+  output: waypoints which actuate the AUV
