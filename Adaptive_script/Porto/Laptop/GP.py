@@ -42,8 +42,19 @@ class GP_Poly:
         self.getDistanceMatrix()
         self.getMaternSigma()
         self.print_gaussianprocess()
+        self.save_GP()
         t2 = time.time()
         print("Parameters are set up correctly, it takes: ", t2 - t1)
+
+    def save_GP(self):
+        self.R_sal = self.R_sal.reshape(-1, 1)
+        print("R_sal will be saved: ", self.R_sal)
+        np.savetxt(self.path_onboard + "R_sal.txt", self.R_sal, delimiter=", ")
+        self.Threshold_S = np.array(self.Threshold_S).reshape(-1, 1)
+        print("Threshold_S will be saved: ", self.Threshold_S)
+        np.savetxt(self.path_onboard + "Threshold_S.txt", self.Threshold_S, delimiter=", ")
+        print("GP is saved successfully.")
+
 
     def load_grid(self):
         print("loading the grid...")
