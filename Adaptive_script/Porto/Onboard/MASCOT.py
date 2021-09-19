@@ -26,6 +26,7 @@ class AUV:
     lat_origin, lon_origin = 41.061874, -8.650977  # origin location
     distance_poly = 100  # [m], distance between two neighbouring points
     depth_obs = [-.5, -1.25, -2] # [m], distance in depth, depth to be explored
+    distanceTolerance = .1  # [m], distance tolerance for the neighbouring points
     def __init__(self):
         self.node_name = 'MASCOT'
         rospy.init_node(self.node_name, anonymous=True)
@@ -115,14 +116,14 @@ class DataAssimilator(AUV):
             print("Folder is already existing, no need to create! ")
 
     def save_data(self):
-        self.data_salinity = np.array(self.data_salinity).reshape(-1, 1)
-        self.data_temperature = np.array(self.data_temperature).reshape(-1, 1)
-        self.data_path_waypoints = np.array(self.data_path_waypoints).reshape(-1, 3)
-        self.data_timestamp = np.array(self.data_timestamp).reshape(-1, 1)
-        np.savetxt(self.data_path_mission + "/data_salinity.txt", self.data_salinity, delimiter=", ")
-        np.savetxt(self.data_path_mission + "/data_temperature.txt", self.data_temperature, delimiter=", ")
-        np.savetxt(self.data_path_mission + "/data_path.txt", self.data_path_waypoints, delimiter=", ")
-        np.savetxt(self.data_path_mission + "/data_timestamp.txt", self.data_timestamp, delimiter=", ")
+        self.data_salinity_saved = np.array(self.data_salinity).reshape(-1, 1)
+        self.data_temperature_saved = np.array(self.data_temperature).reshape(-1, 1)
+        self.data_path_waypoints_saved = np.array(self.data_path_waypoints).reshape(-1, 3)
+        self.data_timestamp_saved = np.array(self.data_timestamp).reshape(-1, 1)
+        np.savetxt(self.data_path_mission + "/data_salinity.txt", self.data_salinity_saved, delimiter=", ")
+        np.savetxt(self.data_path_mission + "/data_temperature.txt", self.data_temperature_saved, delimiter=", ")
+        np.savetxt(self.data_path_mission + "/data_path.txt", self.data_path_waypoints_saved, delimiter=", ")
+        np.savetxt(self.data_path_mission + "/data_timestamp.txt", self.data_timestamp_saved, delimiter=", ")
 
     def vehpos2latlon(self, x, y, lat_origin, lon_origin):
         if lat_origin <= 10:
@@ -142,21 +143,23 @@ class PathPlanner_Polygon(DataAssimilator):
     data_path_lat = []  # save the waypoint lat
     data_path_lon = []  # waypoint lon
     data_path_depth = []  # waypoint depth
-    Total_waypoints = 100  # total number of waypoints to be explored
+    Total_waypoints = 60  # total number of waypoints to be explored
     counter_plot_simulation = 0  # track the plot, will be deleted
     distance_neighbours = np.sqrt(AUV.distance_poly ** 2 + (AUV.depth_obs[1] - AUV.depth_obs[0]) ** 2)
 
     def __init__(self):
         DataAssimilator.__init__(self)
         print("range of neighbours: ", self.distance_neighbours)
-        self.prior_corrected_path = "prior_corrected.txt"
-        self.sigma_path = "Sigma_sal.txt"
         self.load_prior()
         self.travelled_waypoints = 0
         self.move_to_starting_loc()
         self.run()
 
     def load_prior(self):
+        self.prior_corrected_path = "prior_corrected.txt"
+        self.sigma_path = "Sigma_sal.txt"
+        self.threshold_path = "Threshold_S.txt"
+        self.R_sal_path = "R_sal.txt"
         self.data_prior = np.loadtxt(self.prior_corrected_path, delimiter=", ")
         self.lat_loc = self.data_prior[:, 0]
         self.lon_loc = self.data_prior[:, 1]
@@ -164,8 +167,9 @@ class PathPlanner_Polygon(DataAssimilator):
         self.salinity_prior_corrected = self.data_prior[:, -1]
         self.mu_prior = self.salinity_prior_corrected
         self.Sigma_prior = np.loadtxt(self.sigma_path, delimiter=", ")
+        self.Threshold_S = np.loadtxt(self.threshold_path, delimiter=", ")
+        self.R_sal = np.loadtxt(self.R_sal_path, delimiter=", ")
         print("Sigma_prior: ", self.Sigma_prior.shape)
-        print("Sigma sal: ", self.Sigma_sal.shape)
         self.mu_cond = self.mu_prior
         self.Sigma_cond = self.Sigma_prior
         self.N = len(self.mu_prior)
@@ -174,6 +178,8 @@ class PathPlanner_Polygon(DataAssimilator):
         print("Sigma_prior shape is: ", self.Sigma_prior.shape)
         print("mu_cond shape is: ", self.mu_cond.shape)
         print("Sigma_cond shape is: ", self.Sigma_cond.shape)
+        print("Threshold: ", self.Threshold_S)
+        print("R_sal: ", self.R_sal)
         print("N: ", self.N)
 
     def updateF(self, ind):
@@ -238,26 +244,26 @@ class PathPlanner_Polygon(DataAssimilator):
         lon_cand_plot = []
         depth_cand_plot = []
         vec1 = np.array([dx1, dy1, dz1]).squeeze()
-        print("vec1 :", vec1)
+        # print("vec1 :", vec1)
         for i in range(len(self.ind_cand)):
             if self.ind_cand[i] != self.ind_now:
                 dx2, dy2 = self.latlon2xy(self.lat_loc[self.ind_cand[i]], self.lon_loc[self.ind_cand[i]],
                                           self.lat_loc[self.ind_now], self.lon_loc[self.ind_now])
                 dz2 = self.depth_loc[self.ind_cand[i]] - self.depth_loc[self.ind_now]
                 vec2 = np.array([dx2, dy2, dz2]).squeeze()
-                print("vec2: ", vec2)
+                # print("vec2: ", vec2)
                 if np.dot(vec1, vec2) > 0:
-                    print("Product: ", np.dot(vec1, vec2))
+                    # print("Product: ", np.dot(vec1, vec2))
                     id.append(self.ind_cand[i])
                     lat_cand_plot.append(self.lat_loc[self.ind_cand[i]])
                     lon_cand_plot.append(self.lon_loc[self.ind_cand[i]])
                     depth_cand_plot.append(self.depth_loc[self.ind_cand[i]])
-                    print("The candidate location: ", self.ind_cand[i], self.ind_now)
-                    print("Candloc: ", [self.lat_loc[self.ind_cand[i]], self.lon_loc[self.ind_cand[i]]])
-                    print("NowLoc: ", [self.lat_loc[self.ind_now], self.lon_loc[self.ind_now]])
-        print("Before uniquing: ", id)
+                    # print("The candidate location: ", self.ind_cand[i], self.ind_now)
+                    # print("Candloc: ", [self.lat_loc[self.ind_cand[i]], self.lon_loc[self.ind_cand[i]]])
+                    # print("NowLoc: ", [self.lat_loc[self.ind_now], self.lon_loc[self.ind_now]])
+        # print("Before uniquing: ", id)
         id = np.unique(np.array(id))
-        print("After uniquing: ", id)
+        # print("After uniquing: ", id)
         self.ind_cand = id
         M = len(id)
         eibv = []
@@ -268,18 +274,18 @@ class PathPlanner_Polygon(DataAssimilator):
         t2 = time.time()
 
         if len(eibv) == 0:  # in case it is in the corner and not found any valid candidate locations
-            print("No valid candidates found: ")
+            # print("No valid candidates found: ")
             self.ind_next = np.abs(
                 self.EP_1D(mu, Sig, self.Threshold_S) - .5).argmin()  # if not found next, use the other one
         else:
-            print("The EIBV for the candidate location: ", np.array(eibv))
+            # print("The EIBV for the candidate location: ", np.array(eibv))
             self.ind_next = self.ind_cand[np.argmin(np.array(eibv))]
-        print("ind_next: ", self.ind_next)
+        # print("ind_next: ", self.ind_next)
 
         self.data_path_lat.append(self.lat_loc[self.ind_next])
         self.data_path_lon.append(self.lon_loc[self.ind_next])
         self.data_path_depth.append(self.depth_loc[self.ind_next])
-        print("Finding next waypoint takes: ", t2 - t1)
+        # print("Finding next waypoint takes: ", t2 - t1)
         self.updateF(self.ind_next)
 
     def updateWaypoint(self):
@@ -296,7 +302,7 @@ class PathPlanner_Polygon(DataAssimilator):
             self.rate.sleep()  #
 
     def save_mission_data(self):
-        if (self.t2 - self.t1) % 10 == 0:
+        if np.around((self.t2 - self.t1), 0) % 10 == 0:
             print("Data is saved: ", self.counter_data_saved, " times")
             self.save_data()
             self.counter_data_saved = self.counter_data_saved + 1
@@ -312,13 +318,12 @@ class PathPlanner_Polygon(DataAssimilator):
 
     def send_next_waypoint(self):
         if self.counter_waypoint % 5 == 0:
-            if (self.t2 - self.t1) % 600 == 0:
+            if np.around((self.t2 - self.t1), 0) % 600 == 0:
                 print("Longer than 10 mins, need a long break")
-                # self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
+                self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
             else:
                 print("Less than 10 mins, need a shorter break")
-                # self.surfacing(30) # surfacing 30 seconds
-        self.counter_waypoint = self.counter_waypoint + 1
+                self.surfacing(30) # surfacing 30 seconds
 
         # Move to the next waypoint
         self.auv_handler.setWaypoint(self.deg2rad(self.lat_loc[self.ind_next]),
@@ -327,6 +332,7 @@ class PathPlanner_Polygon(DataAssimilator):
         print("next waypoint", self.deg2rad(self.lat_loc[self.ind_next]),
                                self.deg2rad(self.lon_loc[self.ind_next]),
                                -self.depth_loc[self.ind_next])
+        self.counter_waypoint = self.counter_waypoint + 1
 
     def run(self):
         self.createDataPath()
@@ -336,7 +342,8 @@ class PathPlanner_Polygon(DataAssimilator):
         while not rospy.is_shutdown():
             if self.init:
                 self.t2 = time.time()
-                print("Time elapsed:", self.t2 - self.t1)
+                # print("Time elapsed:", self.t2 - self.t1)
+                print("counter waypoint: ", self.counter_waypoint)
                 self.append_mission_data()
                 self.save_mission_data()
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":

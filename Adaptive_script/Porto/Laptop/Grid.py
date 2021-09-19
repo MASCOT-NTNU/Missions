@@ -53,7 +53,6 @@ class GridPoly(WaypointNode):
     circumference = 40075000  # circumference of the earth, [m]
     distance_poly = 100  # [m], distance between two neighbouring points
     depth_obs = [-.5, -1.25, -2] # [m], distance in depth, depth to be explored
-    distanceTolerance = .1 # [m], distance tolerance for the neighbouring points
     pointsPr = 1000  # points per layer
     polygon = None
     loc_start = None
