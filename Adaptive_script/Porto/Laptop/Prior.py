@@ -73,10 +73,10 @@ class DelftPrior:
 
     def select_data(self):
         t1 = time.time()
-        self.lat_selected = np.zeros_like(self.grid_poly)
-        self.lon_selected = np.zeros_like(self.grid_poly)
-        self.depth_selected = np.zeros_like(self.grid_poly)
-        self.salinity_selected = np.zeros_like(self.grid_poly)
+        self.lat_selected = np.zeros([len(self.grid_poly), 1])
+        self.lon_selected = np.zeros([len(self.grid_poly), 1])
+        self.depth_selected = np.zeros([len(self.grid_poly), 1])
+        self.salinity_selected = np.zeros([len(self.grid_poly), 1])
         self.depth_mean = np.nanmean(self.depth, axis = (0, 1)) # find the mean depth of each layer from delft3d
         self.grid_coord = []
         for i in range(len(self.grid_poly)):

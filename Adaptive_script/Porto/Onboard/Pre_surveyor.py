@@ -155,7 +155,7 @@ class Pre_surveyor(DataAssimilator):
             self.rate.sleep()  #
 
     def save_mission_data(self):
-        if (self.t2 - self.t1) % 10 == 0:
+        if np.around((self.t2 - self.t1), 0) % 10 == 0:
             print("Data is saved: ", self.counter_data_saved, " times")
             self.save_data()
             self.counter_data_saved = self.counter_data_saved + 1
@@ -171,13 +171,12 @@ class Pre_surveyor(DataAssimilator):
 
     def send_next_waypoint(self):
         if self.path_initial_survey[self.counter_waypoint, 2] == 0:
-            if (self.t2 - self.t1) % 600 == 0:
+            if np.around((self.t2 - self.t1), 0) % 600 == 0:
                 print("Longer than 10 mins, need a long break")
-                # self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
+                self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
             else:
                 print("Less than 10 mins, need a shorter break")
-                # self.surfacing(30) # surfacing 30 seconds
-        self.counter_waypoint = self.counter_waypoint + 1
+                self.surfacing(30) # surfacing 30 seconds
 
         # Move to the next waypoint
         self.auv_handler.setWaypoint(self.deg2rad(self.path_initial_survey[self.counter_waypoint, 0]),
@@ -186,6 +185,7 @@ class Pre_surveyor(DataAssimilator):
         print("next waypoint", self.deg2rad(self.path_initial_survey[self.counter_waypoint, 0]),
               self.deg2rad(self.path_initial_survey[self.counter_waypoint, 1]),
               self.path_initial_survey[self.counter_waypoint, 2])
+        self.counter_waypoint = self.counter_waypoint + 1
 
     def Pre_surveyor(self):
         self.createDataPath()
