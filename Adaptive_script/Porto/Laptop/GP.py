@@ -9,6 +9,7 @@ __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
 import time
+import h5py
 import numpy as np
 
 class GP_Poly:
@@ -91,16 +92,20 @@ class GP_Poly:
         print("computing the covariance matrix...")
         t1 = time.time()
         self.Sigma_sal = self.sigma_sal ** 2 * (1 + self.eta * self.distanceMatrix) * np.exp(-self.eta * self.distanceMatrix)
-        np.savetxt(self.path_onboard + "Sigma_sal.txt", self.Sigma_sal, delimiter=", ")
+        data_Sigma = h5py.File(self.path_onboard + "Sigma_sal.h5", 'w')
+        data_Sigma.create_dataset("Sigma_sal", data = self.Sigma_sal)
+        # np.savetxt(self.path_onboard + "Sigma_sal.txt", self.Sigma_sal, delimiter=", ")
         t2 = time.time()
         print("Covariance matrix is saved successfully, Sigma: ", self.Sigma_sal.shape)
         print("Time consumed: ", t2 - t1)
 
     def checkSigma(self):
-        a = np.loadtxt(self.path_onboard + "Sigma_sal.txt", delimiter=", ")
+        datafile = h5py.File(self.path_onboard + "Sigma_sal.h5", 'r')
+        Sigma_sal = np.array(datafile.get("Sigma_sal"))
+        # a = np.loadtxt(self.path_onboard + "Sigma_sal.txt", delimiter=", ")
         import matplotlib.pyplot as plt
         plt.figure()
-        plt.imshow(a)
+        plt.imshow(Sigma_sal)
         plt.colorbar()
         plt.show()
 
@@ -120,4 +125,5 @@ class GP_Poly:
 
 if __name__ == "__main__":
     a = GP_Poly()
+    # a.checkSigma()
 
