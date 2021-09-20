@@ -74,7 +74,7 @@ class PathDesigner:
         plt.plot(self.polygon[:, 1], self.polygon[:, 0], 'r-')
         plt.xlabel("Lon [deg]")
         plt.ylabel("Lat [deg]")
-        path_initialsurvey = plt.ginput(n=100)  # wait for the click to select the polygon
+        path_initialsurvey = plt.ginput(n=100, timeout = 0)  # wait for the click to select the polygon
         plt.show()
         self.path_initial_survey = []
         for i in range(len(path_initialsurvey)):
