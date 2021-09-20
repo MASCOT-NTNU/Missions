@@ -157,7 +157,7 @@ class PathPlanner_Polygon(DataAssimilator):
 
     def load_prior(self):
         self.prior_corrected_path = "prior_corrected.txt"
-        self.sigma_path = "Sigma_sal.txt"
+        self.sigma_path = "Sigma_sal.h5"
         self.threshold_path = "Threshold_S.txt"
         self.R_sal_path = "R_sal.txt"
         self.data_prior = np.loadtxt(self.prior_corrected_path, delimiter=", ")
@@ -166,7 +166,8 @@ class PathPlanner_Polygon(DataAssimilator):
         self.depth_loc = self.data_prior[:, 2]
         self.salinity_prior_corrected = self.data_prior[:, -1]
         self.mu_prior = self.salinity_prior_corrected
-        self.Sigma_prior = np.loadtxt(self.sigma_path, delimiter=", ")
+        self.Sigma_prior = np.array(h5py.File(self.sigma_path, 'r').get("Sigma_sal"))
+        # self.Sigma_prior = np.loadtxt(self.sigma_path, delimiter=", ")
         self.Threshold_S = np.loadtxt(self.threshold_path, delimiter=", ")
         self.R_sal = np.loadtxt(self.R_sal_path, delimiter=", ")
         print("Sigma_prior: ", self.Sigma_prior.shape)
