@@ -4,7 +4,6 @@ path_map = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot"
 path_grid = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/fig/"
 path_maretec = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Exemplo_Douro/"
 path_delft3d = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/Merged_all/"
-path_grid_coord = ""
 
 # Steps:
 
@@ -14,7 +13,7 @@ path_grid_coord = ""
 
 python3 Polygon_Selector.py
 
-pycharm = False
+pycharm = False, use terminal instead. 
 
 string_date = "2021-09-14_2021-09-15"
 string_hour = "08_12"

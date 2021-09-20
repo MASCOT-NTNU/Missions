@@ -128,7 +128,7 @@ class MaretecDataHandler:
         plt.title("Surface salinity estimation from Maretec during " + self.data_path[81:102])
         plt.xlabel("Lon [deg]")
         plt.ylabel("Lat [deg]")
-        polygon = plt.ginput(n = 100) # wait for the click to select the polygon
+        polygon = plt.ginput(n = 100, timeout = 0) # wait for the click to select the polygon
         plt.show()
         self.polygon = []
         for i in range(len(polygon)):
