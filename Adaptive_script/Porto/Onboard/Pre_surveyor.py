@@ -163,7 +163,8 @@ class Pre_surveyor(DataAssimilator):
 
     def surfacing(self, time_length):
         for i in range(time_length):
-            self.send_SMS()
+            if i % 30 == 0:
+                self.send_SMS()
             self.append_mission_data()
             self.save_mission_data()
             print("Sleep {:d} seconds".format(i))
