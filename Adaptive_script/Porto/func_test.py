@@ -18,19 +18,22 @@ from bs4 import BeautifulSoup
 filepath = "/Users/yaoling/Downloads/test/doc.kml"
 with open(filepath, 'r') as f:
     soup = BeautifulSoup(f)
-lat_max = str(soup.find("north"))[7:-8]
-lat_min = str(soup.find("south"))[7:-8]
-lon_max = str(soup.find("east"))[6:-7]
-lon_min = str(soup.find("west"))[6:-7]
+lat_max = float(str(soup.find("north"))[7:-8])
+lat_min = float(str(soup.find("south"))[7:-8])
+lon_max = float(str(soup.find("east"))[6:-7])
+lon_min = float(str(soup.find("west"))[6:-7])
 
 figpath = "/Users/yaoling/Downloads/test/image.png"
 import cv2
 img = cv2.imread(figpath)
 val = img[:, :, 0]
+
 lat_img = np.linspace(lat_min, lat_max, val.shape[0])
 lon_img = np.linspace(lon_min, lon_max, val.shape[1])
-# plt.scatter(lon_img, lat_img, val.reshape(-1, 1))
+lat, lon = np.meshgrid(lon_img, lat_img)
 
+plt.scatter(lat, lon, c = val)
+plt.show()
 # import matplotlib.pyplot as plt
 # plt.figure(figsize = (20, 20))
 # plt.axvline(lon_min)
