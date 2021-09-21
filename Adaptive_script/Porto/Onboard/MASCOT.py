@@ -36,7 +36,7 @@ class AUV:
         rospy.Subscriber("/Vehicle/Out/Salinity_filtered", Salinity, self.SalinityCB)
         rospy.Subscriber("/Vehicle/Out/EstimatedState_filtered", EstimatedState, self.EstimatedStateCB)
 
-        self.speed = 1.6  # m/s
+        self.speed = 1.2  # m/s
         self.depth = 0.0  # meters
         self.last_state = "unavailable"
         self.rate.sleep()
@@ -298,7 +298,8 @@ class PathPlanner_Polygon(DataAssimilator):
 
     def surfacing(self, time_length):
         for i in range(time_length):
-            self.send_SMS()
+            if i % 30 == 0:
+                self.send_SMS()
             self.append_mission_data()
             self.save_mission_data()
             print("Sleep {:d} seconds".format(i))
