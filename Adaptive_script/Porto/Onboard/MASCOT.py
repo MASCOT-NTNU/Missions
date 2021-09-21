@@ -304,9 +304,9 @@ class PathPlanner_Polygon(DataAssimilator):
             self.append_mission_data()
             self.save_mission_data()
             print("Sleep {:d} seconds".format(i))
-            self.auv_handler.setWaypoint(self.deg2rad(self.lat_loc[self.ind_now]),
-                                         self.deg2rad(self.lon_loc[self.ind_now]),
-                                         -self.depth_loc[self.ind_now])
+            self.auv_handler.setWaypoint(self.deg2rad(self.lat_loc[self.ind_pre]),
+                                         self.deg2rad(self.lon_loc[self.ind_pre]),
+                                         -self.depth_loc[self.ind_pre])
             self.auv_handler.spin()  # publishes the reference, stay on the surface
             self.rate.sleep()  #
 
@@ -329,10 +329,10 @@ class PathPlanner_Polygon(DataAssimilator):
         self.counter_waypoint = self.counter_waypoint + 1  # needs to be updated before
 
         if self.counter_waypoint % 5 == 0: # check whether it needs to surface
-            print(int(self.t2 - self.t1))
-            if int(self.t2 - self.t1) % 600 == 0:
+            if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
                 print("Longer than 10 mins, need a long break")
                 self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
+                self.t1 = self.t2
             else:
                 print("Less than 10 mins, need a shorter break")
                 self.surfacing(30) # surfacing 30 seconds
@@ -356,7 +356,7 @@ class PathPlanner_Polygon(DataAssimilator):
                 self.save_mission_data()
                 print(self.auv_handler.getState())
                 print("Counter waypoint: ", self.counter_waypoint)
-                print("Elapsed time: ", self.t2 - self.t1)
+                print("Elapsed time after surfacing: ", self.t2 - self.t1)
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the current location")
                     self.sal_sampled = np.mean(self.data_salinity[-10:])  # take the past ten samples and average

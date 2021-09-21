@@ -187,9 +187,10 @@ class Pre_surveyor(DataAssimilator):
 
     def send_next_waypoint(self):
         if self.path_initial_survey[self.counter_waypoint, 2] == 0:
-            if np.around((self.t2 - self.t1), 0) % 600 == 0:
+            if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
                 print("Longer than 10 mins, need a long break")
                 self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
+                self.t1 = self.t2
             else:
                 print("Less than 10 mins, need a shorter break")
                 self.surfacing(30) # surfacing 30 seconds
