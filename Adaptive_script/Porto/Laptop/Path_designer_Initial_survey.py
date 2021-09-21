@@ -33,7 +33,7 @@ class PathDesigner:
         self.debug = debug
         self.load_grid()
         self.load_polygon()
-        self.load_data()
+        self.plot_3d_prior()
         self.design_path()
         self.checkPath()
 
@@ -47,22 +47,30 @@ class PathDesigner:
         self.polygon = np.loadtxt(self.path_onboard + "polygon.txt", delimiter=", ")
         print("Finished polygon loading, polygon: ", self.polygon.shape)
 
-    def load_data(self):
-        print("Loading the selected data...")
-        t1 = time.time()
-        self.data_path = self.path_onboard + "Prior_polygon.h5"
-        self.data = h5py.File(self.data_path, 'r')
-        self.lat_selected = np.array(self.data.get('lat_selected'))
-        self.lon_selected = np.array(self.data.get('lon_selected'))
-        self.depth_selected = np.array(self.data.get('depth_selected'))
-        self.salinity_selected = np.array(self.data.get('salinity_selected'))
-        print("Merged data is loaded correctly!")
-        print("lat_selected: ", self.lat_selected.shape)
-        print("lon_selected: ", self.lon_selected.shape)
-        print("depth_selected: ", self.depth_selected.shape)
-        print("salinity_selected: ", self.salinity_selected.shape)
-        t2 = time.time()
-        print("Loading data takes: ", t2 - t1)
+    def plot_3d_prior(self):
+        import plotly.graph_objects as go
+        import plotly
+        prior = self.path_onboard + "Prior_polygon.txt"
+        data_prior = np.loadtxt(prior, delimiter=", ")
+        depth_prior = data_prior[:, 2]
+        lat_prior = data_prior[:, 0]
+        lon_prior = data_prior[:, 1]
+        salinity_prior = data_prior[:, -1]
+        fig = go.Figure(data=[go.Scatter3d(
+            x=lon_prior.squeeze(),
+            y=lat_prior.squeeze(),
+            z=depth_prior.squeeze(),
+            mode='markers',
+            marker=dict(
+                size=12,
+                color=salinity_prior.squeeze(),  # set color to an array/list of desired values
+                showscale=True,
+                coloraxis="coloraxis"
+            )
+        )])
+        fig.update_coloraxes(colorscale="jet")
+        figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/"
+        plotly.offline.plot(fig, filename=figpath + "Prior.html", auto_open=True)
 
     def design_path(self):
         print("Please design the path, every second node will be pop up, use the yoyo pattern")
@@ -88,11 +96,15 @@ class PathDesigner:
 
     def checkPath(self):
         plt.figure(figsize=(10, 10))
-        plt.plot(self.grid_poly[:, 1], self.grid_poly[:, 0], 'k.')
-        plt.plot(self.polygon[:, 1], self.polygon[:, 0], 'r-')
-        plt.plot(self.path_initial_survey[:, 1], self.path_initial_survey[:, 0], 'b*-')
+        plt.plot(self.grid_poly[:, 1], self.grid_poly[:, 0], 'k.', label = "Grid graph")
+        plt.plot(self.polygon[:, 1], self.polygon[:, 0], 'r-', label = "Operaional boundary")
+        plt.plot(self.path_initial_survey[:, 1], self.path_initial_survey[:, 0], 'k-', label = "Initial Survey Path")
+        plt.plot(self.path_initial_survey[0:-1:2, 1], self.path_initial_survey[0:-1:2, 0], 'b*', label = "Surfacing")
+        plt.plot(self.path_initial_survey[1:-1:2, 1], self.path_initial_survey[1:-1:2, 0], 'g*', label = "Diving")
+        plt.title("Initial path visualisation")
         plt.xlabel("Lon [deg]")
         plt.ylabel("Lat [deg]")
+        plt.legend()
         plt.show()
 
 
