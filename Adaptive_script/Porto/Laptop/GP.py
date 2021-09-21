@@ -98,9 +98,7 @@ class GP_Poly:
         print("Time consumed: ", t2 - t1)
 
     def checkSigma(self):
-        datafile = h5py.File(self.path_onboard + "Sigma_sal.h5", 'r')
-        Sigma_sal = np.array(datafile.get("Sigma_sal"))
-        # a = np.loadtxt(self.path_onboard + "Sigma_sal.txt", delimiter=", ")
+        Sigma_sal = np.loadtxt(self.path_onboard + "Sigma_sal.txt", delimiter=", ")
         import matplotlib.pyplot as plt
         plt.figure()
         plt.imshow(Sigma_sal)
