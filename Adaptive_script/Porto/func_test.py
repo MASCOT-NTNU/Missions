@@ -39,6 +39,17 @@ lon_img = np.linspace(lon_min, lon_max, val.shape[1])
 # plt.axhline(lat_min)
 # plt.show()
 
+#%%
+t1 = 0
+for t2 in range(100):
+    t2 = t2 + np.random.randn(1)
+
+    if (t2 - t1) / 20 >= 1 and (t2 - t1) % 20 >= 0:
+            print(t2)
+            print("here")
+            t1 = t2
+    else:
+        print("not")
 
 
 #%%
