@@ -8,12 +8,11 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
-import h5py
 import numpy as np
 import rospy
 from auv_handler import AuvHandler
 import imc_ros_interface
-from imc_ros_interface.msg import Temperature, Salinity, EstimatedState
+from imc_ros_interface.msg import Temperature, Salinity, EstimatedState, Sms
 import time
 import os
 from pathlib import Path
@@ -42,6 +41,9 @@ class AUV:
         self.currentTemperature = 0.0
         self.currentSalinity = 0.0
         self.vehicle_pos = [0, 0, 0]
+
+        self.sms_pub_ = rospy.Publisher("/IMC/In/Sms", Sms, queue_size = 10)
+        self.phone_number = "+4792526858"
 
     def TemperatureCB(self, msg):
         self.currentTemperature = msg.value.data
@@ -146,11 +148,26 @@ class Pre_surveyor(DataAssimilator):
         self.path_initial_survey = np.loadtxt(self.path_onboard + "path_initial_survey.txt", delimiter=", ")
         print("Initial survey path is loaded successfully, path_initial_survey: ", self.path_initial_survey)
 
+    def send_SMS(self):
+        print("Message has been sent to: ", self.phone_number)
+        SMS = Sms()
+        SMS.number.data = self.phone_number
+        SMS.timeout.data = 60
+        x_auv = self.vehicle_pos[0]
+        y_auv = self.vehicle_pos[1]
+        lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
+        SMS.contents.data = "LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(lon_auv) + ". Navigation from Google: " \
+                                                                                              "https://www.google.com/maps/place" \
+                                                                                              "/@" + str(lat_auv) + ", " + str(lon_auv) + "10z"
+        self.sms_pub_.publish(SMS)
+
     def surfacing(self, time_length):
         for i in range(time_length):
+            self.send_SMS()
             self.append_mission_data()
             self.save_mission_data()
             print("Sleep {:d} seconds".format(i))
+            self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
             self.auv_handler.spin()  # publishes the reference, stay on the surface
             self.rate.sleep()  #
 
@@ -167,7 +184,6 @@ class Pre_surveyor(DataAssimilator):
                                                 self.lon_origin)
         self.append_path([lat_temp, lon_temp, self.vehicle_pos[2]])
         self.append_timestamp(datetime.now().timestamp())
-        # print("mission data is appended successfully:")
 
     def send_next_waypoint(self):
         if self.path_initial_survey[self.counter_waypoint, 2] == 0:
@@ -178,13 +194,15 @@ class Pre_surveyor(DataAssimilator):
                 print("Less than 10 mins, need a shorter break")
                 self.surfacing(30) # surfacing 30 seconds
 
-        # Move to the next waypoint
-        self.auv_handler.setWaypoint(self.deg2rad(self.path_initial_survey[self.counter_waypoint, 0]),
-                                     self.deg2rad(self.path_initial_survey[self.counter_waypoint, 1]),
-                                     -self.path_initial_survey[self.counter_waypoint, 2])
+        self.waypoint_lat_now = self.deg2rad(self.path_initial_survey[self.counter_waypoint, 0])
+        self.waypoint_lon_now = self.deg2rad(self.path_initial_survey[self.counter_waypoint, 1])
+        self.waypoin_depth_now = -self.path_initial_survey[self.counter_waypoint, 2]
+
+        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
         print("next waypoint", self.deg2rad(self.path_initial_survey[self.counter_waypoint, 0]),
               self.deg2rad(self.path_initial_survey[self.counter_waypoint, 1]),
               self.path_initial_survey[self.counter_waypoint, 2])
+        # Move to the next waypoint
         self.counter_waypoint = self.counter_waypoint + 1
 
     def Pre_surveyor(self):
@@ -193,9 +211,10 @@ class Pre_surveyor(DataAssimilator):
         self.t1 = time.time()
         self.counter_waypoint = 0
         self.counter_data_saved = 0
-        self.auv_handler.setWaypoint(self.deg2rad(self.path_initial_survey[self.counter_waypoint, 0]),
-                                     self.deg2rad(self.path_initial_survey[self.counter_waypoint, 1]),
-                                     -self.path_initial_survey[self.counter_waypoint, 2]) # reason for that is that setwaypoint does not accept negative values for depth
+        self.waypoint_lat_now = self.deg2rad(self.path_initial_survey[self.counter_waypoint, 0])
+        self.waypoint_lon_now = self.deg2rad(self.path_initial_survey[self.counter_waypoint, 1])
+        self.waypoin_depth_now = - self.path_initial_survey[self.counter_waypoint, 2]# reason for that is that setwaypoint does not accept negative values for depth
+        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
         while not rospy.is_shutdown():
             if self.init:
                 self.t2 = time.time()
@@ -204,10 +223,10 @@ class Pre_surveyor(DataAssimilator):
                 self.save_mission_data()
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the current location")
-                    self.send_next_waypoint()
                     if self.counter_waypoint >= len(self.path_initial_survey):
                         rospy.signal_shutdown("Mission completed!!!")
                         break
+                    self.send_next_waypoint()
                 self.last_state = self.auv_handler.getState()
                 self.auv_handler.spin()
             self.rate.sleep()
@@ -233,14 +252,14 @@ class Prior(Pre_surveyor):
         print("Finished pre survey file path, filepath: ", self.file_path_initial_survey)
 
     def load_prior(self):
-        self.prior_data = h5py.File("Prior_polygon.h5", 'r')
-        self.lat_prior = np.array(self.prior_data.get("lat_selected"))
-        self.lon_prior = np.array(self.prior_data.get("lon_selected"))
-        self.depth_prior = np.array(self.prior_data.get("depth_selected"))
-        self.salinity_prior = np.array(self.prior_data.get("salinity_selected"))
+        self.prior_data = np.loadtxt("Prior_polygon.txt", delimiter=", ")
+        self.lat_prior = self.prior_data[:, 0]
+        self.lon_prior = self.prior_data[:, 1]
+        self.depth_prior = self.prior_data[:, 2]
+        self.salinity_prior = self.prior_data[:, -1]
         print("Loading prior successfully.")
-        print("lat_selected: ", self.lat_prior.shape)
-        print("lon_selected: ", self.lon_prior.shape)
+        print("lat_prior: ", self.lat_prior.shape)
+        print("lon_prior: ", self.lon_prior.shape)
         print("depth_prior: ", self.depth_prior.shape)
         print("salinity_prior: ", self.salinity_prior.shape)
 
@@ -249,13 +268,12 @@ class Prior(Pre_surveyor):
         return the index in the prior data which corresponds to the location
         '''
         lat, lon, depth = loc
-        distDepth = np.abs(self.depth_obs - depth)
-        ind_depth = np.where(distDepth == distDepth.min())[0][0]
-        distLat = self.lat_prior[:, ind_depth] - lat
-        distLon = self.lon_prior[:, ind_depth] - lon
-        dist = np.sqrt(distLat ** 2 + distLon ** 2)
+        distDepth = self.depth_prior - depth
+        distLat = self.lat_prior - lat
+        distLon = self.lon_prior - lon
+        dist = np.sqrt(distLat ** 2 + distLon ** 2 + distDepth ** 2)
         ind_loc = np.where(dist == dist.min())[0][0]
-        return [ind_loc, ind_depth]
+        return ind_loc
 
     def prior_calibrator(self):
         '''
@@ -266,13 +284,14 @@ class Prior(Pre_surveyor):
         self.depth_auv = self.path[:, 2]
         self.salinity_prior_reg = []
         for i in range(len(self.lat_auv)):
-            ind_loc, ind_depth = self.getPriorIndAtLoc([self.lat_auv[i], self.lon_auv[i], self.depth_auv[i]])
-            self.salinity_prior_reg.append(self.salinity_prior[ind_loc, ind_depth])
+            ind_loc = self.getPriorIndAtLoc([self.lat_auv[i], self.lon_auv[i], self.depth_auv[i]])
+            self.salinity_prior_reg.append(self.salinity_prior[ind_loc])
         self.salinity_prior_reg = np.array(self.salinity_prior_reg).reshape(-1, 1)
         X = np.hstack((np.ones_like(self.salinity_prior_reg), self.salinity_prior_reg))
         Y = self.salinity_auv
         self.beta = np.linalg.solve(X.T @ X, (X.T @ Y))
         print("Prior is calibrated, beta: ", self.beta)
+        np.savetxt("beta.txt", self.beta, delimiter=", ")
         self.salinity_prior_corrected = self.beta[0] + self.beta[1] * self.salinity_prior
         self.data_prior_corrected = np.hstack((self.lat_prior.reshape(-1, 1),
                                           self.lon_prior.reshape(-1, 1),
