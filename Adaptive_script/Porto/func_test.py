@@ -18,44 +18,75 @@ from bs4 import BeautifulSoup
 filepath = "/Users/yaoling/Downloads/test/doc.kml"
 with open(filepath, 'r') as f:
     soup = BeautifulSoup(f)
-lat_max = float(str(soup.find("north"))[7:-8])
-lat_min = float(str(soup.find("south"))[7:-8])
+lat_max = float(str(soup.find("south"))[7:-8])
+lat_min = float(str(soup.find("north"))[7:-8])
 lon_max = float(str(soup.find("east"))[6:-7])
 lon_min = float(str(soup.find("west"))[6:-7])
 
 figpath = "/Users/yaoling/Downloads/test/image.png"
+path_onboard = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Laptop/"
 import cv2
 img = cv2.imread(figpath)
 val = img[:, :, 0]
 
 lat_img = np.linspace(lat_min, lat_max, val.shape[0])
 lon_img = np.linspace(lon_min, lon_max, val.shape[1])
-lat, lon = np.meshgrid(lon_img, lat_img)
 
-plt.scatter(lat, lon, c = val)
-plt.show()
+Lat = []
+Lon = []
+Ref = []
+for i in range(len(lat_img)):
+    for j in range(len(lon_img)):
+        if lat_img[i] >= 41.1 and lat_img[i] <= 41.16 and lon_img[j] >= -8.75 and lon_img[j] <= -8.64:
+            Lat.append(lat_img[i])
+            Lon.append(lon_img[j])
+            Ref.append(val[i, j])
+
+Lat = np.array(Lat).reshape(-1, 1)
+Lon = np.array(Lon).reshape(-1, 1)
+Ref = np.array(Ref).reshape(-1, 1)
+data_satellite = np.hstack((Lat, Lon, Ref))
+np.savetxt(path_onboard + "satellite_data.txt", data_satellite, delimiter=", ")
 # import matplotlib.pyplot as plt
 # plt.figure(figsize = (20, 20))
-# plt.axvline(lon_min)
-# plt.axvline(lon_max, c = "r")
-# plt.axhline(lat_max, c = 'r')
-# plt.axhline(lat_min)
+# plt.scatter(Lon, Lat, c = Ref)
+# plt.colorbar()
 # plt.show()
 
 #%%
-t1 = 0
-for t2 in range(100):
-    t2 = t2 + np.random.randn(1)
-
-    if (t2 - t1) / 20 >= 1 and (t2 - t1) % 20 >= 0:
-            print(t2)
-            print("here")
-            t1 = t2
-    else:
-        print("not")
+data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Simulator/MissionData_on2021_0921_2237/"
+waypoint = np.loadtxt(data_path + "data_path.txt", delimiter=", ")
+waypoint = waypoint[1:, :]
+sal = np.loadtxt(data_path + "data_salinity.txt", delimiter=", ")
+sal = sal[1:]
+lat = waypoint[:, 0]
+lon = waypoint[:, 1]
+depth = waypoint[:, -1]
+plt.scatter(lon, lat, c = sal, cmap = "Paired", vmin = 35, vmax =36)
+plt.colorbar()
+plt.show()
+# import plotly.graph_objects as go
+# import plotly
+# fig = go.Figure(data=[go.Scatter3d(
+#     x=lon.squeeze(),
+#     y=lat.squeeze(),
+#     z=depth.squeeze(),
+#     mode='markers',
+#     marker=dict(
+#         size=12,
+#
+#         color=sal.squeeze(),  # set color to an array/list of desired values
+#         showscale=True,
+#         coloraxis="coloraxis"
+#     )
+# )])
+# fig.update_coloraxes(colorscale="jet")
+# figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Simulation"
+# plotly.offline.plot(fig, filename=figpath + "Simulation.html", auto_open=True)
 
 
 #%%
+
 data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/In-situ/pmel-20170813T154236.000-lauv-xplore-1.nc'
 # data_path = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/In-situ/pmel-20170813T152758.000-lauv-xplore-2.nc'
 import netCDF4
