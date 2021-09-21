@@ -9,12 +9,11 @@ __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
 import rospy
-import h5py
 import numpy as np
 from scipy.stats import mvn, norm
 from auv_handler import AuvHandler
 import imc_ros_interface
-from imc_ros_interface.msg import Temperature, Salinity, EstimatedState
+from imc_ros_interface.msg import Temperature, Salinity, EstimatedState, Sms
 import time
 import os
 from pathlib import Path
@@ -45,6 +44,9 @@ class AUV:
         self.currentTemperature = 0.0
         self.currentSalinity = 0.0
         self.vehicle_pos = [0, 0, 0]
+
+        self.sms_pub_ = rospy.Publisher("/IMC/In/Sms", Sms, queue_size = 10)
+        self.phone_number = "+4792526858"
 
     def TemperatureCB(self, msg):
         self.currentTemperature = msg.value.data
@@ -157,7 +159,7 @@ class PathPlanner_Polygon(DataAssimilator):
 
     def load_prior(self):
         self.prior_corrected_path = "prior_corrected.txt"
-        self.sigma_path = "Sigma_sal.h5"
+        self.sigma_path = "Sigma_sal.txt"
         self.threshold_path = "Threshold_S.txt"
         self.R_sal_path = "R_sal.txt"
         self.data_prior = np.loadtxt(self.prior_corrected_path, delimiter=", ")
@@ -166,11 +168,9 @@ class PathPlanner_Polygon(DataAssimilator):
         self.depth_loc = self.data_prior[:, 2]
         self.salinity_prior_corrected = self.data_prior[:, -1]
         self.mu_prior = self.salinity_prior_corrected
-        self.Sigma_prior = np.array(h5py.File(self.sigma_path, 'r').get("Sigma_sal"))
-        # self.Sigma_prior = np.loadtxt(self.sigma_path, delimiter=", ")
+        self.Sigma_prior = np.loadtxt(self.sigma_path, delimiter=", ")
         self.Threshold_S = np.loadtxt(self.threshold_path, delimiter=", ")
         self.R_sal = np.loadtxt(self.R_sal_path, delimiter=", ")
-        print("Sigma_prior: ", self.Sigma_prior.shape)
         self.mu_cond = self.mu_prior
         self.Sigma_cond = self.Sigma_prior
         self.N = len(self.mu_prior)
@@ -245,26 +245,18 @@ class PathPlanner_Polygon(DataAssimilator):
         lon_cand_plot = []
         depth_cand_plot = []
         vec1 = np.array([dx1, dy1, dz1]).squeeze()
-        # print("vec1 :", vec1)
         for i in range(len(self.ind_cand)):
             if self.ind_cand[i] != self.ind_now:
                 dx2, dy2 = self.latlon2xy(self.lat_loc[self.ind_cand[i]], self.lon_loc[self.ind_cand[i]],
                                           self.lat_loc[self.ind_now], self.lon_loc[self.ind_now])
                 dz2 = self.depth_loc[self.ind_cand[i]] - self.depth_loc[self.ind_now]
                 vec2 = np.array([dx2, dy2, dz2]).squeeze()
-                # print("vec2: ", vec2)
                 if np.dot(vec1, vec2) > 0:
-                    # print("Product: ", np.dot(vec1, vec2))
                     id.append(self.ind_cand[i])
                     lat_cand_plot.append(self.lat_loc[self.ind_cand[i]])
                     lon_cand_plot.append(self.lon_loc[self.ind_cand[i]])
                     depth_cand_plot.append(self.depth_loc[self.ind_cand[i]])
-                    # print("The candidate location: ", self.ind_cand[i], self.ind_now)
-                    # print("Candloc: ", [self.lat_loc[self.ind_cand[i]], self.lon_loc[self.ind_cand[i]]])
-                    # print("NowLoc: ", [self.lat_loc[self.ind_now], self.lon_loc[self.ind_now]])
-        # print("Before uniquing: ", id)
         id = np.unique(np.array(id))
-        # print("After uniquing: ", id)
         self.ind_cand = id
         M = len(id)
         eibv = []
@@ -275,18 +267,14 @@ class PathPlanner_Polygon(DataAssimilator):
         t2 = time.time()
 
         if len(eibv) == 0:  # in case it is in the corner and not found any valid candidate locations
-            # print("No valid candidates found: ")
             self.ind_next = np.abs(
                 self.EP_1D(mu, Sig, self.Threshold_S) - .5).argmin()  # if not found next, use the other one
         else:
-            # print("The EIBV for the candidate location: ", np.array(eibv))
             self.ind_next = self.ind_cand[np.argmin(np.array(eibv))]
-        # print("ind_next: ", self.ind_next)
-
         self.data_path_lat.append(self.lat_loc[self.ind_next])
         self.data_path_lon.append(self.lon_loc[self.ind_next])
         self.data_path_depth.append(self.depth_loc[self.ind_next])
-        # print("Finding next waypoint takes: ", t2 - t1)
+        print("Finding next waypoint takes: ", t2 - t1)
         self.updateF(self.ind_next)
 
     def updateWaypoint(self):
@@ -294,11 +282,29 @@ class PathPlanner_Polygon(DataAssimilator):
         self.ind_pre = self.ind_now
         self.ind_now = self.ind_next
 
+    def send_SMS(self):
+        print("Message has been sent to: ", self.phone_number)
+        SMS = Sms()
+        SMS.number.data = self.phone_number
+        SMS.timeout.data = 60
+        x_auv = self.vehicle_pos[0]
+        y_auv = self.vehicle_pos[1]
+        lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
+        SMS.contents.data = "LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(
+            lon_auv) + ". Navigation from Google: " \
+                       "https://www.google.com/maps/place" \
+                       "/@" + str(lat_auv) + ", " + str(lon_auv) + "10z"
+        self.sms_pub_.publish(SMS)
+
     def surfacing(self, time_length):
         for i in range(time_length):
+            self.send_SMS()
             self.append_mission_data()
             self.save_mission_data()
             print("Sleep {:d} seconds".format(i))
+            self.auv_handler.setWaypoint(self.deg2rad(self.lat_loc[self.ind_next]),
+                                         self.deg2rad(self.lon_loc[self.ind_next]),
+                                         -self.depth_loc[self.ind_next])
             self.auv_handler.spin()  # publishes the reference, stay on the surface
             self.rate.sleep()  #
 
@@ -315,7 +321,6 @@ class PathPlanner_Polygon(DataAssimilator):
                                                 self.lon_origin)
         self.append_path([lat_temp, lon_temp, self.vehicle_pos[2]])
         self.append_timestamp(datetime.now().timestamp())
-        # print("mission data is appended successfully:")
 
     def send_next_waypoint(self):
         if self.counter_waypoint % 5 == 0:
@@ -326,6 +331,7 @@ class PathPlanner_Polygon(DataAssimilator):
                 print("Less than 10 mins, need a shorter break")
                 self.surfacing(30) # surfacing 30 seconds
 
+        self.counter_waypoint = self.counter_waypoint + 1
         # Move to the next waypoint
         self.auv_handler.setWaypoint(self.deg2rad(self.lat_loc[self.ind_next]),
                                      self.deg2rad(self.lon_loc[self.ind_next]),
@@ -333,7 +339,6 @@ class PathPlanner_Polygon(DataAssimilator):
         print("next waypoint", self.deg2rad(self.lat_loc[self.ind_next]),
                                self.deg2rad(self.lon_loc[self.ind_next]),
                                -self.depth_loc[self.ind_next])
-        self.counter_waypoint = self.counter_waypoint + 1
 
     def run(self):
         self.createDataPath()
@@ -343,7 +348,6 @@ class PathPlanner_Polygon(DataAssimilator):
         while not rospy.is_shutdown():
             if self.init:
                 self.t2 = time.time()
-                # print("Time elapsed:", self.t2 - self.t1)
                 print("counter waypoint: ", self.counter_waypoint)
                 self.append_mission_data()
                 self.save_mission_data()
@@ -356,10 +360,11 @@ class PathPlanner_Polygon(DataAssimilator):
                     self.find_next_EIBV_1D(self.mu_cond, self.Sigma_cond)
                     self.updateWaypoint()
                     self.travelled_waypoints += 1
-                    self.send_next_waypoint()
                     if self.travelled_waypoints >= self.Total_waypoints:
                         rospy.signal_shutdown("Mission completed!!!")
                         break
+                    self.send_next_waypoint()
+
                 self.last_state = self.auv_handler.getState()
                 self.auv_handler.spin()
             self.rate.sleep()
