@@ -13,6 +13,7 @@ class MaretecDataHandler:
     delft_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/Merged_all/"
     figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Polygon/fig/"
     polygon_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
+    path_laptop = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Laptop/"
     circumference = 40075000 # [m], circumference of the earth
 
     def __init__(self):
@@ -109,6 +110,14 @@ class MaretecDataHandler:
         self.lon_delft3d = np.array(delft3d.get("lon"))[:, :, 0]
         self.salinity_delft3d = np.array(delft3d.get("salinity"))[:, :, 0]
 
+    def loadSatellite(self):
+        print("Satellite data is loading")
+        self.data_satellite = np.loadtxt(self.path_laptop + "satellite_data.txt", delimiter=", ")
+        self.lat_satellite = self.data_satellite[:, 0]
+        self.lon_satellite = self.data_satellite[:, 1]
+        self.ref_satellite = self.data_satellite[:, -1]
+        print("Satellite data is loaded successfully...")
+
     def plotdataonDay(self, day, hour, wind_dir, wind_level):
         print("This will plot the data on day " + day)
         datapath = self.data_path[:81] + day + "/WaterProperties.hdf5"
@@ -125,6 +134,7 @@ class MaretecDataHandler:
                     c=self.salinity[hour_start, :self.lon.shape[1], :], vmin=26, vmax=36, alpha = .25, cmap="Paired")
         plt.scatter(self.lon[:self.lon.shape[1], :], self.lat[:self.lon.shape[1], :],
                     c=self.salinity[hour_end, :self.lon.shape[1], :], vmin=26, vmax=36, alpha=.05, cmap="Paired")
+        # plt.scatter(self.lon_satellite, self.lat_satellite, c = self.ref_satellite, alpha = .01, cmap = "Paired")
         plt.title("Surface salinity estimation from Maretec during " + self.data_path[81:102])
         plt.xlabel("Lon [deg]")
         plt.ylabel("Lat [deg]")
