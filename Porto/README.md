@@ -2,8 +2,8 @@
 
 ## TL;DR
 
-###### Laptop folder needs to be done on laptop, which will generate files needed in Onboard.
-###### Onboard folder contains all necessary files needed for the mission.
+###### `Laptop` folder needs to be done on laptop, which will generate files needed in Onboard. I will take care of this part. You don't have to worry about this. Changes for those parameters and polygon might change depend on the weather conditions, forcasted models, satellite images and Drone footage. 
+###### `Onboard` folder contains all necessary files needed for the mission. Only this folder will be transferred to `LAUV-XPLORE-1`. Only this folder will be used during the mission onboard.
 
 ---
 # Laptop:
