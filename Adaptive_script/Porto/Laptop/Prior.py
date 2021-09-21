@@ -92,15 +92,11 @@ class DelftPrior:
             self.depth_selected[i] = self.grid_poly[i, 2]
             self.salinity_selected[i] = self.salinity[row_ind, col_ind, depth_ind]
 
-        print("lat_selected: ", self.lat_selected.shape)
-        print("lon_selected: ", self.lon_selected.shape)
-        print("depth_selected: ", self.depth_selected.shape)
-        print("salinity_selected: ", self.salinity_selected.shape)
-        data_file = h5py.File(self.path_onboard + "Prior_polygon.h5", 'w')
-        data_file.create_dataset("lat_selected", data = self.lat_selected)
-        data_file.create_dataset("lon_selected", data = self.lon_selected)
-        data_file.create_dataset("depth_selected", data = self.depth_selected)
-        data_file.create_dataset("salinity_selected", data = self.salinity_selected)
+        self.dataset_prior = np.hstack((self.lat_selected.reshape(-1, 1),
+                                        self.lon_selected.reshape(-1, 1),
+                                        self.depth_selected.reshape(-1, 1),
+                                        self.salinity_selected.reshape(-1, 1)))
+        np.savetxt(self.path_onboard + "Prior_polygon.txt", self.dataset_prior, delimiter=", ")
         t2 = time.time()
         print("Data polygon selection is complete! Time consumed: ", t2 - t1)
 
