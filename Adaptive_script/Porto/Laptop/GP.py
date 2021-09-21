@@ -9,7 +9,6 @@ __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
 import time
-import h5py
 import numpy as np
 
 class GP_Poly:
