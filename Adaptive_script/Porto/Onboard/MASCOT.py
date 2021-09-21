@@ -252,10 +252,14 @@ class PathPlanner_Polygon(DataAssimilator):
                 dz2 = self.depth_loc[self.ind_cand[i]] - self.depth_loc[self.ind_now]
                 vec2 = np.array([dx2, dy2, dz2]).squeeze()
                 if np.dot(vec1, vec2) > 0:
-                    id.append(self.ind_cand[i])
-                    lat_cand_plot.append(self.lat_loc[self.ind_cand[i]])
-                    lon_cand_plot.append(self.lon_loc[self.ind_cand[i]])
-                    depth_cand_plot.append(self.depth_loc[self.ind_cand[i]])
+                    if dx2 == 0 and dy2 == 0:
+                        print("Sorry, I cannot dive or float directly")
+                        pass
+                    else:
+                        id.append(self.ind_cand[i])
+                        lat_cand_plot.append(self.lat_loc[self.ind_cand[i]])
+                        lon_cand_plot.append(self.lon_loc[self.ind_cand[i]])
+                        depth_cand_plot.append(self.depth_loc[self.ind_cand[i]])
         id = np.unique(np.array(id))
         self.ind_cand = id
         M = len(id)
@@ -290,10 +294,7 @@ class PathPlanner_Polygon(DataAssimilator):
         x_auv = self.vehicle_pos[0]
         y_auv = self.vehicle_pos[1]
         lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
-        SMS.contents.data = "LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(
-            lon_auv) + ". Navigation from Google: " \
-                       "https://www.google.com/maps/place" \
-                       "/@" + str(lat_auv) + ", " + str(lon_auv) + "10z"
+        SMS.contents.data = "LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(lon_auv)
         self.sms_pub_.publish(SMS)
 
     def surfacing(self, time_length):
@@ -325,7 +326,8 @@ class PathPlanner_Polygon(DataAssimilator):
 
     def send_next_waypoint(self):
         if self.counter_waypoint % 5 == 0:
-            if np.around((self.t2 - self.t1), 0) % 600 == 0:
+            print(int(self.t2 - self.t1))
+            if int(self.t2 - self.t1) % 600 == 0:
                 print("Longer than 10 mins, need a long break")
                 self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
             else:
@@ -349,9 +351,9 @@ class PathPlanner_Polygon(DataAssimilator):
         while not rospy.is_shutdown():
             if self.init:
                 self.t2 = time.time()
-                print("counter waypoint: ", self.counter_waypoint)
                 self.append_mission_data()
                 self.save_mission_data()
+                print(self.auv_handler.getState())
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the current location")
                     self.sal_sampled = np.mean(self.data_salinity[-10:])  # take the past ten samples and average
