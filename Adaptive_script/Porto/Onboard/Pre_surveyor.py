@@ -33,7 +33,7 @@ class AUV:
         rospy.Subscriber("/Vehicle/Out/Salinity_filtered", Salinity, self.SalinityCB)
         rospy.Subscriber("/Vehicle/Out/EstimatedState_filtered", EstimatedState, self.EstimatedStateCB)
 
-        self.speed = 1.6  # m/s
+        self.speed = 1.2  # m/s
         self.depth = 0.0  # meters
         self.last_state = "unavailable"
         self.rate.sleep()
@@ -156,9 +156,7 @@ class Pre_surveyor(DataAssimilator):
         x_auv = self.vehicle_pos[0]
         y_auv = self.vehicle_pos[1]
         lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
-        SMS.contents.data = "LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(lon_auv) + ". Navigation from Google: " \
-                                                                                              "https://www.google.com/maps/place" \
-                                                                                              "/@" + str(lat_auv) + ", " + str(lon_auv) + "10z"
+        SMS.contents.data = "LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(lon_auv)
         self.sms_pub_.publish(SMS)
 
     def surfacing(self, time_length):
@@ -168,6 +166,7 @@ class Pre_surveyor(DataAssimilator):
             self.append_mission_data()
             self.save_mission_data()
             print("Sleep {:d} seconds".format(i))
+            print("Now is: ", self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
             self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
             self.auv_handler.spin()  # publishes the reference, stay on the surface
             self.rate.sleep()  #
@@ -195,16 +194,16 @@ class Pre_surveyor(DataAssimilator):
                 print("Less than 10 mins, need a shorter break")
                 self.surfacing(30) # surfacing 30 seconds
 
+        # Move to the next waypoint
+        self.counter_waypoint = self.counter_waypoint + 1 # should not be changed to the other order, since it can damage the reference
         self.waypoint_lat_now = self.deg2rad(self.path_initial_survey[self.counter_waypoint, 0])
         self.waypoint_lon_now = self.deg2rad(self.path_initial_survey[self.counter_waypoint, 1])
         self.waypoin_depth_now = -self.path_initial_survey[self.counter_waypoint, 2]
-
+        print("Now is: " ,self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
         self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
         print("next waypoint", self.deg2rad(self.path_initial_survey[self.counter_waypoint, 0]),
               self.deg2rad(self.path_initial_survey[self.counter_waypoint, 1]),
               self.path_initial_survey[self.counter_waypoint, 2])
-        # Move to the next waypoint
-        self.counter_waypoint = self.counter_waypoint + 1
 
     def Pre_surveyor(self):
         self.createDataPath()
@@ -222,9 +221,10 @@ class Pre_surveyor(DataAssimilator):
                 print("Elapsed time: ", self.t2 - self.t1)
                 self.append_mission_data()
                 self.save_mission_data()
+                print(self.auv_handler.getState())
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the current location")
-                    if self.counter_waypoint >= len(self.path_initial_survey):
+                    if self.counter_waypoint + 1 >= len(self.path_initial_survey):
                         rospy.signal_shutdown("Mission completed!!!")
                         break
                     self.send_next_waypoint()
