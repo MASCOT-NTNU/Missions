@@ -28,6 +28,7 @@ class PathDesigner:
     '''
     data_path = None
     path_onboard = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
+    circumference = 40075000
     debug = True
 
     def __init__(self, debug = False):
@@ -38,6 +39,8 @@ class PathDesigner:
         self.design_path()
         self.checkPath()
         self.saveKML()
+        self.load_path_initial_survey()
+        self.calculateDistacne()
 
     def load_grid(self):
         print("Loading grid...")
@@ -124,6 +127,43 @@ class PathDesigner:
         plt.legend()
         plt.show()
 
+    @staticmethod
+    def deg2rad(deg):
+        return deg / 180 * np.pi
+
+    @staticmethod
+    def rad2deg(rad):
+        return rad / np.pi * 180
+
+    @staticmethod
+    def latlon2xy(lat, lon, lat_origin, lon_origin):
+        x = PathDesigner.deg2rad((lat - lat_origin)) / 2 / np.pi * PathDesigner.circumference
+        y = PathDesigner.deg2rad((lon - lon_origin)) / 2 / np.pi * PathDesigner.circumference * np.cos(PathDesigner.deg2rad(lat))
+        return x, y
+
+    def calculateDistacne(self):
+        self.speed = 1.2
+        self.lat_travel = self.path_initial_survey[:, 0]
+        self.lon_travel = self.path_initial_survey[:, 1]
+        self.depth_travel = self.path_initial_survey[:, 2]
+        self.lat_pre = self.lat_travel[0]
+        self.lon_pre = self.lon_travel[0]
+        self.depth_pre = self.depth_travel[0]
+        dist = 0
+        for i in range(len(self.lat_travel)):
+            x_temp, y_temp = self.latlon2xy(self.lat_travel[i], self.lon_travel[i], self.lat_pre, self.lon_pre)
+            distZ = self.depth_travel[i] - self.depth_pre
+            dist = dist + np.sqrt(x_temp ** 2 + y_temp ** 2 + distZ ** 2)
+            self.lat_pre = self.lat_travel[i]
+            self.lon_pre = self.lon_travel[i]
+            self.depth_pre = self.depth_travel[i]
+        print("Total distance needs to be travelled: ", dist)
+        print("Time estimated: ", dist / self.speed)
+
+    def load_path_initial_survey(self):
+        print("Loading the initial survey path...")
+        self.path_initial_survey = np.loadtxt(self.path_onboard + "path_initial_survey.txt", delimiter=", ")
+        print("Initial survey path is loaded successfully, path_initial_survey: ", self.path_initial_survey)
 
 if __name__ == "__main__":
     a = PathDesigner()

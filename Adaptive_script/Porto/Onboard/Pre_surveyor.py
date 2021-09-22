@@ -141,7 +141,26 @@ class Pre_surveyor(DataAssimilator):
     def __init__(self, debug = False):
         DataAssimilator.__init__(self)
         self.load_path_initial_survey()
+        self.calculateDistacne()
         self.Pre_surveyor()
+
+    def calculateDistacne(self):
+        self.lat_travel = self.path_initial_survey[:, 0]
+        self.lon_travel = self.path_initial_survey[:, 1]
+        self.depth_travel = self.path_initial_survey[:, 2]
+        self.lat_pre = self.lat_travel[0]
+        self.lon_pre = self.lon_travel[0]
+        self.depth_pre = self.depth_travel[0]
+        dist = 0
+        for i in range(len(self.lat_travel)):
+            x_temp, y_temp = self.latlon2xy(self.lat_travel[i], self.lon_travel[i], self.lat_pre, self.lon_pre)
+            distZ = self.depth_travel[i] - self.depth_pre
+            dist = dist + np.sqrt(x_temp ** 2 + y_temp ** 2 + distZ ** 2)
+            self.lat_pre = self.lat_travel[i]
+            self.lon_pre = self.lon_travel[i]
+            self.depth_pre = self.depth_travel[i]
+        print("Total distance needs to be travelled: ", dist)
+        print("Time estimated: ", dist / self.speed)
 
     def load_path_initial_survey(self):
         print("Loading the initial survey path...")
