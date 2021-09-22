@@ -3,5 +3,6 @@ git filter-branch --force --index-filter \
   --prune-empty --tag-name-filter cat -- --all
 
 git filter-branch -f --index-filter 'git rm --cached --ignore-unmatch Adaptive_script/Raspberry/samples_2020.05.01.nc'
+git filter-branch -f --index-filter 'git rm --cached --ignore-unmatch Adaptive_script/Porto/Onboard/Sigma_sal.txt'
 
 git filter-branch -f --index-filter 'git rm --cached --ignore-unmatch Porto/Setup/Grid/Base.txt'

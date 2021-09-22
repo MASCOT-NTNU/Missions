@@ -156,6 +156,7 @@ class MaretecDataHandler:
         plt.scatter(self.lon_delft3d, self.lat_delft3d, c=self.salinity_delft3d, vmin=26, vmax=36, alpha=1,
                     cmap="Paired")
         plt.colorbar()
+        plt.axvline(-8.75267327, c = 'r')
         plt.scatter(self.lon[:self.lon.shape[1], :], self.lat[:self.lon.shape[1], :],
                     c=self.salinity[hour_start, :self.lon.shape[1], :], vmin=26, vmax=36, alpha = .25, cmap="Paired")
         plt.scatter(self.lon[:self.lon.shape[1], :], self.lat[:self.lon.shape[1], :],
