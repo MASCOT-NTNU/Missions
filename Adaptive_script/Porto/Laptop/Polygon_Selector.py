@@ -1,8 +1,19 @@
+#! /usr/bin/env python3
+__author__ = "Yaolin Ge"
+__copyright__ = "Copyright 2021, The MASCOT Project, NTNU (https://wiki.math.ntnu.no/mascot)"
+__credits__ = ["Yaolin Ge"]
+__license__ = "MIT"
+__version__ = "1.0.1"
+__maintainer__ = "Yaolin Ge"
+__email__ = "yaolin.ge@ntnu.no"
+__status__ = "UnderDevelopment"
+
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 import time
 import os
+import simplekml
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams.update({'font.size': 12})
 plt.rcParams.update({'font.style': 'oblique'})
@@ -118,6 +129,21 @@ class MaretecDataHandler:
         self.ref_satellite = self.data_satellite[:, -1]
         print("Satellite data is loaded successfully...")
 
+    def saveKML(self):
+        print("I will create a polygon kml file for importing...")
+        with open(self.polygon_path + "polygon.txt", "r") as a_file:
+            points = []
+            for line in a_file:
+                stripped_line = line.strip()
+                coordinates = stripped_line.split(",")
+                points.append((coordinates[1], coordinates[0]))
+        kml = simplekml.Kml()
+        pol = kml.newpolygon(name='A Polygon')
+        pol.outerboundaryis = points
+        pol.innerboundaryis = points
+        kml.save(self.polygon_path + "Polygon.kml")
+        print("Polygon.kml is created successfully")
+
     def plotdataonDay(self, day, hour, wind_dir, wind_level):
         print("This will plot the data on day " + day)
         datapath = self.data_path[:81] + day + "/WaterProperties.hdf5"
@@ -149,6 +175,7 @@ class MaretecDataHandler:
         os.system("say Congrats, Polygon is selected successfully, total area is {:.2f} km2".format(self.getPolygonArea()))
         print("Total area: ", self.getPolygonArea())
         self.save_wind_condition(wind_dir, wind_level)
+        self.saveKML()
 
     def save_wind_condition(self, wind_dir, wind_level):
         f_wind = open(self.polygon_path + "wind_condition.txt", 'w')
@@ -163,8 +190,8 @@ if __name__ == "__main__":
         a.visualiseData()
     else:
         from Grid import GridPoly
-        string_date = "2021-09-14_2021-09-15"
-        string_hour = "08_12"
+        string_date = "2021-09-23_2021-09-24"
+        string_hour = "05_12"
         wind_dir = "North" # [North, East, West, South]
         wind_level = "Moderate" # [Mild, Moderate, Heavy]
         a.plotdataonDay(string_date, string_hour, wind_dir, wind_level)

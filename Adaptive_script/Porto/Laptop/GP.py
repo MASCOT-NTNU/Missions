@@ -17,13 +17,15 @@ class GP_Poly:
     '''
     path_onboard = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
     # coef for salinity
-    sigma_sal = np.sqrt(4) # scaling coef in matern kernel for salinity
-    tau_sal = np.sqrt(.03) # iid noise
-    Threshold_S = 34 # threshold for salinity
+    sigma_sal = np.sqrt(.5) # scaling coef in matern kernel for salinity
+    tau_sal = np.sqrt(.04) # iid noise
+    Threshold_S = 35 # threshold for salinity
 
     # coef shared in common
-    eta = 4.5 / 600 # coef in matern kernel
-    ksi = 600 / 2 # scaling factor in 3D
+    range_lateral = 550
+    range_vertical = 2
+    eta = 4.5 / range_lateral # coef in matern kernel
+    ksi = range_lateral / range_vertical # scaling factor in 3D
 
     circumference = 40075000 # m
     lat_origin, lon_origin = 41.10251, -8.669811  # the right bottom corner coordinates

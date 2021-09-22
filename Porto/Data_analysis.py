@@ -10,6 +10,8 @@ from matplotlib.gridspec import GridSpec
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly
+from pathlib import Path
+
 plotly.io.orca.config.executable = '/usr/local/bin/orca'
 plotly.io.orca.config.save()
 plt.rcParams["font.family"] = "Times New Roman"
@@ -752,11 +754,245 @@ class DataGetter(Mat2HDF5, DataHandler_Delft3D):
         #             folder_content = os.listdir(folder)
 
 
+class MaretecDataHandler:
+    data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Exemplo_Douro/2021-09-22_2021-09-23/WaterProperties.hdf5"
+    delft_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Delft3D/Surface/D2_201609_surface_salinity.h5"
+    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Polygon/fig/"
+    path_onboard = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
+    path_laptop = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Laptop/"
+    figpath_comp = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/MareTec_Delft_Comp/" + delft_path[-29:-20] + "/"
+    circumference = 40075000 # [m], circumference of the earth
+
+    def __init__(self):
+        self.lat_origin, self.lon_origin = 41.061874, -8.650977  # origin location
+        self.loaddata()
+        self.loadDelft3DSurface()
+        self.loadSatellite()
+        # self.getsimilarDelft()
+        self.plotSurfaceData()
+        pass
+
+    def loaddata(self):
+        print("Now it will load the Maretec data...")
+        t1 = time.time()
+        self.data = h5py.File(self.data_path, 'r')
+        self.grid = self.data.get('Grid')
+        self.lat = np.array(self.grid.get("Latitude"))[:-1, :-1]
+        self.lon = np.array(self.grid.get("Longitude"))[:-1, :-1]
+        self.depth = []
+        self.salinity = []
+        for i in range(1, 26):
+            string_z = "Vertical_{:05d}".format(i)
+            string_sal = "salinity_{:05d}".format(i)
+            self.depth.append(np.mean(np.array(self.grid.get("VerticalZ").get(string_z)), axis = 0))
+            self.salinity.append(np.mean(np.array(self.data.get("Results").get("salinity").get(string_sal)), axis = 0))
+        self.depth = np.array(self.depth)
+        self.salinity = np.array(self.salinity)
+        t2 = time.time()
+        print("Data is loaded correctly, time consumed: ", t2 - t1)
+
+    def checkFolder(self):
+        i = 0
+        while os.path.exists(self.figpath + "P%s" % i):
+            i += 1
+        self.figpath = self.figpath + "P%s" % i
+        if not os.path.exists(self.figpath):
+            print(self.figpath + " is created")
+            os.mkdir(self.figpath)
+        else:
+            print(self.figpath + " is already existed")
+
+    def visualiseData(self):
+        self.checkFolder()
+        print("Here it comes the plotting for the updated results from Maretec.")
+        files = os.listdir(self.data_path[:81])
+        files.sort()
+        counter = 0
+        for i in range(len(files)):
+            if files[i] != ".DS_Store":
+                datapath = self.data_path[:81] + files[i] + "/WaterProperties.hdf5"
+                self.data_path = datapath
+                self.loaddata()
+                for j in range(self.salinity.shape[0]):
+                    print(j)
+                    plt.figure(figsize=(10, 10))
+                    plt.scatter(self.lon[:self.lon.shape[1], :], self.lat[:self.lon.shape[1], :],
+                                c=self.salinity[j, :self.lon.shape[1], :], vmin=26, vmax=36, cmap="Paired")
+                    plt.colorbar()
+                    plt.title("Surface salinity estimation from Maretec at time: {:02d}:00 during ".format(
+                        j) + self.data_path[81:102])
+                    plt.xlabel("Lon [deg]")
+                    plt.ylabel("Lat [deg]")
+                    plt.savefig(self.figpath + "/P_{:04d}.png".format(counter))
+                    plt.close("all")
+                    counter = counter + 1
+                # plt.show()
+
+    @staticmethod
+    def deg2rad(deg):
+        return deg / 180 * np.pi
+
+    @staticmethod
+    def rad2deg(rad):
+        return rad / np.pi * 180
+
+    @staticmethod
+    def latlon2xy(lat, lon, lat_origin, lon_origin):
+        x = MaretecDataHandler.deg2rad((lat - lat_origin)) / 2 / np.pi * MaretecDataHandler.circumference
+        y = MaretecDataHandler.deg2rad((lon - lon_origin)) / 2 / np.pi * MaretecDataHandler.circumference * np.cos(MaretecDataHandler.deg2rad(lat))
+        return x, y
+
+    def getPolygonArea(self):
+        area = 0
+        prev = self.polygon[-1]
+        for i in range(self.polygon.shape[0] - 1):
+            now = self.polygon[i]
+            xnow, ynow = MaretecDataHandler.latlon2xy(now[0], now[1], self.lat_origin, self.lon_origin)
+            xpre, ypre = MaretecDataHandler.latlon2xy(prev[0], prev[1], self.lat_origin, self.lon_origin)
+            area += xnow * ypre - ynow * xpre
+            prev = now
+        self.PolyArea = area / 2 / 1e6
+        return self.PolyArea
+        # print("Area: ", self.PolyArea / 1e6, " km2")
+
+    def loadSatellite(self):
+        print("Satellite data is loading")
+        self.data_satellite = np.loadtxt(self.path_laptop + "satellite_data.txt", delimiter=", ")
+        self.lat_satellite = self.data_satellite[:, 0]
+        self.lon_satellite = self.data_satellite[:, 1]
+        self.ref_satellite = self.data_satellite[:, -1]
+        print("Satellite data is loaded successfully...")
+
+    def loadDelft3DSurface(self):
+        delft3d = h5py.File(self.delft_path, 'r')
+        self.lat_delft3d = np.mean(np.array(delft3d.get("lat"))[:-1, :-1, :], axis = 2)
+        self.lon_delft3d = np.mean(np.array(delft3d.get("lon"))[:-1, :-1, :], axis = 2)
+        self.salinity_delft3d = np.array(delft3d.get("salinity"))
+        print("lat_delft3d: ", self.lat_delft3d.shape)
+        print("lon_delft3d: ", self.lon_delft3d.shape)
+        print("salinity_delft3d: ", self.salinity_delft3d.shape)
+
+    def plotSurfaceData(self):
+        i = 0
+        while os.path.exists(self.figpath_comp + "P%s" % i):
+            i += 1
+        self.figpath_comp = self.figpath_comp + "P%s" % i
+        if not os.path.exists(self.figpath_comp):
+            print(self.figpath_comp + " is created")
+            path = Path(self.figpath_comp)
+            path.mkdir(parents=True, exist_ok=True)
+        else:
+            print(self.figpath_comp + " is already existed")
+
+        for i in range(self.salinity_delft3d.shape[0]):
+            print(i)
+            plt.figure(figsize = (10, 10))
+            plt.scatter(self.lon_delft3d, self.lat_delft3d, c = self.salinity_delft3d[i, :, :], cmap = "Paired", vmin = 33, vmax = 36)
+            plt.colorbar()
+            plt.scatter(self.lon, self.lat, c = np.mean(self.salinity, axis = 0), cmap = "Paired", vmin = 33, vmax = 36, alpha = .05)
+            plt.scatter(self.lon_satellite, self.lat_satellite, c = self.ref_satellite, cmap = "Paired", vmin = 20, vmax = 60, alpha = .03)
+            plt.xlabel("Lon [deg]")
+            plt.ylabel("Lat [deg]")
+            plt.title("Frame: " + str(i))
+            plt.savefig(self.figpath_comp + "/P_{:04d}.png".format(i))
+            plt.close("all")
+            # break
+
+
+    # def getsimilarDelft(self):
+    #     self.mse = []
+    #     t1 = time.time()
+    #     for k in range(self.salinity_delft3d.shape[0]):
+    #         self.lat_comp = []
+    #         self.lon_comp = []
+    #         self.sal_delft = []
+    #         self.sal_maretec = []
+    #         for i in range(self.lat.shape[0]):
+    #             for j in range(self.lat.shape[1]):
+    #                 if self.lat[i, j] >= 41.1 and self.lat[i, j] <= 41.16 and self.lon[i, j] <= -8.65:
+    #                     row_ind, col_ind = self.getDelftAtLoc([self.lat[i, j], self.lon[i, j]])
+    #                     self.lat_comp.append(self.lat[i, j])
+    #                     self.lon_comp.append(self.lon[i, j])
+    #                     self.sal_delft.append(self.salinity_delft3d[k, row_ind, col_ind])
+    #                     self.sal_maretec.append(np.mean(self.salinity[:, i, j], axis = 0))
+    #         self.sal_delft = np.array(self.sal_delft)
+    #         self.MSE = np.nansum(np.sqrt((self.sal_delft - self.sal_maretec) ** 2))
+    #         self.mse.append(self.MSE)
+    #         t2 = time.time()
+    #         print("Time consumed: ", t2 - t1)
+    #         print("sal_delft: ", self.sal_delft.shape)
+    #         print("MSE: ", self.mse)
+    #         # plt.scatter(self.lon_comp, self.lat_comp, c = self.sal_maretec, cmap = "Paired", vmin = 33, vmax = 36)
+    #         # plt.scatter(self.lon_comp, self.lat_comp, c = self.sal_delft, alpha = .3, cmap = "Paired", vmin = 33, vmax = 36)
+    #         # plt.colorbar()
+    #         # plt.show()
+    #     ind_min =
+
+    def getDelftAtLoc(self, loc):
+        lat, lon = loc
+        distLat = self.lat_delft3d - lat
+        distLon = self.lon_delft3d - lon
+        dist = np.sqrt(distLat ** 2 + distLon ** 2)
+        row_ind = np.where(dist == np.nanmin(dist))[0]
+        col_ind = np.where(dist == np.nanmin(dist))[1]
+        return row_ind, col_ind
+
+    def loadSatellite(self):
+        print("Satellite data is loading")
+        self.data_satellite = np.loadtxt(self.path_laptop + "satellite_data.txt", delimiter=", ")
+        self.lat_satellite = self.data_satellite[:, 0]
+        self.lon_satellite = self.data_satellite[:, 1]
+        self.ref_satellite = self.data_satellite[:, -1]
+        print("lat_latellite: ", self.lat_satellite.shape)
+        print("lon_satellite: ", self.lon_satellite.shape)
+        print("ref_satellite: ", self.ref_satellite.shape)
+        print("Satellite data is loaded successfully...")
+
+    # def plotdataonDay(self, day, hour, wind_dir, wind_level):
+    #     print("This will plot the data on day " + day)
+    #     datapath = self.data_path[:81] + day + "/WaterProperties.hdf5"
+    #     hour_start = int(hour[:2])
+    #     hour_end = int(hour[3:])
+    #     self.data_path = datapath
+    #     self.loaddata()
+    #     self.loadDelft3D(wind_dir, wind_level)
+    #     plt.figure(figsize=(10, 10))
+    #     plt.scatter(self.lon_delft3d, self.lat_delft3d, c=self.salinity_delft3d, vmin=26, vmax=36, alpha=1,
+    #                 cmap="Paired")
+    #     plt.colorbar()
+    #     plt.scatter(self.lon[:self.lon.shape[1], :], self.lat[:self.lon.shape[1], :],
+    #                 c=self.salinity[hour_start, :self.lon.shape[1], :], vmin=26, vmax=36, alpha = .25, cmap="Paired")
+    #     plt.scatter(self.lon[:self.lon.shape[1], :], self.lat[:self.lon.shape[1], :],
+    #                 c=self.salinity[hour_end, :self.lon.shape[1], :], vmin=26, vmax=36, alpha=.05, cmap="Paired")
+    #     # plt.scatter(self.lon_satellite, self.lat_satellite, c = self.ref_satellite, alpha = .01, cmap = "Paired")
+    #     plt.title("Surface salinity estimation from Maretec during " + self.data_path[81:102])
+    #     plt.xlabel("Lon [deg]")
+    #     plt.ylabel("Lat [deg]")
+    #     polygon = plt.ginput(n = 100, timeout = 0) # wait for the click to select the polygon
+    #     plt.show()
+    #     self.polygon = []
+    #     for i in range(len(polygon)):
+    #         self.polygon.append([polygon[i][1], polygon[i][0]])
+    #     self.polygon = np.array(self.polygon)
+    #     np.savetxt(self.path_onboard + "polygon.txt", self.polygon, delimiter=", ")
+    #     print("Ploygon is selected successfully. Total area: ", self.getPolygonArea())
+    #     os.system("say Congrats, Polygon is selected successfully, total area is {:.2f} km2".format(self.getPolygonArea()))
+    #     print("Total area: ", self.getPolygonArea())
+    #     self.save_wind_condition(wind_dir, wind_level)
+
+    def save_wind_condition(self, wind_dir, wind_level):
+        f_wind = open(self.path_onboard + "wind_condition.txt", 'w')
+        f_wind.write("wind_dir=" + wind_dir + ", wind_level=" + wind_level)
+        f_wind.close()
+        print("wind_condition is saved successfully!")
+
 data_folder = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/"
 data_folder_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/Merged/"
 wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Wind/wind_data.txt"
+path_maretec = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Exemplo_Douro/2021-09-22_2021-09-23/"
 
-if __name__ == "__main__":
-    a = DataGetter(data_folder, data_folder_new, wind_path)
+# if __name__ == "__main__":
+a = MaretecDataHandler()
+    # a = DataGetter(data_folder, data_folder_new, wind_path)
 
 

@@ -8,6 +8,7 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
+import simplekml
 import time
 import os
 import h5py
@@ -36,6 +37,7 @@ class PathDesigner:
         self.plot_3d_prior()
         self.design_path()
         self.checkPath()
+        self.saveKML()
 
     def load_grid(self):
         print("Loading grid...")
@@ -93,6 +95,21 @@ class PathDesigner:
         self.path_initial_survey = np.array(self.path_initial_survey)
         np.savetxt(self.path_onboard + "path_initial_survey.txt", self.path_initial_survey, delimiter=", ")
         print("The initial survey path is designed successfully, path_initial_survey: ", self.path_initial_survey.shape)
+
+    def saveKML(self):
+        print("I will create a polygon kml file for importing...")
+        with open(self.path_onboard + "path_initial_survey.txt", "r") as a_file:
+            points = []
+            for line in a_file:
+                stripped_line = line.strip()
+                coordinates = stripped_line.split(",")
+                points.append((coordinates[1], coordinates[0]))
+        kml = simplekml.Kml()
+        pol = kml.newpolygon(name='A Polygon')
+        pol.outerboundaryis = points
+        pol.innerboundaryis = points
+        kml.save(self.path_onboard + "Path_initial_survey.kml")
+        print("Path_initial_survey.kml is created successfully")
 
     def checkPath(self):
         plt.figure(figsize=(10, 10))

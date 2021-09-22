@@ -37,7 +37,7 @@ Lon = []
 Ref = []
 for i in range(len(lat_img)):
     for j in range(len(lon_img)):
-        if lat_img[i] >= 41.1 and lat_img[i] <= 41.16 and lon_img[j] >= -8.75 and lon_img[j] <= -8.64:
+        if lat_img[i] >= 41.1 and lat_img[i] <= 41.16 and lon_img[j] >= -8.75 and lon_img[j] <= -8.67:
             Lat.append(lat_img[i])
             Lon.append(lon_img[j])
             Ref.append(val[i, j])
@@ -47,11 +47,14 @@ Lon = np.array(Lon).reshape(-1, 1)
 Ref = np.array(Ref).reshape(-1, 1)
 data_satellite = np.hstack((Lat, Lon, Ref))
 np.savetxt(path_onboard + "satellite_data.txt", data_satellite, delimiter=", ")
-# import matplotlib.pyplot as plt
-# plt.figure(figsize = (20, 20))
-# plt.scatter(Lon, Lat, c = Ref)
-# plt.colorbar()
-# plt.show()
+import matplotlib.pyplot as plt
+plt.figure(figsize = (20, 20))
+plt.scatter(Lon, Lat, c = Ref, cmap = "Paired", vmin = 20, vmax = 60)
+plt.colorbar()
+plt.show()
+
+
+
 
 #%%
 data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Simulator/MissionData_on2021_0921_2237/"
