@@ -178,6 +178,17 @@ class Pre_surveyor(DataAssimilator):
         SMS.contents.data = "LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(lon_auv)
         self.sms_pub_.publish(SMS)
 
+    def send_SMS_mission_complete(self):
+        print("Mission complete Message has been sent to: ", self.phone_number)
+        SMS = Sms()
+        SMS.number.data = self.phone_number
+        SMS.timeout.data = 60
+        x_auv = self.vehicle_pos[0]
+        y_auv = self.vehicle_pos[1]
+        lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
+        SMS.contents.data = "Congrats, Mission complete. LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(lon_auv)
+        self.sms_pub_.publish(SMS)
+
     def surfacing(self, time_length):
         for i in range(time_length):
             if i % 30 == 0:
@@ -245,6 +256,7 @@ class Pre_surveyor(DataAssimilator):
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the current location")
                     if self.counter_waypoint + 1 >= len(self.path_initial_survey):
+                        self.send_SMS_mission_complete()
                         rospy.signal_shutdown("Mission completed!!!")
                         break
                     self.send_next_waypoint()
