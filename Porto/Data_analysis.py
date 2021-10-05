@@ -1166,7 +1166,6 @@ class PortoMissionHandler:
     def __init__(self):
         print("hello world")
     pass
-
 if __name__ == "__main__":
     print("hello world")
     path_mission = ""
