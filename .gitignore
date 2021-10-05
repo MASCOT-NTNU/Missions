@@ -1,5 +1,8 @@
 # Ignore DS system file
 .DS_store
+.idea
+.gitignore
+.git
 
 Adaptive_script/samples_2020.05.01.nc
 Adaptive_script/Porto/Onboard/Sigma_sal.txt
