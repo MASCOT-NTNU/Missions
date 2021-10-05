@@ -6,6 +6,15 @@ from usr_func import *
 # figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Projects_practice/ES_3D_scratch/fig/EIBV_2D1_Rule_Based/"
 
 #%%
+import numpy as np
+a = np.random.rand(10000, 10000)
+import time
+t1 = time.time()
+b = np.linalg.inv(a)
+t2 = time.time()
+print("Time consumed: ", t2 - t1)
+
+#%%
 grid_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/ROS/grid.txt"
 grid = np.loadtxt(grid_path, delimiter = ", ")
 import matplotlib.pyplot as plt

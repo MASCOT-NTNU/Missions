@@ -43,7 +43,7 @@ class AUV:
         self.vehicle_pos = [0, 0, 0]
 
         self.sms_pub_ = rospy.Publisher("/IMC/In/Sms", Sms, queue_size = 10)
-        self.phone_number = "+4792526858"
+        self.phone_number = "+351969459285"
 
     def TemperatureCB(self, msg):
         self.currentTemperature = msg.value.data
@@ -191,7 +191,7 @@ class Pre_surveyor(DataAssimilator):
 
     def surfacing(self, time_length):
         for i in range(time_length):
-            if i % 30 == 0:
+            if (i + 1) % 15 == 0:
                 self.send_SMS()
             self.append_mission_data()
             self.save_mission_data()

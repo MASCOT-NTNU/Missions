@@ -18,6 +18,7 @@ plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams.update({'font.size': 12})
 plt.rcParams.update({'font.style': 'oblique'})
 
+
 class Mat2HDF5:
     data_path = None
     data_path_new = None
@@ -543,8 +544,6 @@ class MergeTide:
         np.savetxt(self.tide_path[:-5] + "ebby.txt", self.ebby, delimiter = ", ")
 
 
-
-
 class DataGetter(Mat2HDF5, DataHandler_Delft3D):
     '''
     Get data according to date specified and wind direction
@@ -714,9 +713,6 @@ class DataGetter(Mat2HDF5, DataHandler_Delft3D):
                 else:
                     print("No data found for " + wind_dir + wind_level)
                     pass
-
-
-
 
     def checkMerged(self):
         files = os.listdir(self.data_folder + "Merged_all/")
@@ -898,7 +894,6 @@ class MaretecDataHandler:
             plt.close("all")
             # break
 
-
     # def getsimilarDelft(self):
     #     self.mse = []
     #     t1 = time.time()
@@ -992,7 +987,17 @@ wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Wind/wind_
 path_maretec = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Exemplo_Douro/2021-09-22_2021-09-23/"
 
 # if __name__ == "__main__":
-a = MaretecDataHandler()
+    # a = MaretecDataHandler()
     # a = DataGetter(data_folder, data_folder_new, wind_path)
 
+class PortoMissionHandler:
 
+    def __init__(self):
+        print("hello world")
+    pass
+
+
+
+if __name__ == "__main__":
+    print("hello world")
+    path_mission = ""

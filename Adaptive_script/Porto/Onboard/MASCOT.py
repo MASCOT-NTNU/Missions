@@ -46,7 +46,7 @@ class AUV:
         self.vehicle_pos = [0, 0, 0]
 
         self.sms_pub_ = rospy.Publisher("/IMC/In/Sms", Sms, queue_size = 10)
-        self.phone_number = "+4792526858"
+        self.phone_number = "+351969459285"
 
     def TemperatureCB(self, msg):
         self.currentTemperature = msg.value.data
@@ -297,6 +297,17 @@ class PathPlanner_Polygon(DataAssimilator):
         SMS.contents.data = "LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(lon_auv)
         self.sms_pub_.publish(SMS)
 
+    def send_SMS_starting_loc(self):
+        print("Message has been sent to: ", self.phone_number)
+        SMS = Sms()
+        SMS.number.data = self.phone_number
+        SMS.timeout.data = 60
+        x_auv = self.vehicle_pos[0]
+        y_auv = self.vehicle_pos[1]
+        lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
+        SMS.contents.data = "I am moving to the starting location. LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(lon_auv)
+        self.sms_pub_.publish(SMS)
+
     def send_SMS_mission_complete(self):
         print("Mission complete Message has been sent to: ", self.phone_number)
         SMS = Sms()
@@ -310,14 +321,14 @@ class PathPlanner_Polygon(DataAssimilator):
 
     def surfacing(self, time_length):
         for i in range(time_length):
-            if i % 30 == 0:
+            if (i + 1) % 15 == 0:
                 self.send_SMS()
             self.append_mission_data()
             self.save_mission_data()
             print("Sleep {:d} seconds".format(i))
             self.auv_handler.setWaypoint(self.deg2rad(self.lat_loc[self.ind_pre]),
                                          self.deg2rad(self.lon_loc[self.ind_pre]),
-                                         -self.depth_loc[self.ind_pre])
+                                         0)
             self.auv_handler.spin()  # publishes the reference, stay on the surface
             self.rate.sleep()  #
 
@@ -335,11 +346,31 @@ class PathPlanner_Polygon(DataAssimilator):
         self.append_path([lat_temp, lon_temp, self.vehicle_pos[2]])
         self.append_timestamp(datetime.now().timestamp())
 
+    def send_starting_waypoint(self):
+        if (self.t2 - self.t1) / 300 >= 1 and (self.t2 - self.t1) % 300 >= 0:
+            print("Longer than 10 mins, need a long break")
+            time_length = 90
+            for i in range(time_length):
+                if (i + 1) % 15 == 0:
+                    self.send_SMS_starting_loc()
+                self.append_mission_data()
+                self.save_mission_data()
+                print("Sleep {:d} seconds".format(i))
+                self.auv_handler.setWaypoint(self.deg2rad(self.lat_loc[self.ind_start]),
+                                             self.deg2rad(self.lon_loc[self.ind_start]),
+                                             0)
+                self.auv_handler.spin()  # publishes the reference, stay on the surface
+                self.rate.sleep()  #
+            self.t1 = self.t2
+        self.auv_handler.setWaypoint(self.deg2rad(self.lat_loc[self.ind_start]),
+                                     self.deg2rad(self.lon_loc[self.ind_start]), -self.depth_loc[self.ind_start])
+        print("moving to the starting location")
+
     def send_next_waypoint(self):
         # Move to the next waypoint
         self.counter_waypoint = self.counter_waypoint + 1  # needs to be updated before
 
-        if self.counter_waypoint % 5 == 0: # check whether it needs to surface
+        if self.counter_waypoint % 3 == 0: # check whether it needs to surface
             if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
                 print("Longer than 10 mins, need a long break")
                 self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
@@ -368,6 +399,8 @@ class PathPlanner_Polygon(DataAssimilator):
                 print(self.auv_handler.getState())
                 print("Counter waypoint: ", self.counter_waypoint)
                 print("Elapsed time after surfacing: ", self.t2 - self.t1)
+                if self.counter_waypoint == 0:
+                    self.send_starting_waypoint()
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the current location")
                     self.sal_sampled = np.mean(self.data_salinity[-10:])  # take the past ten samples and average
