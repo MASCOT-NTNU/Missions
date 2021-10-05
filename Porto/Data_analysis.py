@@ -19,6 +19,7 @@ plt.rcParams.update({'font.size': 12})
 plt.rcParams.update({'font.style': 'oblique'})
 
 
+
 class Mat2HDF5:
     data_path = None
     data_path_new = None
@@ -543,7 +544,6 @@ class MergeTide:
         self.ebby = np.hstack((self.ebby_start, self.ebby_end))
         np.savetxt(self.tide_path[:-5] + "ebby.txt", self.ebby, delimiter = ", ")
 
-
 class DataGetter(Mat2HDF5, DataHandler_Delft3D):
     '''
     Get data according to date specified and wind direction
@@ -828,6 +828,176 @@ class MaretecDataHandler:
     def deg2rad(deg):
         return deg / 180 * np.pi
 
+class DataGetter(Mat2HDF5, DataHandler_Delft3D):
+    '''
+    Get data according to date specified and wind direction
+    '''
+    data_folder = None
+    data_folder_new = None
+    wind_path = None
+    ebby_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Tide/ebby.txt"
+
+    def __init__(self, data_folder, data_folder_new, wind_path):
+        # GridPoly.__init__(self, debug = False)
+        self.depth_layers = 5 # top five layers will be chosen for saving the data, to make sure it has enough space to operate
+        self.data_folder = data_folder
+        self.data_folder_new = data_folder_new
+        self.wind_path = wind_path
+        # self.load_ebby()
+
+        # self.getAllPriorData()
+        # self.mergedata("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/salinity_2019_SEP_2.h5")
+        # self.merge_all()
+        self.checkMerged()
+        pass
+
+    def load_ebby(self):
+        print("Loading ebby...")
+        self.ebby = np.loadtxt(self.ebby_path, delimiter=", ")
+        print("Ebby is loaded correctly!")
+
+    def mergedata(self, data_path): #load merged data with Delft3D and wind data
+        t1 = time.time()
+        datahandler = DataHandler_Delft3D(data_path, self.wind_path, rough = True, voiceControl = False)
+        self.file_string = data_path[-13:-3]
+        print("File string: ", self.file_string)
+        self.lat = datahandler.lat
+        self.lon = datahandler.lon
+        self.depth = datahandler.depth
+        self.salinity = datahandler.salinity
+        self.wind_dir = datahandler.wind_dir
+        self.wind_level = datahandler.wind_level
+        self.timestamp_data = datahandler.timestamp_data
+        print("lat: ", datahandler.lat.shape)
+        print("lon: ", datahandler.lon.shape)
+        print("depth: ", datahandler.depth.shape)
+        print("salinity", datahandler.salinity.shape)
+        print("timestamp_data: ", self.timestamp_data.shape)
+        print("wind_dir: ", np.array(self.wind_dir).shape, len(self.wind_dir))
+        print("wind_level: ", np.array(self.wind_level).shape, len(self.wind_level))
+        t2 = time.time()
+        print(t2 - t1)
+
+    def isEbby(self, timestamp):
+        if len(np.where(timestamp < self.ebby[:, 0])[0]) > 0:
+            ind = np.where(timestamp < self.ebby[:, 0])[0][0] - 1 # check the index for ebby start
+            if timestamp < self.ebby[ind, 1]:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def getdata4wind(self, wind_dir, wind_level, data_path):
+
+        self.mergedata(data_path)
+        self.lat_merged = self.lat[:, :, :self.depth_layers] # only extract top layers
+        self.lon_merged = self.lon[:, :, :self.depth_layers]
+
+        self.ind_selected = np.where((np.array(self.wind_dir) == wind_dir) & (np.array(self.wind_level) == wind_level))[0] # indices for selecting the time frames
+
+        if np.any(self.ind_selected):
+            self.test_timestamp = self.timestamp_data[self.ind_selected]
+            self.ind_selected_ebby = []
+            print("before ebby checking: ", len(self.ind_selected))
+            print("len of test timestamp: ", len(self.test_timestamp))
+
+            for i in range(len(self.test_timestamp)):
+                if self.isEbby(self.test_timestamp[i]):
+                    self.ind_selected_ebby.append(self.ind_selected[i])
+
+            print("after ebby checking: ", len(self.ind_selected_ebby))
+            if len(self.ind_selected_ebby) > 0:
+                print("Found ", wind_dir, wind_level, " {:d} timeframes are used to average".format(len(self.ind_selected_ebby)))
+                self.salinity_merged = np.mean(self.salinity[self.ind_selected_ebby, :, :, :self.depth_layers], axis = 0)
+                self.depth_merged = np.mean(self.depth[self.ind_selected_ebby, :, :, :self.depth_layers], axis = 0)
+                t1 = time.time()
+                if os.path.exists(self.data_folder_new + "Merged_" + wind_dir + "_" + wind_level + "_" + self.file_string + ".h5"):
+                    print("rm -rf " + self.data_folder_new + "Merged_" + wind_dir + "_" + wind_level + "_" + self.file_string + ".h5")
+                    os.system("rm -rf " + self.data_folder_new + "Merged_" + wind_dir + "_" + wind_level + "_" + self.file_string + ".h5")
+                data_file = h5py.File(
+                    self.data_folder_new + "Merged_" + wind_dir + "_" + wind_level + "_" + self.file_string + ".h5", 'w')
+                data_file.create_dataset("lat", data=self.lat_merged)
+                data_file.create_dataset("lon", data=self.lon_merged)
+                data_file.create_dataset("depth", data=self.depth_merged)
+                data_file.create_dataset("salinity", data=self.salinity_merged)
+                t2 = time.time()
+                print("Finished data creation! Time consumed: ", t2 - t1)
+        else:
+            print("Not enough data, no corresponding ", wind_dir, wind_level, "data is found.")
+
+    def getAllPriorData(self):
+        # wind_dirs = ['North', 'South', 'West', 'East'] # get wind_data for all conditions
+        wind_dirs = ['West', 'East'] # get wind_data for all conditions
+        wind_levels = ['Mild', 'Moderate', 'Heavy'] # get data for all conditions
+        # wind_dirs = ['North'] # get wind_data for all conditions
+        # wind_levels = ['Moderate'] # get data for all conditions
+        counter = 0
+        os.system("say Start merging all the data")
+        for wind_dir in wind_dirs:
+            for wind_level in wind_levels:
+                print("wind_dir: ", wind_dir)
+                print("wind_level: ", wind_level)
+                for file in os.listdir(self.data_folder):
+                    if file.endswith(".h5"):
+                        print(self.data_folder + file)
+                        # if counter == 3:
+                        #     break
+                        t1 = time.time()
+                        self.getdata4wind(wind_dir, wind_level, self.data_folder + file)
+                        t2 = time.time()
+                        os.system("say Step {:d} of {:d}, time consumed {:.1f} seconds".format(counter, len(os.listdir(self.data_folder)) * len(wind_dirs) * len(wind_levels), t2 - t1))
+                        print("Step {:d} of {:d}, time consumed {:.1f} seconds".format(counter, len(os.listdir(self.data_folder)) * len(wind_dirs) * len(wind_levels), t2 - t1))
+                        counter = counter + 1
+
+    def merge_all(self):
+        new_data_path = self.data_folder + "Merged_all/"
+        wind_dirs = ['North', 'South', 'West', 'East'] # get wind_data for all conditions
+        wind_levels = ['Mild', 'Moderate', 'Heavy'] # get data for all conditions
+        # wind_dirs = ['North'] # get wind_data for all conditions
+        # wind_levels = ['Moderate'] # get data for all conditions
+        counter = 0
+        for wind_dir in wind_dirs:
+            for wind_level in wind_levels:
+                print("wind_dir: ", wind_dir)
+                print("wind_level: ", wind_level)
+                self.lat_merged_all = 0
+                self.lon_merged_all = 0
+                self.depth_merged_all = 0
+                self.salinity_merged_all = 0
+                exist = False
+                counter_mean = 0
+                for file in os.listdir(self.data_folder_new):
+                    if "Merged_" + wind_dir + "_" + wind_level in file:
+                        print(file)
+                        print(counter)
+                        counter = counter + 1
+                        counter_mean = counter_mean + 1
+                        exist = True
+                        data = h5py.File(self.data_folder_new + file, 'r')
+                        self.lat_merged_all = self.lat_merged_all + np.array(data.get("lat"))
+                        self.lon_merged_all = self.lon_merged_all + np.array(data.get("lon"))
+                        self.depth_merged_all = self.depth_merged_all + np.array(data.get("depth"))
+                        self.salinity_merged_all = self.salinity_merged_all + np.array(data.get("salinity"))
+                # print("lat_merged_all: ", self.lat_merged_all.shape)
+                # print("lon_merged_all: ", self.lon_merged_all.shape)
+                # print("depth_merged_all:, ", self.depth_merged_all.shape)
+                # print("salinity_merged_all: ", self.salinity_merged_all.shape)
+                if exist:
+                    print("counter_mean: ", counter_mean)
+                    self.lat_mean = self.lat_merged_all / counter_mean
+                    self.lon_mean = self.lon_merged_all / counter_mean
+                    self.depth_mean = self.depth_merged_all / counter_mean
+                    self.salinity_mean = self.salinity_merged_all / counter_mean
+                    data_file = h5py.File(self.data_folder + "Merged_all/" + wind_dir + "_" + wind_level + "_all" + ".h5", 'w')
+                    data_file.create_dataset("lat", data=self.lat_mean)
+                    data_file.create_dataset("lon", data=self.lon_mean)
+                    data_file.create_dataset("depth", data=self.depth_mean)
+                    data_file.create_dataset("salinity", data=self.salinity_mean)
+                else:
+                    print("No data found for " + wind_dir + wind_level)
+                    pass
+
     @staticmethod
     def rad2deg(rad):
         return rad / np.pi * 180
@@ -990,13 +1160,12 @@ path_maretec = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maret
     # a = MaretecDataHandler()
     # a = DataGetter(data_folder, data_folder_new, wind_path)
 
+
 class PortoMissionHandler:
 
     def __init__(self):
         print("hello world")
     pass
-
-
 
 if __name__ == "__main__":
     print("hello world")

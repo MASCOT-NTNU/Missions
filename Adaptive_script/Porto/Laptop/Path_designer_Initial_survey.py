@@ -99,6 +99,7 @@ class PathDesigner:
         np.savetxt(self.path_onboard + "path_initial_survey.txt", self.path_initial_survey, delimiter=", ")
         print("The initial survey path is designed successfully, path_initial_survey: ", self.path_initial_survey.shape)
 
+
     def saveKML(self):
         print("I will create a polygon kml file for importing...")
         with open(self.path_onboard + "path_initial_survey.txt", "r") as a_file:
@@ -113,6 +114,7 @@ class PathDesigner:
         pol.innerboundaryis = points
         kml.save(self.path_onboard + "Path_initial_survey.kml")
         print("Path_initial_survey.kml is created successfully")
+
 
     def checkPath(self):
         plt.figure(figsize=(10, 10))

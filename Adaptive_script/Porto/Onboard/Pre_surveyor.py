@@ -44,6 +44,7 @@ class AUV:
 
         self.sms_pub_ = rospy.Publisher("/IMC/In/Sms", Sms, queue_size = 10)
         self.phone_number = "+351969459285"
+        # self.phone_number = "+4792526858"
 
     def TemperatureCB(self, msg):
         self.currentTemperature = msg.value.data

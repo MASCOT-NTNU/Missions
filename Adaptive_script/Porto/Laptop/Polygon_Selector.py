@@ -8,6 +8,7 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
+
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
@@ -129,6 +130,7 @@ class MaretecDataHandler:
         self.ref_satellite = self.data_satellite[:, -1]
         print("Satellite data is loaded successfully...")
 
+
     def saveKML(self):
         print("I will create a polygon kml file for importing...")
         with open(self.polygon_path + "polygon.txt", "r") as a_file:
@@ -144,6 +146,7 @@ class MaretecDataHandler:
         kml.save(self.polygon_path + "Polygon.kml")
         print("Polygon.kml is created successfully")
 
+
     def plotdataonDay(self, day, hour, wind_dir, wind_level):
         print("This will plot the data on day " + day)
         datapath = self.data_path[:81] + day + "/WaterProperties.hdf5"
@@ -156,7 +159,7 @@ class MaretecDataHandler:
         plt.scatter(self.lon_delft3d, self.lat_delft3d, c=self.salinity_delft3d, vmin=26, vmax=36, alpha=1,
                     cmap="Paired")
         plt.colorbar()
-        plt.axvline(-8.75267327, c = 'r')
+        plt.axvline(-8.75267327, c = 'r') # ancher zone, boundary, cannot be on the left
         plt.scatter(self.lon[:self.lon.shape[1], :], self.lat[:self.lon.shape[1], :],
                     c=self.salinity[hour_start, :self.lon.shape[1], :], vmin=26, vmax=36, alpha = .25, cmap="Paired")
         plt.scatter(self.lon[:self.lon.shape[1], :], self.lat[:self.lon.shape[1], :],

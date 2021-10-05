@@ -17,6 +17,7 @@ class GP_Poly:
     '''
     path_onboard = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
     # coef for salinity
+
     sigma_sal = np.sqrt(.5) # scaling coef in matern kernel for salinity
     tau_sal = np.sqrt(.04) # iid noise
     Threshold_S = 35 # threshold for salinity

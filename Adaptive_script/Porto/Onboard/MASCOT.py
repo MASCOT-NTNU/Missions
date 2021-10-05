@@ -47,6 +47,7 @@ class AUV:
 
         self.sms_pub_ = rospy.Publisher("/IMC/In/Sms", Sms, queue_size = 10)
         self.phone_number = "+351969459285"
+        # self.phone_number = "+4792526858"
 
     def TemperatureCB(self, msg):
         self.currentTemperature = msg.value.data
@@ -81,6 +82,7 @@ class AUV:
         lat = lat_origin + AUV.rad2deg(x * np.pi * 2.0 / AUV.circumference)
         lon = lon_origin + AUV.rad2deg(y * np.pi * 2.0 / (AUV.circumference * np.cos(AUV.deg2rad(lat))))
         return lat, lon
+
 
 class DataAssimilator(AUV):
     data_salinity = []
@@ -423,11 +425,4 @@ class PathPlanner_Polygon(DataAssimilator):
 if __name__ == "__main__":
     a = PathPlanner_Polygon()
     print("Mission complete!!!")
-
-
-
-
-
-
-
 
