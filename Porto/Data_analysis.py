@@ -1161,11 +1161,521 @@ path_maretec = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maret
     # a = DataGetter(data_folder, data_folder_new, wind_path)
 
 
-class PortoMissionHandler:
+class PortoMissionAnalyser:
+    path_mission_data = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/20210923/Mission/lauv-xplore-1-backseat/MASCOT_PORTO/Data/"
+    timestamp_mission = np.empty(0)
+    salinity_mission = np.empty(0)
+    lat_mission = np.empty(0)
+    lon_mission = np.empty(0)
+    depth_mission = np.empty(0)
+
+    timestamp_presurvey = np.empty(0)
+    salinity_presurvey = np.empty(0)
+    lat_presurvey = np.empty(0)
+    lon_presurvey = np.empty(0)
+    depth_presurvey = np.empty(0)
 
     def __init__(self):
-        print("hello world")
-    pass
-if __name__ == "__main__":
-    print("hello world")
-    path_mission = ""
+        # self.loaddata_mission()
+        self.loaddata_presurvey()
+
+    def loaddata_mission(self):
+        files = os.listdir(self.path_mission_data)
+        files.sort()
+        for file in files:
+            if file != ".DS_Store":
+                if file.startswith("MissionData"):
+                    print(file)
+                    temp_timestamp = np.loadtxt(self.path_mission_data + file + "/data_timestamp.txt", delimiter = ", ")
+                    temp_salinity = np.loadtxt(self.path_mission_data + file + "/data_salinity.txt", delimiter=", ")
+                    temp_path = np.loadtxt(self.path_mission_data + file + "/data_path.txt", delimiter=", ")
+                    self.timestamp_mission = np.append(self.timestamp_mission, temp_timestamp)
+                    self.salinity_mission = np.append(self.salinity_mission, temp_salinity)
+                    self.lat_mission = np.append(self.lat_mission, temp_path[:, 0])
+                    self.lon_mission = np.append(self.lon_mission, temp_path[:, 1])
+                    self.depth_mission = np.append(self.depth_mission, temp_path[:, -1])
+
+    def loaddata_presurvey(self):
+        files = os.listdir(self.path_mission_data)
+        for file in files:
+            if file != ".DS_Store":
+                if file.startswith("Pre_survey_data"):
+                    temp_timestamp = np.loadtxt(self.path_mission_data + file + "/data_timestamp.txt", delimiter = ", ")
+                    temp_salinity = np.loadtxt(self.path_mission_data + file + "/data_salinity.txt", delimiter=", ")
+                    temp_path = np.loadtxt(self.path_mission_data + file + "/data_path.txt", delimiter=", ").reshape(-1, 3)
+                    self.timestamp_presurvey = np.append(self.timestamp_presurvey, temp_timestamp)
+                    self.salinity_presurvey = np.append(self.salinity_presurvey, temp_salinity)
+                    # print(file)
+                    # print(temp_path.shape)
+                    self.lat_presurvey = np.append(self.lat_presurvey, temp_path[:, 0])
+                    self.lon_presurvey = np.append(self.lon_presurvey, temp_path[:, 1])
+                    self.depth_presurvey = np.append(self.depth_presurvey, temp_path[:, -1])
+
+# if __name__ == "__main__":
+
+# a = PortoMissionAnalyser()
+# ind_start = 500
+# ind_end = 3000
+# # plt.scatter(a.lon_mission, a.lat_mission, c = a.salinity_mission)
+# plt.scatter(a.lon_presurvey[ind_start:ind_end], a.lat_presurvey[ind_start:ind_end], c = a.salinity_presurvey[ind_start:ind_end])
+# plt.colorbar()
+# plt.show()
+
+
+import matplotlib.path as mplPath # used to determine whether a point is inside the grid or not
+class WaypointNode:
+    '''
+    generate node for each waypoint
+    '''
+    waypoint_loc = None
+    subwaypoint_len = 0
+    subwaypoint_loc = []
+
+    def __init__(self, subwaypoints_len, subwaypoints_loc, waypoint_loc):
+        self.subwaypoint_len = subwaypoints_len
+        self.subwaypoint_loc = subwaypoints_loc
+        self.waypoint_loc = waypoint_loc
+
+
+class GridPoly(WaypointNode):
+    '''
+    generate the polygon grid with equal-distance from one to another
+    '''
+    lat_origin, lon_origin = 41.10251, -8.669811  # the right bottom corner coordinates
+    circumference = 40075000  # circumference of the earth, [m]
+    distance_poly = 90  # [m], distance between two neighbouring points
+    depth_obs = [-.5, -1.25, -2]  # [m], distance in depth, depth to be explored
+    pointsPr = 10000  # points per layer
+    polygon = None
+    loc_start = None
+    counter_plot = 0  # counter for plot number
+    counter_grid = 0  # counter for grid points
+    debug = True
+    voiceCtrl = False
+    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/fig/"
+    gridpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
+
+    def __init__(self, polygon=np.array([[41.12251, -8.707745],
+                                         [41.12413, -8.713079],
+                                         [41.11937, -8.715101],
+                                         [41.11509, -8.717317],
+                                         [41.11028, -8.716535],
+                                         [41.10336, -8.716813],
+                                         [41.10401, -8.711306],
+                                         [41.11198, -8.710787],
+                                         [41.11764, -8.710245],
+                                         [41.12251, -8.707745]]), debug=False, voiceCtrl=False):
+        if debug:
+            self.checkFolder()
+        self.lat_origin, self.lon_origin = 41.061874, -8.650977  # origin location
+        self.grid_poly = []
+        self.polygon = polygon
+        self.debug = debug
+        self.voiceCtrl = voiceCtrl
+        self.polygon_path = mplPath.Path(self.polygon)
+        self.angle_poly = self.deg2rad(np.arange(0, 6) * 60)  # angles for polygon
+        self.getPolygonArea()
+
+        print("Grid polygon is activated!")
+        print("Distance between neighbouring points: ", self.distance_poly)
+        print("Depth to be observed: ", self.depth_obs)
+        print("Starting location: ", self.loc_start)
+        print("Polygon: ", self.polygon.shape)
+        print("Points desired: ", self.pointsPr)
+        print("Debug mode: ", self.debug)
+        print("fig path: ", self.figpath)
+        t1 = time.time()
+        self.getGridPoly()
+        # self.plotGridonMap(self.grid_poly)
+        # self.savegrid()
+        t2 = time.time()
+        print("Grid discretisation takes: {:.2f} seconds".format(t2 - t1))
+
+    def checkFolder(self):
+        i = 0
+        while os.path.exists(self.figpath + "P%s" % i):
+            i += 1
+        self.figpath = self.figpath + "P%s" % i
+        if not os.path.exists(self.figpath):
+            print(self.figpath + " is created")
+            os.mkdir(self.figpath)
+        else:
+            print(self.figpath + " is already existed")
+
+    def savegrid(self):
+        grid = []
+        for i in range(len(self.grid_poly)):
+            for j in range(len(self.depth_obs)):
+                grid.append([self.grid_poly[i, 0], self.grid_poly[i, 1], self.depth_obs[j]])
+        np.savetxt(self.gridpath + "grid.txt", grid, delimiter=", ")
+        print("Grid is created correctly, it is saved to grid.txt")
+
+    def revisit(self, loc):
+        '''
+        func determines whether it revisits the points it already have
+        '''
+        temp = np.array(self.grid_poly)
+        if len(self.grid_poly) > 0:
+            dist_min = np.min(np.sqrt((temp[:, 0] - loc[0]) ** 2 + (temp[:, 1] - loc[1]) ** 2))
+            ind = np.argmin(np.sqrt((temp[:, 0] - loc[0]) ** 2 + (temp[:, 1] - loc[1]) ** 2))
+            if dist_min <= .00001:
+                return [True, ind]
+            else:
+                return [False, []]
+        else:
+            return [False, []]
+
+    def getNewLocations(self, loc):
+        '''
+        get new locations around the current location
+        '''
+        lat_delta, lon_delta = self.xy2latlon(self.distance_poly * np.sin(self.angle_poly),
+                                              self.distance_poly * np.cos(self.angle_poly), 0, 0)
+        return lat_delta + loc[0], lon_delta + loc[1]
+
+    def getStartLocation(self):
+        lat_min = np.amin(self.polygon[:, 0])
+        lat_max = np.amax(self.polygon[:, 0])
+        lon_min = np.amin(self.polygon[:, 1])
+        lon_max = np.amax(self.polygon[:, 1])
+        path_polygon = mplPath.Path(self.polygon)
+        while True:
+            lat_random = np.random.uniform(lat_min, lat_max)
+            lon_random = np.random.uniform(lon_min, lon_max)
+            if path_polygon.contains_point((lat_random, lon_random)):
+                break
+        print("The generated random starting location is: ")
+        print([lat_random, lon_random])
+        self.loc_start = [lat_random, lon_random]
+
+    def getGridPoly(self):
+        '''
+        get the polygon grid discretisation
+        '''
+        self.getStartLocation()
+        lat_new, lon_new = self.getNewLocations(self.loc_start)
+        start_node = []
+        for i in range(len(self.angle_poly)):
+            if self.polygon_path.contains_point((lat_new[i], lon_new[i])):
+                start_node.append([lat_new[i], lon_new[i]])
+                self.grid_poly.append([lat_new[i], lon_new[i]])
+                self.counter_grid = self.counter_grid + 1
+
+        WaypointNode_start = WaypointNode(len(start_node), start_node, self.loc_start)
+        Allwaypoints = self.getAllWaypoints(WaypointNode_start)
+        self.grid_poly = np.array(self.grid_poly)
+        if len(self.grid_poly) > self.pointsPr:
+            print("{:d} waypoints are generated, only {:d} waypoints are selected!".format(len(self.grid_poly),
+                                                                                           self.pointsPr))
+            self.grid_poly = self.grid_poly[:self.pointsPr, :]
+        else:
+            print("{:d} waypoints are generated, all are selected!".format(len(self.grid_poly)))
+        print("Grid: ", self.grid_poly.shape)
+
+    def getAllWaypoints(self, waypoint_node):
+        if self.counter_grid > self.pointsPr:  # stopping criterion to end the recursion
+            return WaypointNode(0, [], waypoint_node.waypoint_loc)
+        for i in range(waypoint_node.subwaypoint_len):  # loop through all the subnodes
+            subsubwaypoint = []
+            length_new = 0
+            lat_subsubwaypoint, lon_subsubwaypoint = self.getNewLocations(
+                waypoint_node.subwaypoint_loc[i])  # generate candidates location
+            for j in range(len(self.angle_poly)):
+                if self.polygon_path.contains_point((lat_subsubwaypoint[j], lon_subsubwaypoint[j])):
+                    testRevisit = self.revisit([lat_subsubwaypoint[j], lon_subsubwaypoint[j]])
+                    if not testRevisit[0]:
+                        subsubwaypoint.append([lat_subsubwaypoint[j], lon_subsubwaypoint[j]])
+                        self.grid_poly.append([lat_subsubwaypoint[j], lon_subsubwaypoint[j]])
+                        self.counter_grid = self.counter_grid + 1
+                        length_new = length_new + 1
+            if len(subsubwaypoint) > 0:
+                Subwaypoint = WaypointNode(len(subsubwaypoint), subsubwaypoint, waypoint_node.subwaypoint_loc[i])
+                self.getAllWaypoints(Subwaypoint)
+            else:
+                return WaypointNode(0, [], waypoint_node.subwaypoint_loc[i])
+        return WaypointNode(0, [], waypoint_node.waypoint_loc)
+
+    def getPolygonArea(self):
+        area = 0
+        prev = self.polygon[-2]
+        for i in range(self.polygon.shape[0] - 1):
+            now = self.polygon[i]
+            xnow, ynow = GridPoly.latlon2xy(now[0], now[1], self.lat_origin, self.lon_origin)
+            xpre, ypre = GridPoly.latlon2xy(prev[0], prev[1], self.lat_origin, self.lon_origin)
+            area += xnow * ypre - ynow * xpre
+            prev = now
+        self.PolyArea = area / 2
+        print("Area: ", self.PolyArea / 1e6, " km2")
+        if self.voiceCtrl:
+            os.system("say Area is: {:.1f} squared kilometers".format(self.PolyArea / 1e6))
+
+    @staticmethod
+    def deg2rad(deg):
+        return deg / 180 * np.pi
+
+    @staticmethod
+    def rad2deg(rad):
+        return rad / np.pi * 180
+
+    @staticmethod
+    def latlon2xy(lat, lon, lat_origin, lon_origin):
+        x = GridPoly.deg2rad((lat - lat_origin)) / 2 / np.pi * GridPoly.circumference
+        y = GridPoly.deg2rad((lon - lon_origin)) / 2 / np.pi * GridPoly.circumference * np.cos(GridPoly.deg2rad(lat))
+        return x, y
+
+    @staticmethod
+    def xy2latlon(x, y, lat_origin, lon_origin):
+        lat = lat_origin + GridPoly.rad2deg(x * np.pi * 2.0 / GridPoly.circumference)
+        lon = lon_origin + GridPoly.rad2deg(y * np.pi * 2.0 / (GridPoly.circumference * np.cos(GridPoly.deg2rad(lat))))
+        return lat, lon
+
+    @staticmethod
+    def getDistance(coord1, coord2):
+        x1, y1 = GridPoly.latlon2xy(coord1[0], coord1[1], GridPoly.lat_origin, GridPoly.lon_origin)
+        x2, y2 = GridPoly.latlon2xy(coord2[0], coord2[1], GridPoly.lat_origin, GridPoly.lon_origin)
+        dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+        return dist
+
+
+from gmplot import GoogleMapPlotter
+from matplotlib.colors import Normalize
+from matplotlib.cm import ScalarMappable
+class Presentation:
+    # datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/20210923/Backup_mission_scripts/Onboard/"
+    datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/20210923/Mission/lauv-xplore-1-backseat/MASCOT_PORTO/"
+    figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Report/Porto/fig/'
+    lat_origin, lon_origin = 41.10251, -8.669811  # the right bottom corner coordinates
+    circumference = 40075000
+
+    def __init__(self):
+        self.loaddata()
+        self.plotpolygon_presurvey()
+        self.plot_corrected_prior()
+
+        # self.plotgrid()
+        # self.calpolygon()
+        pass
+
+    def loaddata(self):
+        self.grid = np.loadtxt(self.datapath + "grid.txt", delimiter = ", ")
+        self.polygon = np.loadtxt(self.datapath + "polygon.txt", delimiter=", ")
+        self.path_initial_survey = np.loadtxt(self.datapath + "path_initial_survey.txt", delimiter=", ")
+        self.prior_polygon = np.loadtxt(self.datapath + "Prior_polygon.txt", delimiter=", ")
+        self.prior_corrected = np.loadtxt(self.datapath + "prior_corrected.txt", delimiter=", ")
+        print("Data is loaded successfully!")
+        print("Polygon: ", self.polygon.shape)
+        print("Grid: ", self.grid.shape)
+        print("Path_initial_survey: ", self.path_initial_survey.shape)
+        print("Prior polygon: ", self.prior_polygon.shape)
+        print("Prior corrected: ", self.prior_corrected.shape)
+
+    def plotpolygon_presurvey(self):
+        plt.figure(figsize = (10, 10))
+        self.polygon = np.append(self.polygon, self.polygon[0, :].reshape(1, -1), axis = 0)
+        print(self.polygon)
+        ind_surface = self.prior_polygon[:, 2] == -.5
+        plt.scatter(self.prior_polygon[ind_surface, 1], self.prior_polygon[ind_surface, 0], vmin = 15, vmax = 38, c = self.prior_polygon[ind_surface, -1], s = 250, cmap = "Paired")
+        plt.colorbar()
+        plt.plot(self.polygon[:, -1], self.polygon[:, 0], 'k-.', label = "Polygon boundary")
+        for i in range(self.path_initial_survey.shape[0]-1):
+            if i % 2 != 0:
+                if i <= 1:
+                    plt.plot(self.path_initial_survey[i:i + 2, 1], self.path_initial_survey[i:i + 2, 0], 'ro-', label = "Surfacing")
+                else:
+                    plt.plot(self.path_initial_survey[i:i + 2, 1], self.path_initial_survey[i:i + 2, 0], 'ro-')
+            else:
+                if i <= 0:
+                    plt.plot(self.path_initial_survey[i:i + 1, 1], self.path_initial_survey[i:i + 1, 0], 'bo',
+                                 markersize=20)
+                    plt.plot(self.path_initial_survey[i:i + 2, 1], self.path_initial_survey[i:i + 2, 0], 'go-',
+                             label="Diving")
+                else:
+                    if i % 4 == 0:
+                        plt.plot(self.path_initial_survey[i:i + 1, 1], self.path_initial_survey[i:i + 1, 0], 'bo',
+                                 markersize=40)
+                    else:
+                        plt.plot(self.path_initial_survey[i:i + 1, 1], self.path_initial_survey[i:i + 1, 0], 'bo',
+                                 markersize=20)
+                    plt.plot(self.path_initial_survey[i:i + 2, 1], self.path_initial_survey[i:i + 2, 0], 'go-')
+
+        plt.xlabel("Lon [deg]")
+        plt.ylabel("Lat [deg]")
+        plt.title("Polygon & Presurvey path")
+        plt.legend()
+        plt.savefig(self.figpath + "combined.png")
+        plt.show()
+
+    def plot_corrected_prior(self):
+        plt.figure(figsize = (10, 10))
+        self.polygon = np.append(self.polygon, self.polygon[0, :].reshape(1, -1), axis = 0)
+        print(self.polygon)
+        ind_surface = self.prior_corrected[:, 2] == -.5
+        plt.scatter(self.prior_corrected[ind_surface, 1], self.prior_corrected[ind_surface, 0], vmin = 15, vmax = 38, c = self.prior_corrected[ind_surface, -1], s = 250, cmap = "Paired")
+        plt.colorbar()
+        plt.plot(self.polygon[:, -1], self.polygon[:, 0], 'k-.', label = "Polygon boundary")
+        plt.xlabel("Lon [deg]")
+        plt.ylabel("Lat [deg]")
+        plt.title("Corrected Prior and initial path")
+        plt.legend()
+        plt.savefig(self.figpath + "prior.png")
+        plt.show()
+
+    def plotgrid(self):
+        self.plotGridonMap(self.grid)
+
+    def calpolygon(self):
+        area = self.getPolygonArea(self.polygon)
+        print("Area: ", area)
+
+    @staticmethod
+    def deg2rad(deg):
+        return deg / 180 * np.pi
+
+    @staticmethod
+    def rad2deg(rad):
+        return rad / np.pi * 180
+
+    @staticmethod
+    def latlon2xy(lat, lon, lat_origin, lon_origin):
+        x = Presentation.deg2rad((lat - lat_origin)) / 2 / np.pi * Presentation.circumference
+        y = Presentation.deg2rad((lon - lon_origin)) / 2 / np.pi * Presentation.circumference * np.cos(Presentation.deg2rad(lat))
+        return x, y
+
+    @staticmethod
+    def xy2latlon(x, y, lat_origin, lon_origin):
+        lat = lat_origin + Presentation.rad2deg(x * np.pi * 2.0 / Presentation.circumference)
+        lon = lon_origin + Presentation.rad2deg(y * np.pi * 2.0 / (Presentation.circumference * np.cos(Presentation.deg2rad(lat))))
+        return lat, lon
+
+    def getPolygonArea(self, polygon):
+        area = 0
+        prev = polygon[-1]
+        for i in range(polygon.shape[0] - 1):
+            now = polygon[i]
+            xnow, ynow = self.latlon2xy(now[0], now[1], self.lat_origin, self.lon_origin)
+            xpre, ypre = self.latlon2xy(prev[0], prev[1], self.lat_origin, self.lon_origin)
+            area += xnow * ypre - ynow * xpre
+            prev = now
+        self.PolyArea = area / 2 / 1e6
+        return self.PolyArea
+
+    def plotGridonMap(self, grid):
+        def color_scatter(gmap, lats, lngs, values=None, colormap='coolwarm',
+                          size=None, marker=False, s=None, **kwargs):
+            def rgb2hex(rgb):
+                """ Convert RGBA or RGB to #RRGGBB """
+                rgb = list(rgb[0:3])  # remove alpha if present
+                rgb = [int(c * 255) for c in rgb]
+                hexcolor = '#%02x%02x%02x' % tuple(rgb)
+                return hexcolor
+
+            if values is None:
+                colors = [None for _ in lats]
+            else:
+                cmap = plt.get_cmap(colormap)
+                norm = Normalize(vmin=min(values), vmax=max(values))
+                scalar_map = ScalarMappable(norm=norm, cmap=cmap)
+                colors = [rgb2hex(scalar_map.to_rgba(value)) for value in values]
+            for lat, lon, c in zip(lats, lngs, colors):
+                gmap.scatter(lats=[lat], lngs=[lon], c=c, size=size, marker=marker, s=s, **kwargs)
+
+        initial_zoom = 12
+        apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
+        gmap = GoogleMapPlotter(grid[0, 0], grid[0, 1], initial_zoom, apikey=apikey)
+        color_scatter(gmap, grid[:, 0], grid[:, 1], np.zeros_like(grid[:, 0]), size=20, colormap='hsv')
+        gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
+
+# a = Presentation()
+
+class DataExtractor:
+    datapath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/20210923/Mission/lauv-xplore-1/20210923/082919_follow_ntnu/mra/csv/'
+    circumference = 40075000
+
+    def __init__(self):
+        self.extract_data()
+
+    @staticmethod
+    def deg2rad(deg):
+        return deg / 180 * np.pi
+
+    @staticmethod
+    def rad2deg(rad):
+        return rad / np.pi * 180
+
+    def extract_data(self):
+        #% Data extraction from the raw data
+        rawTemp = pd.read_csv(self.datapath + "Temperature.csv", delimiter=', ', header=0, engine='python')
+        rawLoc = pd.read_csv(self.datapath + "EstimatedState.csv", delimiter=', ', header=0, engine='python')
+        rawSal = pd.read_csv(self.datapath + "Salinity.csv", delimiter=', ', header=0, engine='python')
+        rawDepth = pd.read_csv(self.datapath + "Depth.csv", delimiter=', ', header=0, engine='python')
+        # rawGPS = pd.read_csv(datapath + "GpsFix.csv", delimiter=', ', header=0, engine='python')
+        # rawCurrent = pd.read_csv(datapath + "EstimatedStreamVelocity.csv", delimiter=', ', header=0, engine='python')
+
+        # To group all the time stamp together, since only second accuracy matters
+        rawSal.iloc[:, 0] = np.ceil(rawSal.iloc[:, 0])
+        rawTemp.iloc[:, 0] = np.ceil(rawTemp.iloc[:, 0])
+        rawCTDTemp = rawTemp[rawTemp.iloc[:, 2] == 'Water Quality Sensor']
+        rawLoc.iloc[:, 0] = np.ceil(rawLoc.iloc[:, 0])
+        rawDepth.iloc[:, 0] = np.ceil(rawDepth.iloc[:, 0])
+        rawDepth.iloc[:, 0] = np.ceil(rawDepth.iloc[:, 0])
+
+        depth_ctd = rawDepth[rawDepth.iloc[:, 2] == 'Water Quality Sensor']["value (m)"].groupby(rawDepth["timestamp"]).mean()
+        depth_dvl = rawDepth[rawDepth.iloc[:, 2] == 'DVL']["value (m)"].groupby(rawDepth["timestamp"]).mean()
+        depth_est = rawLoc["depth (m)"].groupby(rawLoc["timestamp"]).mean()
+
+        # indices used to extract data
+        lat_origin = rawLoc["lat (rad)"].groupby(rawLoc["timestamp"]).mean()
+        lon_origin = rawLoc["lon (rad)"].groupby(rawLoc["timestamp"]).mean()
+        x_loc = rawLoc["x (m)"].groupby(rawLoc["timestamp"]).mean()
+        y_loc = rawLoc["y (m)"].groupby(rawLoc["timestamp"]).mean()
+        z_loc = rawLoc["z (m)"].groupby(rawLoc["timestamp"]).mean()
+        depth = rawLoc["depth (m)"].groupby(rawLoc["timestamp"]).mean()
+        time_loc = rawLoc["timestamp"].groupby(rawLoc["timestamp"]).mean()
+        time_sal= rawSal["timestamp"].groupby(rawSal["timestamp"]).mean()
+        time_temp = rawCTDTemp["timestamp"].groupby(rawCTDTemp["timestamp"]).mean()
+        dataSal = rawSal["value"].groupby(rawSal["timestamp"]).mean()
+        dataTemp = rawCTDTemp.iloc[:, -1].groupby(rawCTDTemp["timestamp"]).mean()
+
+        #% Rearrange data according to their timestamp
+        data = []
+        time_mission = []
+        x = []
+        y = []
+        z = []
+        d = []
+        sal = []
+        temp = []
+        lat = []
+        lon = []
+
+        for i in range(len(time_loc)):
+            if np.any(time_sal.isin([time_loc.iloc[i]])) and np.any(time_temp.isin([time_loc.iloc[i]])):
+                time_mission.append(time_loc.iloc[i])
+                x.append(x_loc.iloc[i])
+                y.append(y_loc.iloc[i])
+                z.append(z_loc.iloc[i])
+                d.append(depth.iloc[i])
+                lat_temp = DataExtractor.rad2deg(lat_origin.iloc[i]) + DataExtractor.rad2deg(x_loc.iloc[i] * np.pi * 2.0 / DataExtractor.circumference)
+                lat.append(lat_temp)
+                lon.append(DataExtractor.rad2deg(lon_origin.iloc[i]) + DataExtractor.rad2deg(y_loc.iloc[i] * np.pi * 2.0 / (DataExtractor.circumference * np.cos(DataExtractor.deg2rad(lat_temp)))))
+                sal.append(dataSal[time_sal.isin([time_loc.iloc[i]])].iloc[0])
+                temp.append(dataTemp[time_temp.isin([time_loc.iloc[i]])].iloc[0])
+            else:
+                print(datetime.fromtimestamp(time_loc.iloc[i]))
+                continue
+
+        lat = np.array(lat).reshape(-1, 1)
+        lon = np.array(lon).reshape(-1, 1)
+        x = np.array(x).reshape(-1, 1)
+        y = np.array(y).reshape(-1, 1)
+        z = np.array(z).reshape(-1, 1)
+        d = np.array(d).reshape(-1, 1)
+        sal = np.array(sal).reshape(-1, 1)
+        temp = np.array(temp).reshape(-1, 1)
+        time_mission = np.array(time_mission).reshape(-1, 1)
+
+        datasheet = np.hstack((time_mission, lat, lon, x, y, z, d, sal, temp))
+        np.savetxt(self.datapath + "data.txt", datasheet, delimiter = ", ")
+
+# a = DataExtractor()
+
