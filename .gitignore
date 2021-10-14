@@ -1,8 +1,0 @@
-**/__pycache__
-*.DS_Store
-*.gitattributes
-*.gitignore
-**/.idea
-**/.ipynb_checkpoints
-Sigma_sal.txt
-*samples_2020.05.01.nc
