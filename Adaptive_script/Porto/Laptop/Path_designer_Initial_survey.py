@@ -9,6 +9,7 @@ __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
 import simplekml
+import PySimpleGUI as sg
 import time
 import os
 import h5py
@@ -38,6 +39,22 @@ class PathDesigner:
         self.saveKML()
         self.load_path_initial_survey()
         self.calculateDistacne()
+
+    def GUI_query(self):
+        layout = [[sg.Text('Please enter Mission date, ebb phase time duration, wind direction and wind speed')],
+                  [sg.Text('Mission date', size=(10, 1)), sg.InputText(key='-Mission_date-')],
+                  [sg.Text('Ebb phase duration', size=(10, 1)), sg.InputText(key='-Ebb-')],
+                  [sg.Text('Wind direction', size=(10, 1)), sg.InputText(key='-Wind_dir-')],
+                  [sg.Text('Wind level', size=(10, 1)), sg.InputText(key='-Wind_level-')],
+                  [sg.Button('Submit'), sg.Button('Cancel')]]
+
+        window = sg.Window('Simple Data Entry Window', layout)
+        event, values = window.read(close=True)
+
+        if event == 'Submit':
+            print('The events was ', event, 'You input', values['-NAME-'], values['-ADDRESS-'], values['-PHONE-'])
+        else:
+            print('User cancelled')
 
     def design_path(self):
         print("Please design the path, every second node will be pop up, use the yoyo pattern")
