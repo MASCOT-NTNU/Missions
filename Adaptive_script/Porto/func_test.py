@@ -122,14 +122,14 @@ import PySimpleGUI as sg
 """
 list = ["{:d}".format(i) for i in range(20)]
 print(list)
-#%%
+
 layout = [[sg.Text('Please enter Mission date, ebb phase time duration, wind direction and wind speed')],
           [sg.Text('Mission month', size=(20, 1)), sg.Listbox(values = ["{:d}".format(i + 1) for i in range(12)], select_mode="extended", key = "mission_month", size = (5, 10)),
            sg.Text("Mission day", size = (20, 1)), sg.Listbox(values = ["{:d}".format(i + 1) for i in range(31)], select_mode="extended", key="mission_day", size = (5, 10))],
           [sg.Text('Ebb phase start', size=(20, 1)), sg.Listbox(values = ["{:d}".format(i + 1) for i in range(24)], select_mode="extended", key="ebb_phase_start", size = (5, 10)),
            sg.Text('Ebb phase end', size = (20, 1)), sg.Listbox(values = ["{:d}".format(i + 1) for i in range(24)], select_mode="extended", key="ebb_phase_end", size = (5, 10))],
-          [sg.Text('Wind direction', size=(20, 1)), sg.Listbox(values = ["North", "East", "South", "West"], select_mode="extended", key="wind_dir", size = (5, 5))],
-          [sg.Text('Wind level', size=(20, 1)), sg.Listbox(values = ["Mild", "Moderate", "Heavy"], select_mode="extended", key="wind_level", size = (5, 5))],
+          [sg.Text('Wind direction', size=(20, 1)), sg.Listbox(values = ["North", "East", "South", "West"], select_mode="extended", key="wind_dir", size = (10, 5))],
+          [sg.Text('Wind level', size=(20, 1)), sg.Listbox(values = ["Mild", "Moderate", "Heavy"], select_mode="extended", key="wind_level", size = (10, 5))],
           [sg.Button('Submit'), sg.Button('Cancel')]]
 
 window = sg.Window('Mission set up window', layout)
@@ -139,6 +139,7 @@ if event == 'Submit':
     print('The events was ', event, 'You input', values['mission_month'], values['mission_day'], values['ebb_phase_start'], values['ebb_phase_end'], values['wind_dir'], values['wind_level'])
 else:
     print('User cancelled')
+
 
 #%%
 import PySimpleGUI as psg
