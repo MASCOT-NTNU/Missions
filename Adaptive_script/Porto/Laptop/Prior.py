@@ -33,10 +33,12 @@ class DelftPrior:
 
     def __init__(self, debug = False):
         self.debug = debug
-        self.load_windcondition()
-        self.load_grid()
-        self.loaddata()
+        self.load_all()
         self.select_data()
+
+    def load_all(self):
+        self.load_windcondition()
+        self.loaddata()
 
     def loaddata(self):
         print("Loading the merged data...")
@@ -54,11 +56,6 @@ class DelftPrior:
         print("salinity: ", self.salinity.shape)
         t2 = time.time()
         print("Loading data takes: ", t2 - t1)
-
-    def load_grid(self):
-        print("Loading grid...")
-        self.grid_poly = np.loadtxt(self.path_onboard + "grid.txt", delimiter=", ")
-        print("grid is loaded successfully, grid shape: ", self.grid_poly.shape)
 
     def load_windcondition(self):
         print("It will load the wind conditions...")
