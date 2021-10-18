@@ -156,7 +156,7 @@ class PathDesigner:
             if i % 2 == 0:
                 self.path_initial_survey.append([path_initialsurvey[i][1], path_initialsurvey[i][0], 0])
             else:
-                self.path_initial_survey.append([path_initialsurvey[i][1], path_initialsurvey[i][0], -7]) # dive to 7 meters
+                self.path_initial_survey.append([path_initialsurvey[i][1], path_initialsurvey[i][0], 7]) # dive to 7 meters
         self.path_initial_survey = np.array(self.path_initial_survey)
         np.savetxt(self.path_onboard + "Config/path_initial_survey.txt", self.path_initial_survey, delimiter=", ")
         print("The initial survey path is designed successfully, path_initial_survey: ", self.path_initial_survey.shape)
