@@ -8,12 +8,10 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
-import numpy as np
 import rospy
 from auv_handler import AuvHandler
-import imc_ros_interface
 from imc_ros_interface.msg import Temperature, Salinity, EstimatedState, Sms
-
+from usr_func import *
 
 class AUV:
     circumference = 40075000  # circumference of the earth, [m]
@@ -39,9 +37,9 @@ class AUV:
         self.currentSalinity = 0.0
         self.vehicle_pos = [0, 0, 0]
 
-        self.sms_pub_ = rospy.Publisher("/IMC/In/Sms", Sms, queue_size = 10)
-        self.phone_number = "+351969459285"
-        # self.phone_number = "+4792526858"
+        # self.sms_pub_ = rospy.Publisher("/IMC/In/Sms", Sms, queue_size = 10)
+        # self.phone_number = "+351969459285"
+        # # self.phone_number = "+4792526858"
 
     def TemperatureCB(self, msg):
         self.currentTemperature = msg.value.data
@@ -50,29 +48,10 @@ class AUV:
         self.currentSalinity = msg.value.data
 
     def EstimatedStateCB(self, msg):
-        offset_north = msg.lat.data - AUV.deg2rad(self.lat_origin)
-        offset_east = msg.lon.data - AUV.deg2rad(self.lon_origin)
+        offset_north = msg.lat.data - deg2rad(self.lat_origin)
+        offset_east = msg.lon.data - deg2rad(self.lon_origin)
         N = offset_north * self.circumference / (2.0 * np.pi)
-        E = offset_east * self.circumference * np.cos(AUV.deg2rad(self.lat_origin)) / (2.0 * np.pi)
+        E = offset_east * self.circumference * np.cos(deg2rad(self.lat_origin)) / (2.0 * np.pi)
         D = msg.z.data
         self.vehicle_pos = [N, E, D]
 
-    @staticmethod
-    def deg2rad(deg):
-        return deg / 180 * np.pi
-
-    @staticmethod
-    def rad2deg(rad):
-        return rad / np.pi * 180
-
-    @staticmethod
-    def latlon2xy(lat, lon, lat_origin, lon_origin):
-        x = AUV.deg2rad((lat - lat_origin)) / 2 / np.pi * AUV.circumference
-        y = AUV.deg2rad((lon - lon_origin)) / 2 / np.pi * AUV.circumference * np.cos(AUV.deg2rad(lat))
-        return x, y
-
-    @staticmethod
-    def xy2latlon(x, y, lat_origin, lon_origin):
-        lat = lat_origin + AUV.rad2deg(x * np.pi * 2.0 / AUV.circumference)
-        lon = lon_origin + AUV.rad2deg(y * np.pi * 2.0 / (AUV.circumference * np.cos(AUV.deg2rad(lat))))
-        return lat, lon

@@ -8,18 +8,13 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
-import numpy as np
-import rospy
-from auv_handler import AuvHandler
-import imc_ros_interface
-from imc_ros_interface.msg import Temperature, Salinity, EstimatedState, Sms
-import time
+
 import os
+from usr_func import *
 from pathlib import Path
 from datetime import datetime
-from AUV import AUV
 
-class DataAssimilator(AUV):
+class DataHandler:
     data_salinity = []
     data_temperature = []
     data_path_waypoints = []
@@ -27,25 +22,24 @@ class DataAssimilator(AUV):
     path_onboard = ''
 
     def __init__(self):
-        AUV.__init__(self)
         print("Data collector is initialised correctly")
 
     def append_salinity(self, value):
-        DataAssimilator.data_salinity.append(value)
+        DataHandler.data_salinity.append(value)
 
     def append_temperature(self, value):
-        DataAssimilator.data_temperature.append(value)
+        DataHandler.data_temperature.append(value)
 
     def append_path(self, value):
-        DataAssimilator.data_path_waypoints.append(value)
+        DataHandler.data_path_waypoints.append(value)
 
     def append_timestamp(self, value):
-        DataAssimilator.data_timestamp.append(value)
+        DataHandler.data_timestamp.append(value)
 
     def createDataPath(self):
         self.date_string = datetime.now().strftime("%Y_%m%d_%H%M")
-        self.data_path_mission = os.getcwd() + "/Data/Pre_survey_data_on_" + self.date_string
-        f_pre = open("filepath_initial_survey.txt", 'w')
+        self.data_path_mission = os.getcwd() + "/Pre_survey/Data/Pre_survey_data_on_" + self.date_string
+        f_pre = open("Pre_survey/filepath_initial_survey.txt", 'w')
         f_pre.write(self.data_path_mission)
         f_pre.close()
         if not os.path.exists(self.data_path_mission):
@@ -64,11 +58,15 @@ class DataAssimilator(AUV):
         np.savetxt(self.data_path_mission + "/data_temperature.txt", self.data_temperature_saved, delimiter=", ")
         np.savetxt(self.data_path_mission + "/data_path.txt", self.data_path_waypoints_saved, delimiter=", ")
         np.savetxt(self.data_path_mission + "/data_timestamp.txt", self.data_timestamp_saved, delimiter=", ")
+        print("Data is saved successfully!")
 
     def vehpos2latlon(self, x, y, lat_origin, lon_origin):
         if lat_origin <= 10:
-            lat_origin = AUV.rad2deg(lat_origin)
-            lon_origin = AUV.rad2deg(lon_origin)
-        lat = lat_origin + AUV.rad2deg(x * np.pi * 2.0 / self.circumference)
-        lon = lon_origin + AUV.rad2deg(y * np.pi * 2.0 / (self.circumference * np.cos(AUV.deg2rad(lat))))
+            lat_origin = rad2deg(lat_origin)
+            lon_origin = rad2deg(lon_origin)
+        lat = lat_origin + rad2deg(x * np.pi * 2.0 / circumference)
+        lon = lon_origin + rad2deg(y * np.pi * 2.0 / (circumference * np.cos(deg2rad(lat))))
         return lat, lon
+
+
+
