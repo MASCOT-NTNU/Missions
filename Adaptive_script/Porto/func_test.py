@@ -1,15 +1,81 @@
+for i in range(a.sal_transect.shape[0]):
+    plt.plot(a.sal_transect[i, :])
+
+plt.show()
+for i in range(a.sal_transect.shape[0]):
+    plt.plot(np.gradient(a.sal_transect[i, :]))
+plt.show()
+
+
+
+#%%
 datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/Merged_all/South_Heavy_all.h5"
 import matplotlib.pyplot as plt
 import h5py
 import numpy as np
+circumference = 40075000 # [m], circumference
+
+def deg2rad(deg):
+    return deg / 180 * np.pi
+
+def rad2deg(rad):
+    return rad / np.pi * 180
+
+def latlon2xy(lat, lon, lat_origin, lon_origin):
+    x = deg2rad((lat - lat_origin)) / 2 / np.pi * circumference
+    y = deg2rad((lon - lon_origin)) / 2 / np.pi * circumference * np.cos(deg2rad(lat))
+    return x, y
+
+def xy2latlon(x, y, lat_origin, lon_origin):
+    lat = lat_origin + rad2deg(x * np.pi * 2.0 / circumference)
+    lon = lon_origin + rad2deg(y * np.pi * 2.0 / (circumference * np.cos(deg2rad(lat))))
+    return lat, lon
+
 
 data = h5py.File(datapath, 'r')
-lat = np.array(data.get("lat"))
-lon = np.array(data.get("lon"))
-depth = np.array(data.get("depth"))
-salinity = np.array(data.get("salinity"))
+lat = np.array(data.get("lat"))[:, :, 0].reshape(-1, 1)
+lon = np.array(data.get("lon"))[:, :, 0].reshape(-1, 1)
+depth = np.array(data.get("depth"))[:, :, 0].reshape(-1, 1)
+salinity = np.array(data.get("salinity"))[:, :, 0].reshape(-1, 1)
+
+lat_river_mouth, lon_river_mouth = 41.139024, -8.680089
+angles = np.arange(0, 110, 5) + 180
+
+r = 10000
+x = r * np.sin(deg2rad(angles))
+y = r * np.cos(deg2rad(angles))
+
+lat_end, lon_end = xy2latlon(x, y, lat_river_mouth, lon_river_mouth)
+plt.scatter(lon, lat, c = salinity, vmin = 10, vmax = 36, cmap = "Paired")
+plt.plot(lon_end, lat_end, 'k.')
+plt.colorbar()
+plt.show()
+
+npoints = 100
+lat_line = np.linspace(lat_river_mouth, lat_end, npoints)
+lon_line = np.linspace(lon_river_mouth, lon_end, npoints)
 
 
+def getDataIndAtLoc(loc):
+    lat_loc, lon_loc = loc
+    distLat = lat - lat_loc
+    distLon = lon - lon_loc
+    dist = np.sqrt(distLat ** 2 + distLon ** 2)
+    print(dist)
+    print(np.where(dist == np.nanmin(dist))[0])
+    ind_loc = np.where(dist == np.nanmin(dist))[0][0]
+    print(ind_loc)
+    return ind_loc
+
+ind = []
+for i in range(len(lat_line)):
+    ind.append(getDataIndAtLoc([lat_line[i, 0], lon_line[i, 0]]))
+
+sal_selected = salinity[ind]
+plt.plot(sal_selected)
+plt.show()
+
+#%%
 
 
 #%%
