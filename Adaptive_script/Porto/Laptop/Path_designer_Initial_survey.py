@@ -15,6 +15,8 @@ import os, sys
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
+from Adaptive_script.Porto.Laptop.usr_func import *
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams.update({'font.size': 12})
 plt.rcParams.update({'font.style': 'oblique'})
@@ -29,19 +31,33 @@ class PathDesigner:
     '''
     data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Exemplo_Douro/2021-09-14_2021-09-15/WaterProperties.hdf5"
     delft_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/Merged_all/"
-    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Polygon/fig/"
+    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Pre_survey/fig/"
     path_laptop = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Laptop/"
     path_onboard = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
     circumference = 40075000
-    debug = True
+    lat_river_mouth, lon_river_mouth = 41.139024, -8.680089
 
     def __init__(self, debug = False):
         self.debug = debug
-        self.GUI_query()
+        if self.debug:
+            self.DebugMode()
+        else:
+            self.GUI_query()
         self.load_all_data()
-        self.design_path_initial()
-        self.save_all()
-        self.checkPath()
+        self.compute_gradient()
+        # self.design_path_initial()
+        # self.save_all()
+        # self.checkPath()
+
+    def DebugMode(self):
+        self.string_date = "2021-09-23_2021-09-24"
+        self.string_hour = "05_12"
+        self.wind_dir = "North" # [North, East, West, South]
+        self.wind_level = "Moderate" # [Mild, Moderate, Heavy]
+        self.data_path = self.data_path[:81] + self.string_date + "/WaterProperties.hdf5"
+        print("Mission date: ", self.string_date)
+        print("Mission hour: ", self.string_hour)
+        print("Mission wind conditions: ", self.wind_dir + " " + self.wind_level)
 
     def GUI_query(self):
         layout = [[sg.Text('Please enter Mission date, ebb phase time duration, wind direction and wind speed')],
@@ -129,6 +145,74 @@ class PathDesigner:
         print("lon_delft: ", self.lon_delft3d.shape)
         print("salinity_delft: ", self.salinity_delft3d.shape)
 
+    def get_transect_lines(self):
+        angles = np.arange(0, 105, 25) + 180
+        r = 8000
+        npoints = 100
+        x = r * np.sin(deg2rad(angles))
+        y = r * np.cos(deg2rad(angles))
+        lat_end, lon_end = xy2latlon(x, y, self.lat_river_mouth, self.lon_river_mouth)
+        lat_line = np.linspace(self.lat_river_mouth, lat_end, npoints).T
+        lon_line = np.linspace(self.lon_river_mouth, lon_end, npoints).T
+        return lat_line, lon_line
+
+    def get_gradient_along_transect_line(self, lat_line, lon_line):
+        sal_transect = np.empty_like(lat_line)
+        for i in range(lat_line.shape[0]):
+            ind = []
+            for j in range(lat_line.shape[1]):
+                ind.append(self.getDataIndAtLoc([lat_line[i, j], lon_line[i, j]]))
+            sal_transect[i, :] = self.salinity_delft3d.reshape(-1, 1)[ind].squeeze()
+        self.sal_transect = sal_transect
+        # self.get_optimal_transect_line()
+        # self.plot_gradient_along_lines()
+
+    def get_optimal_transect_line(self):
+        sum_gradient = []
+        for i in range(self.sal_transect.shape[0]):
+            sum_gradient.append(np.sum(np.gradient(self.sal_transect[i, :])))
+        # print(sum_gradient)
+        self.sum_gradient = sum_gradient
+        print("The optimal line is ", np.where(self.sum_gradient == np.nanmin(self.sum_gradient))[0][0])
+        self.ind_optimal = np.where(self.sum_gradient == np.nanmin(self.sum_gradient))[0][0]
+
+    def plot_gradient_along_lines(self):
+        fig = plt.figure(figsize=(20, 5))
+        gs = GridSpec(ncols = 3, nrows = 1, figure = fig)
+        ax = fig.add_subplot(gs[0])
+        im = ax.scatter(self.lon_delft3d, self.lat_delft3d, c=self.salinity_delft3d, vmin=10, vmax=36, cmap="Paired")
+        plt.colorbar(im)
+        for i in range(self.lat_line.shape[0]):
+            ax.plot(self.lon_line[i, :], self.lat_line[i, :], label = str(i))
+        ax.plot(self.lon_line[self.ind_optimal, -1], self.lat_line[self.ind_optimal, -1], 'b*', markersize = 20, label = "Desired path")
+        ax.set_title("Salinity field for " + self.wind_dir + " " + self.wind_level)
+        ax.set(xlabel = "Lon [deg]", ylabel = "Lat [deg]")
+        ax = fig.add_subplot(gs[1])
+        for i in range(self.lat_line.shape[0]):
+            ax.plot(self.sal_transect[i, :], label = str(i))
+        ax.set_title("Salinity along the transect line for " + self.wind_dir + " " + self.wind_level)
+        ax.set(xlabel = "Distance along transect line", ylabel = "Salinity")
+        ax = fig.add_subplot(gs[2])
+        for i in range(self.lon_line.shape[0]):
+            ax.plot(np.gradient(self.sal_transect[i, :]), label = str(i))
+        ax.set_title("Salinity gradient along the transect line for " + self.wind_dir + " " + self.wind_level)
+        ax.set(xlabel="Distance along transect line", ylabel="Gradient")
+        lgd = plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        plt.savefig(self.figpath + "TL_" + self.wind_dir + "_" + self.wind_level + "_" + str(self.lat_line.shape[0]) + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
+        plt.close("all")
+        # plt.show()
+
+    def compute_gradient(self):
+        self.lat_line, self.lon_line = self.get_transect_lines()
+        self.get_gradient_along_transect_line(self.lat_line, self.lon_line)
+
+    def getDataIndAtLoc(self, loc):
+        lat_loc, lon_loc = loc
+        distLat = self.lat_delft3d.reshape(-1, 1) - lat_loc
+        distLon = self.lon_delft3d.reshape(-1, 1) - lon_loc
+        dist = np.sqrt(distLat ** 2 + distLon ** 2)
+        ind_loc = np.where(dist == np.nanmin(dist))[0][0]
+        return ind_loc
 
     def design_path_initial(self):
         print("This will plot the data on day " + self.string_date)
@@ -232,6 +316,6 @@ class PathDesigner:
         return x, y
 
 if __name__ == "__main__":
-    a = PathDesigner()
+    a = PathDesigner(debug = True)
 
 
