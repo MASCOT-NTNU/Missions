@@ -8,15 +8,19 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
+from Adaptive_script.Porto.Laptop.usr_func import *
+
+import datetime
 import simplekml
 import PySimpleGUI as sg
 import time
 import os, sys
 import h5py
 import numpy as np
+import plotly.graph_objects as go
+import plotly
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
-from Adaptive_script.Porto.Laptop.usr_func import *
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams.update({'font.size': 12})
 plt.rcParams.update({'font.style': 'oblique'})
@@ -36,6 +40,13 @@ class PathDesigner:
     path_onboard = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
     circumference = 40075000
     lat_river_mouth, lon_river_mouth = 41.139024, -8.680089
+    # pitch_angle_AUV = 15 # [deg] pitch angle for AUV, used for setting YoYo
+    distance_waypoint = 100 # [m], distance between each yoyo waypoint, no need to specify the angle
+    distance_total = 4000 # [m], total distance for yoyo
+    popup_interval = 10 # [min], interval between pop ups
+    depth_bottom = 5 # [m], bottom depth layer for yoyo
+    depth_top = 0.5 # [m], top depth layer for yoyo
+    speed = 1.2 # [m/s], speed for AUV
 
     def __init__(self, debug = False):
         self.debug = debug
@@ -133,7 +144,6 @@ class PathDesigner:
         t2 = time.time()
         print("Maretec data is loaded correctly, time consumed: ", t2 - t1)
 
-
     def loadDelft3D(self):
         delft3dpath = self.delft_path + self.wind_dir + "_" + self.wind_level + "_all.h5"
         delft3d = h5py.File(delft3dpath, 'r')
@@ -146,11 +156,11 @@ class PathDesigner:
         print("salinity_delft: ", self.salinity_delft3d.shape)
 
     def get_transect_lines(self):
-        angles = np.arange(0, 105, 25) + 180
+        self.angles = np.arange(0, 105, 5) + 180
         r = 8000
         npoints = 100
-        x = r * np.sin(deg2rad(angles))
-        y = r * np.cos(deg2rad(angles))
+        x = r * np.sin(deg2rad(self.angles))
+        y = r * np.cos(deg2rad(self.angles))
         lat_end, lon_end = xy2latlon(x, y, self.lat_river_mouth, self.lon_river_mouth)
         lat_line = np.linspace(self.lat_river_mouth, lat_end, npoints).T
         lon_line = np.linspace(self.lon_river_mouth, lon_end, npoints).T
@@ -164,8 +174,10 @@ class PathDesigner:
                 ind.append(self.getDataIndAtLoc([lat_line[i, j], lon_line[i, j]]))
             sal_transect[i, :] = self.salinity_delft3d.reshape(-1, 1)[ind].squeeze()
         self.sal_transect = sal_transect
-        # self.get_optimal_transect_line()
-        # self.plot_gradient_along_lines()
+        self.get_optimal_transect_line()
+        self.design_path_initial()
+        self.plot_gradient_along_lines()
+        self.checkPath()
 
     def get_optimal_transect_line(self):
         sum_gradient = []
@@ -185,6 +197,9 @@ class PathDesigner:
         for i in range(self.lat_line.shape[0]):
             ax.plot(self.lon_line[i, :], self.lat_line[i, :], label = str(i))
         ax.plot(self.lon_line[self.ind_optimal, -1], self.lat_line[self.ind_optimal, -1], 'b*', markersize = 20, label = "Desired path")
+        # ax.plot(self.lon_start, self.lat_start, "ks", markersize = 10)
+        # ax.plot(self.lon_end, self.lat_end, 'ks', markersize = 10)
+        ax.plot(self.lon_interval, self.lat_interval, 'k.')
         ax.set_title("Salinity field for " + self.wind_dir + " " + self.wind_level)
         ax.set(xlabel = "Lon [deg]", ylabel = "Lat [deg]")
         ax = fig.add_subplot(gs[1])
@@ -215,40 +230,36 @@ class PathDesigner:
         return ind_loc
 
     def design_path_initial(self):
-        print("This will plot the data on day " + self.string_date)
-        datapath = self.data_path[:81] + self.string_date + "/WaterProperties.hdf5"
-        hour_start = int(self.string_hour[:2])
-        hour_end = int(self.string_hour[3:])
-        self.data_path = datapath
-        plt.figure(figsize=(10, 10))
-        plt.scatter(self.lon_delft3d, self.lat_delft3d, c=self.salinity_delft3d, vmin=26, vmax=36, alpha=1,
-                    cmap="Paired")
-        plt.colorbar()
-        plt.axvline(-8.75267327, c = 'r') # ancher zone, boundary, cannot be on the left
-        plt.scatter(self.lon[:self.lon.shape[1], :], self.lat[:self.lon.shape[1], :],
-                    c=self.salinity[hour_start, :self.lon.shape[1], :], vmin=26, vmax=36, alpha = .25, cmap="Paired")
-        plt.scatter(self.lon[:self.lon.shape[1], :], self.lat[:self.lon.shape[1], :],
-                    c=self.salinity[hour_end, :self.lon.shape[1], :], vmin=26, vmax=36, alpha=.05, cmap="Paired")
-        plt.title("Surface salinity estimation from Maretec during " + self.data_path[81:102])
-        plt.xlabel("Lon [deg]")
-        plt.ylabel("Lat [deg]")
-        print("Please design the path, every second node will be pop up, use the yoyo pattern")
-        path_initialsurvey = plt.ginput(n=100, timeout = 0)  # wait for the click to select the polygon
-        plt.show()
-        self.path_initial_survey = []
-        for i in range(len(path_initialsurvey)):
-            if i % 2 == 0:
-                self.path_initial_survey.append([path_initialsurvey[i][1], path_initialsurvey[i][0], 0])
+        print("Now I will generate the initial YoYo path for preliminary survey")
+        self.lat_end, self.lon_end = self.lat_line[self.ind_optimal, -1], self.lon_line[self.ind_optimal, -1]
+        print("The end location is at: ", self.lat_end, self.lon_end)
+        self.angle_optimal = self.angles[self.ind_optimal] # convert it back to the Cartisen frame
+        x_temp = self.distance_total * np.sin(deg2rad(self.angle_optimal - 180))
+        y_temp = self.distance_total * np.cos(deg2rad(self.angle_optimal - 180))
+        self.lat_start, self.lon_start = xy2latlon(x_temp, y_temp, self.lat_end, self.lon_end) # starting location for yoyo
+        self.interval = np.arange(0, self.distance_total, self.distance_waypoint)
+        self.x_interval = self.interval * np.sin(deg2rad(self.angle_optimal))
+        self.y_interval = self.interval * np.cos(deg2rad(self.angle_optimal))
+        self.lat_interval, self.lon_interval = xy2latlon(self.x_interval, self.y_interval, self.lat_start, self.lon_start)
+
+        self.path = []
+        self.duration = self.popup_interval * 60 * self.speed
+        for i in range(len(self.lat_interval)):
+            if self.interval[i] % self.duration < 100:
+                self.path.append([self.lat_interval[i], self.lon_interval[i], 0])
             else:
-                self.path_initial_survey.append([path_initialsurvey[i][1], path_initialsurvey[i][0], 7]) # dive to 7 meters
-        self.path_initial_survey = np.array(self.path_initial_survey)
+                if i % 2 == 0:
+                    self.path.append([self.lat_interval[i], self.lon_interval[i], self.depth_top])
+                else:
+                    self.path.append([self.lat_interval[i], self.lon_interval[i], self.depth_bottom])
+        lat_finish, lon_finish = xy2latlon(-100, -100, self.lat_interval[-1], self.lon_interval[-1])
+        self.path.append([lat_finish, lon_finish, 0])
+        self.path_initial_survey = np.array(self.path)
         np.savetxt(self.path_onboard + "Config/path_initial_survey.txt", self.path_initial_survey, delimiter=", ")
         print("The initial survey path is designed successfully, path_initial_survey: ", self.path_initial_survey.shape)
         self.calculateDistacne()
 
-
     def calculateDistacne(self):
-        self.speed = 1.2
         self.lat_travel = self.path_initial_survey[:, 0]
         self.lon_travel = self.path_initial_survey[:, 1]
         self.depth_travel = self.path_initial_survey[:, 2]
@@ -264,7 +275,7 @@ class PathDesigner:
             self.lon_pre = self.lon_travel[i]
             self.depth_pre = self.depth_travel[i]
         print("Total distance needs to be travelled: ", dist)
-        print("Time estimated: ", dist / self.speed)
+        print("Time estimated: ", str(datetime.timedelta(seconds = dist / self.speed)))
 
 
     def saveKML(self):
@@ -291,15 +302,22 @@ class PathDesigner:
         print("wind_condition is saved successfully!")
 
     def checkPath(self):
-        plt.figure(figsize=(10, 10))
-        plt.plot(self.path_initial_survey[:, 1], self.path_initial_survey[:, 0], 'k-', label = "Initial Survey Path")
-        plt.plot(self.path_initial_survey[0:-1:2, 1], self.path_initial_survey[0:-1:2, 0], 'b*', label = "Surfacing")
-        plt.plot(self.path_initial_survey[1:-1:2, 1], self.path_initial_survey[1:-1:2, 0], 'g*', label = "Diving")
-        plt.title("Initial path visualisation")
-        plt.xlabel("Lon [deg]")
-        plt.ylabel("Lat [deg]")
-        plt.legend()
-        plt.show()
+        fig = go.Figure(data=[go.Scatter3d(x=self.path_initial_survey[:, 1], y=self.path_initial_survey[:, 0],
+                                       z=-self.path_initial_survey[:, 2],
+                                       marker=dict(size=12, color = "black"),line=dict(color='darkblue',width=2),)])
+        fig.update_layout(
+            scene={
+                'aspectmode': 'manual',
+                'xaxis_title': 'Lon [deg]',
+                'yaxis_title': 'Lat [deg]',
+                'zaxis_title': 'Depth [m]',
+                'aspectratio': dict(x=1, y=1, z=.5),
+            },
+            showlegend=True,
+            title="Initial survey path visualisation",
+        )
+        fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+        plotly.offline.plot(fig, filename=self.figpath + "Path.html", auto_open=True)
 
     @staticmethod
     def deg2rad(deg):
