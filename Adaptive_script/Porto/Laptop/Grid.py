@@ -308,6 +308,7 @@ class GridPoly(WaypointNode):
 
 
 if __name__ == "__main__":
+    # polygon = np.array([[0, 0]])
     grid = GridPoly()
 
 

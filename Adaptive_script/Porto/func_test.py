@@ -1,10 +1,45 @@
-for i in range(a.sal_transect.shape[0]):
-    plt.plot(a.sal_transect[i, :])
+import numpy as np
+import matplotlib.pyplot as plt
+
+r = 1000
+nloc = 100
+theta = np.linspace(0, np.pi * 2, nloc)
+x = r * np.sin(theta)
+y = r * np.cos(theta)
+plt.figure(figsize = (5, 5))
+plt.plot(y, x, 'k.')
 
 plt.show()
-for i in range(a.sal_transect.shape[0]):
-    plt.plot(np.gradient(a.sal_transect[i, :]))
-plt.show()
+area = np.pi * r ** 2 / 1e6
+print("Area: ", area, " km2")
+
+from Adaptive_script.Porto.Laptop.usr_func import *
+
+class CircleHandler:
+    lat_center, lon_center = 41.061874, -8.650977
+    radius = 1000
+    npoints = 100
+
+    def __init__(self):
+        print("Hello world")
+        self.getxy()
+        self.getCircle()
+        self.checkCircle()
+
+    def getxy(self):
+        self.theta = np.linspace(0, np.pi * 2, self.npoints)
+        self.x = self.radius * np.sin(self.theta)
+        self.y = self.radius * np.cos(self.theta)
+
+    def getCircle(self):
+        self.lat_circle, self.lon_circle = xy2latlon(self.x, self.y, self.lat_center, self.lon_center)
+
+    def checkCircle(self):
+        plt.figure(figsize = (5, 5))
+        plt.plot(self.lon_circle, self.lat_circle, 'k.')
+        plt.show()
+
+a = CircleHandler()
 
 
 
