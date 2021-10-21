@@ -3,7 +3,7 @@ import numpy as np
 import time
 
 
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Nov2019_sal_1.h5"
+datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Merged/Merged_North_Mild_2019_sal_2.h5"
 t1 = time.time()
 data = h5py.File(datapath, 'r')
 lat = np.array(data.get("lat"))
