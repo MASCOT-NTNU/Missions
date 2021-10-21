@@ -355,7 +355,6 @@ class DataHandler_Delft3D:
         if self.voiceControl:
             os.system("say Finished plotting time series")
 
-
     def plotscatter3D(self, layers, frame = -1, camera = dict(x=-1.25, y=-1.25, z=1.25)):
         import plotly.express as px
         if self.voiceControl:
