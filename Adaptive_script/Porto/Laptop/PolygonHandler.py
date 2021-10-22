@@ -8,14 +8,11 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
-# from usr_func import *
-import numpy as np
 
 from Adaptive_script.Porto.Laptop.usr_func import *
 import matplotlib.pyplot as plt
 
 class PolygonCircle:
-    path_onboard = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
     lat_center, lon_center = 41.061874, -8.650977 # center of the circular polygon
     radius = 1000 # radius of the polygon
     npoints = 200 # boundary points
@@ -41,11 +38,6 @@ class PolygonCircle:
         print("Polygon shape: ", self.npoints)
         self.getxy()
         self.getCircle()
-        print("Circular polygon is generated successfully!")
-        print("Now I will save it...")
-        np.savetxt(self.path_onboard + "Config/polygon.txt",
-                   np.hstack((self.lat_circle.reshape(-1, 1), self.lon_circle.reshape(-1, 1))), delimiter=", ")
-        print("polygon.txt is saved successfully! ", self.path_onboard + 'Config/polygon.txt')
 
     def getxy(self):
         self.theta = np.linspace(0, np.pi * 2, self.npoints)
@@ -62,9 +54,6 @@ class PolygonCircle:
 
 if __name__ == "__main__":
     a = PolygonCircle()
-    a.getCircularPolygon(0, 0, 1500)
-    a.checkCircle()
-
 
 
 

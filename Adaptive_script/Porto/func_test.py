@@ -1,6 +1,40 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+# data = np.loadtxt("Adaptive_script/Porto/Onboard/Data/Delft3D_North_Moderate.txt", delimiter = ", ")
+data = np.loadtxt("Adaptive_script/Porto/Onboard/Config/OperationArea.txt", delimiter = ", ")
+# lat = data[:, 0]
+# lon = data[:, 1]
+# depth = data[:, 2]
+# salinity = data[:, 3]
+# plt.scatter(lon, lat, c = salinity, cmap = "Paired")
+# plt.colorbar()
+# plt.show()
+plt.plot(data[:, 1], data[:, 0], 'k-.')
+plt.show()
+
+# import simplekml
+# def saveKML():
+#     print("I will create a polygon kml file for importing...")
+#     with open("Adaptive_script/Porto/Onboard/Config/OperationArea.txt", "r") as a_file:
+#         points = []
+#         for line in a_file:
+#             stripped_line = line.strip()
+#             coordinates = stripped_line.split(",")
+#             points.append((coordinates[1], coordinates[0]))
+#     kml = simplekml.Kml()
+#     pol = kml.newpolygon(name='A Polygon')
+#     pol.outerboundaryis = points
+#     pol.innerboundaryis = points
+#     kml.save("Adaptive_script/Porto/Onboard/Import/Polygon.kml")
+#     print("Polygon.kml is created successfully")
+# saveKML()
+
+
+#%%
+import numpy as np
+import matplotlib.pyplot as plt
+
 r = 1000
 nloc = 100
 theta = np.linspace(0, np.pi * 2, nloc)

@@ -38,6 +38,7 @@ class PathDesigner:
     figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Pre_survey/fig/"
     path_laptop = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Laptop/"
     path_onboard = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
+    path_operational_area = path_onboard + "Config/OperationArea.txt"
     circumference = 40075000
     lat_river_mouth, lon_river_mouth = 41.139024, -8.680089
     # pitch_angle_AUV = 15 # [deg] pitch angle for AUV, used for setting YoYo
@@ -54,16 +55,17 @@ class PathDesigner:
             self.DebugMode()
         else:
             self.GUI_query()
-        self.load_all_data()
-        self.compute_gradient()
-        # self.design_path_initial()
-        # self.save_all()
-        # self.checkPath()
+        self.load_all_data() # load all the essential data
+        self.compute_gradient() # compute the gradient along
+        self.get_optimal_transect_line() # get the optimal transect line
+        self.design_path_initial() # design the optimal path
+        self.plot_gradient_along_lines() # plot the gradient along designed lines
+        # self.checkPath() # check those path to plot them on scatter 3d plot
 
     def DebugMode(self):
         self.string_date = "2021-09-23_2021-09-24"
         self.string_hour = "05_12"
-        self.wind_dir = "East" # [North, East, West, South]
+        self.wind_dir = "South" # [North, East, West, South]
         self.wind_level = "Heavy" # [Mild, Moderate, Heavy]
         self.data_path = self.data_path[:81] + self.string_date + "/WaterProperties.hdf5"
         print("Mission date: ", self.string_date)
@@ -118,12 +120,18 @@ class PathDesigner:
 
 
     def load_all_data(self):
+        self.load_operational_area()
         self.loaddata_maretec()
         self.loadDelft3D()
 
     def save_all(self):
         self.save_wind_condition()
         self.saveKML()
+
+    def load_operational_area(self):
+        print("Now I will load the operational area. ")
+        self.OpArea = np.loadtxt(self.path_operational_area, delimiter=", ")
+        print("Loading operational area successfully! ")
 
     def loaddata_maretec(self):
         print("Now it will load the Maretec data...")
@@ -145,6 +153,7 @@ class PathDesigner:
         print("Maretec data is loaded correctly, time consumed: ", t2 - t1)
 
     def loadDelft3D(self):
+        print(self.delft_path)
         delft3dpath = self.delft_path + self.wind_dir + "_" + self.wind_level + "_all.h5"
         delft3d = h5py.File(delft3dpath, 'r')
         self.lat_delft3d = np.array(delft3d.get("lat"))[:, :, 0]
@@ -154,10 +163,25 @@ class PathDesigner:
         print("lat_delft: ", self.lat_delft3d.shape)
         print("lon_delft: ", self.lon_delft3d.shape)
         print("salinity_delft: ", self.salinity_delft3d.shape)
+        self.export_h5data2txt()
+
+    def export_h5data2txt(self):
+        print("Now I will export h5 file to txt.")
+        t1 = time.time()
+        delft3dpath = self.delft_path + self.wind_dir + "_" + self.wind_level + "_all.h5"
+        delft3d = h5py.File(delft3dpath, 'r')
+        self.lat_export = np.array(delft3d.get("lat")).reshape(-1, 1)
+        self.lon_export = np.array(delft3d.get("lon")).reshape(-1, 1)
+        self.depth_export = np.array(delft3d.get("depth")).reshape(-1, 1)
+        self.salinity_export = np.array(delft3d.get("salinity")).reshape(-1, 1)
+        self.dataset_export = np.hstack((self.lat_export, self.lon_export, self.depth_export, self.salinity_export))
+        np.savetxt(self.path_onboard + "Data/" + "Delft3D_" + self.wind_dir + "_" + self.wind_level + ".txt", self.dataset_export, delimiter = ", ")
+        t2 = time.time()
+        print("Onboard Delft3D Data is created successfully! Time consumed: ", t2 - t1)
 
     def get_transect_lines(self):
-        self.angles = np.arange(0, 105, 5) + 180
-        r = 8000
+        self.angles = np.arange(40, 75, 5) + 180
+        r = 10000
         npoints = 100
         x = r * np.sin(deg2rad(self.angles))
         y = r * np.cos(deg2rad(self.angles))
@@ -174,10 +198,6 @@ class PathDesigner:
                 ind.append(self.getDataIndAtLoc([lat_line[i, j], lon_line[i, j]]))
             sal_transect[i, :] = self.salinity_delft3d.reshape(-1, 1)[ind].squeeze()
         self.sal_transect = sal_transect
-        self.get_optimal_transect_line()
-        self.design_path_initial()
-        self.plot_gradient_along_lines()
-        self.checkPath()
 
     def get_optimal_transect_line(self):
         sum_gradient = []
@@ -196,6 +216,7 @@ class PathDesigner:
         plt.colorbar(im)
         for i in range(self.lat_line.shape[0]):
             ax.plot(self.lon_line[i, :], self.lat_line[i, :], label = str(i))
+        ax.plot(self.OpArea[:, 1], self.OpArea[:, 0], 'k-.', label = "Operational Region")
         ax.plot(self.lon_line[self.ind_optimal, -1], self.lat_line[self.ind_optimal, -1], 'b*', markersize = 20, label = "Desired path")
         # ax.plot(self.lon_start, self.lat_start, "ks", markersize = 10)
         # ax.plot(self.lon_end, self.lat_end, 'ks', markersize = 10)
@@ -268,7 +289,7 @@ class PathDesigner:
         self.depth_pre = self.depth_travel[0]
         dist = 0
         for i in range(len(self.lat_travel)):
-            x_temp, y_temp = self.latlon2xy(self.lat_travel[i], self.lon_travel[i], self.lat_pre, self.lon_pre)
+            x_temp, y_temp = latlon2xy(self.lat_travel[i], self.lon_travel[i], self.lat_pre, self.lon_pre)
             distZ = self.depth_travel[i] - self.depth_pre
             dist = dist + np.sqrt(x_temp ** 2 + y_temp ** 2 + distZ ** 2)
             self.lat_pre = self.lat_travel[i]
@@ -319,19 +340,6 @@ class PathDesigner:
         fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
         plotly.offline.plot(fig, filename=self.figpath + "Path.html", auto_open=True)
 
-    @staticmethod
-    def deg2rad(deg):
-        return deg / 180 * np.pi
-
-    @staticmethod
-    def rad2deg(rad):
-        return rad / np.pi * 180
-
-    @staticmethod
-    def latlon2xy(lat, lon, lat_origin, lon_origin):
-        x = PathDesigner.deg2rad((lat - lat_origin)) / 2 / np.pi * PathDesigner.circumference
-        y = PathDesigner.deg2rad((lon - lon_origin)) / 2 / np.pi * PathDesigner.circumference * np.cos(PathDesigner.deg2rad(lat))
-        return x, y
 
 if __name__ == "__main__":
     a = PathDesigner(debug = True)
