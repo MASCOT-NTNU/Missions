@@ -8,16 +8,10 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
-import numpy as np
 import rospy
 from auv_handler import AuvHandler
 import imc_ros_interface
 from imc_ros_interface.msg import Temperature, Salinity, EstimatedState, Sms
-import time
-import os
-from pathlib import Path
-from datetime import datetime
-from AUV import AUV
 
 class MessageHandler:
     phone_number = "+351969459285"

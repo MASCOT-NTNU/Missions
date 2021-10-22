@@ -36,10 +36,10 @@ class DataHandler:
     def append_timestamp(self, value):
         DataHandler.data_timestamp.append(value)
 
-    def createDataPath(self):
+    def createDataPath(self, path_global):
         self.date_string = datetime.now().strftime("%Y_%m%d_%H%M")
-        self.data_path_mission = os.getcwd() + "/Pre_survey/Data/Pre_survey_data_on_" + self.date_string
-        f_pre = open("Pre_survey/filepath_initial_survey.txt", 'w')
+        self.data_path_mission = path_global + "/Data/Pre_survey/Pre_survey_data_on_" + self.date_string
+        f_pre = open(path_global + "/Config/filepath_initial_survey.txt", 'w')
         f_pre.write(self.data_path_mission)
         f_pre.close()
         if not os.path.exists(self.data_path_mission):

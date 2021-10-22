@@ -22,3 +22,4 @@ import matplotlib.pyplot as plt
 plt.scatter(lon[:, :, 0], lat[:, :, 0], c = salinity[:, :, 0], cmap = "Paired")
 plt.colorbar()
 plt.show()
+
