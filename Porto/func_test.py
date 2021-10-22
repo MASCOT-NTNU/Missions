@@ -13,6 +13,8 @@ salinity = np.array(data.get("salinity"))
 t2 = time.time()
 print("Time consuemed: ", t2 - t1)
 
+
+
 #%%
 print(lat.shape)
 print(salinity.shape)
