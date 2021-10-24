@@ -57,6 +57,7 @@ class PostProcessor:
         print("wind_level: ", self.wind_level)
 
     def load_prior(self):
+        self.load_windcondition()
         self.prior_data = np.loadtxt(self.path_global + "/Data/Prior/Delft3D_" + self.wind_dir + "_" + self.wind_level + ".txt", delimiter=", ")
         self.lat_prior = self.prior_data[:, 0]
         self.lon_prior = self.prior_data[:, 1]
@@ -113,3 +114,6 @@ class PostProcessor:
             path.mkdir(parents = True, exist_ok=True)
         else:
             print("Folder is already existing, no need to create! ")
+
+if __name__ == "__main__":
+    a = PostProcessor()

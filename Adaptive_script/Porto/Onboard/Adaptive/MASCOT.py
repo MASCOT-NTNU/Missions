@@ -8,139 +8,22 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
-import rospy
-import numpy as np
-from scipy.stats import mvn, norm
-from auv_handler import AuvHandler
-import imc_ros_interface
-from imc_ros_interface.msg import Temperature, Salinity, EstimatedState, Sms
+
 import time
 import os
-from pathlib import Path
 from datetime import datetime
+from scipy.stats import mvn, norm
+from DataHandler import DataHandler
+from AUV import AUV
+import rospy
+from auv_handler import AuvHandler
+from imc_ros_interface.msg import Temperature, Salinity, EstimatedState, Sms
+from usr_func import *
 
 
-class AUV:
-    circumference = 40075000  # circumference of the earth, [m]
-    lat_origin, lon_origin = 41.061874, -8.650977  # origin location
-    distance_poly = 100  # [m], distance between two neighbouring points
-    depth_obs = [-.5, -1.25, -2] # [m], distance in depth, depth to be explored
-    distanceTolerance = .1  # [m], distance tolerance for the neighbouring points
-    def __init__(self):
-        self.node_name = 'MASCOT'
-        rospy.init_node(self.node_name, anonymous=True)
-        self.rate = rospy.Rate(1)  # 1Hz
-        self.auv_handler = AuvHandler(self.node_name, "MASCOT")
-
-        rospy.Subscriber("/Vehicle/Out/Temperature_filtered", Temperature, self.TemperatureCB)
-        rospy.Subscriber("/Vehicle/Out/Salinity_filtered", Salinity, self.SalinityCB)
-        rospy.Subscriber("/Vehicle/Out/EstimatedState_filtered", EstimatedState, self.EstimatedStateCB)
-
-        self.speed = 1.2  # m/s
-        self.depth = 0.0  # meters
-        self.last_state = "unavailable"
-        self.rate.sleep()
-        self.init = True
-        self.currentTemperature = 0.0
-        self.currentSalinity = 0.0
-        self.vehicle_pos = [0, 0, 0]
-
-        self.sms_pub_ = rospy.Publisher("/IMC/In/Sms", Sms, queue_size = 10)
-        self.phone_number = "+351969459285"
-        # self.phone_number = "+4792526858"
-
-    def TemperatureCB(self, msg):
-        self.currentTemperature = msg.value.data
-
-    def SalinityCB(self, msg):
-        self.currentSalinity = msg.value.data
-
-    def EstimatedStateCB(self, msg):
-        offset_north = msg.lat.data - AUV.deg2rad(self.lat_origin)
-        offset_east = msg.lon.data - AUV.deg2rad(self.lon_origin)
-        N = offset_north * self.circumference / (2.0 * np.pi)
-        E = offset_east * self.circumference * np.cos(AUV.deg2rad(self.lat_origin)) / (2.0 * np.pi)
-        D = msg.z.data
-        self.vehicle_pos = [N, E, D]
-
-    @staticmethod
-    def deg2rad(deg):
-        return deg / 180 * np.pi
-
-    @staticmethod
-    def rad2deg(rad):
-        return rad / np.pi * 180
-
-    @staticmethod
-    def latlon2xy(lat, lon, lat_origin, lon_origin):
-        x = AUV.deg2rad((lat - lat_origin)) / 2 / np.pi * AUV.circumference
-        y = AUV.deg2rad((lon - lon_origin)) / 2 / np.pi * AUV.circumference * np.cos(AUV.deg2rad(lat))
-        return x, y
-
-    @staticmethod
-    def xy2latlon(x, y, lat_origin, lon_origin):
-        lat = lat_origin + AUV.rad2deg(x * np.pi * 2.0 / AUV.circumference)
-        lon = lon_origin + AUV.rad2deg(y * np.pi * 2.0 / (AUV.circumference * np.cos(AUV.deg2rad(lat))))
-        return lat, lon
-
-
-class DataAssimilator(AUV):
-    data_salinity = []
-    data_temperature = []
-    data_path_waypoints = []
-    data_timestamp = []
-
-    def __init__(self):
-        AUV.__init__(self)
-        print("Data collector is initialised correctly")
-
-    def append_salinity(self, value):
-        DataAssimilator.data_salinity.append(value)
-
-    def append_temperature(self, value):
-        DataAssimilator.data_temperature.append(value)
-
-    def append_path(self, value):
-        DataAssimilator.data_path_waypoints.append(value)
-
-    def append_timestamp(self, value):
-        DataAssimilator.data_timestamp.append(value)
-
-    def createDataPath(self):
-        self.date_string = datetime.now().strftime("%Y_%m%d_%H%M")
-        self.data_path_mission = os.getcwd() + "/Data/MissionData_on" + self.date_string
-        f_pre = open("filepath_missiondata.txt", 'w')
-        f_pre.write(self.data_path_mission)
-        f_pre.close()
-        if not os.path.exists(self.data_path_mission):
-            print("New data path is created: ", self.data_path_mission)
-            path = Path(self.data_path_mission)
-            path.mkdir(parents = True, exist_ok=True)
-        else:
-            print("Folder is already existing, no need to create! ")
-
-    def save_data(self):
-        self.data_salinity_saved = np.array(self.data_salinity).reshape(-1, 1)
-        self.data_temperature_saved = np.array(self.data_temperature).reshape(-1, 1)
-        self.data_path_waypoints_saved = np.array(self.data_path_waypoints).reshape(-1, 3)
-        self.data_timestamp_saved = np.array(self.data_timestamp).reshape(-1, 1)
-        np.savetxt(self.data_path_mission + "/data_salinity.txt", self.data_salinity_saved, delimiter=", ")
-        np.savetxt(self.data_path_mission + "/data_temperature.txt", self.data_temperature_saved, delimiter=", ")
-        np.savetxt(self.data_path_mission + "/data_path.txt", self.data_path_waypoints_saved, delimiter=", ")
-        np.savetxt(self.data_path_mission + "/data_timestamp.txt", self.data_timestamp_saved, delimiter=", ")
-
-    def vehpos2latlon(self, x, y, lat_origin, lon_origin):
-        if lat_origin <= 10:
-            lat_origin = AUV.rad2deg(lat_origin)
-            lon_origin = AUV.rad2deg(lon_origin)
-        lat = lat_origin + AUV.rad2deg(x * np.pi * 2.0 / self.circumference)
-        lon = lon_origin + AUV.rad2deg(y * np.pi * 2.0 / (self.circumference * np.cos(AUV.deg2rad(lat))))
-        return lat, lon
-
-
-class PathPlanner_Polygon(DataAssimilator):
+class MASCOT(AUV, DataHandler):
     ind_start, ind_now, ind_pre, ind_cand, ind_next = [0, 0, 0, 0, 0]  # only use index to make sure it is working properly
-    mu_cond, Sigma_cond, F = [None, None, None]  # conditional mean
+    mu_cond, Sigma_cond, F = [None, None, None]  # conditional mean and covariance and design matrix
     mu_prior, Sigma_prior = [None, None]  # prior mean and covariance matrix
     travelled_waypoints = None  # track how many waypoins have been explored
     data_path_waypoint = []  # save the waypoint to compare
@@ -149,22 +32,32 @@ class PathPlanner_Polygon(DataAssimilator):
     data_path_depth = []  # waypoint depth
     Total_waypoints = 60  # total number of waypoints to be explored
     counter_plot_simulation = 0  # track the plot, will be deleted
-    distance_neighbours = np.sqrt(AUV.distance_poly ** 2 + (AUV.depth_obs[1] - AUV.depth_obs[0]) ** 2)
+    distance_poly = 100  # [m], distance between two neighbouring points
+    depth_obs = [-.5, -1.25, -2]  # [m], distance in depth, depth to be explored
+    distanceTolerance = .1  # [m], distance tolerance for the neighbouring points
+    distance_neighbours = np.sqrt(distance_poly ** 2 + (depth_obs[1] - depth_obs[0]) ** 2)
 
     def __init__(self):
-        DataAssimilator.__init__(self)
+        AUV.__init__(self)
         print("range of neighbours: ", self.distance_neighbours)
+        self.load_global_path()
         self.load_prior()
         self.travelled_waypoints = 0
         self.move_to_starting_loc()
         self.run()
 
+    def load_global_path(self):
+        print("Now it will load the global path.")
+        self.path_global = open("path_global.txt", 'r').read()
+        print("global path is set up successfully!")
+        print(self.path_global)
+
     def load_prior(self):
-        self.prior_corrected_path = "prior_corrected.txt"
-        self.sigma_path = "Sigma_sal.txt"
-        self.threshold_path = "Threshold_S.txt"
-        self.R_sal_path = "R_sal.txt"
-        self.data_prior = np.loadtxt(self.prior_corrected_path, delimiter=", ")
+        self.prior_extracted_path = self.path_global + "/Data/Corrected/Prior_extracted.txt"
+        self.sigma_path = self.path_global + "/Config/Sigma_sal.txt"
+        self.threshold_path = self.path_global + "/Config/threshold.txt"
+        self.R_sal_path = self.path_global + "/Config/R_sal.txt"
+        self.data_prior = np.loadtxt(self.prior_extracted_path, delimiter=", ")
         self.lat_loc = self.data_prior[:, 0]
         self.lon_loc = self.data_prior[:, 1]
         self.depth_loc = self.data_prior[:, 2]
@@ -184,6 +77,46 @@ class PathPlanner_Polygon(DataAssimilator):
         print("Threshold: ", self.Threshold_S)
         print("R_sal: ", self.R_sal)
         print("N: ", self.N)
+
+    def check_pause(self):
+        self.get_resume_state()
+        if self.resume == 'False':
+            self.paused = False
+            self.save_counter_waypoint()
+            self.get_counter_waypoint()
+            print("Mission is started successfully!")
+        else:
+            self.paused = True
+            self.get_counter_waypoint()
+            print("Mission is resumed successfully!")
+        print("Resume state:", self.resume)
+
+    def get_resume_state(self):
+        print("Loading resume state...")
+        if not os.path.exists(self.path_global + "/Config/ResumeState.txt"):
+            self.save_resume_state()
+        else:
+            self.resume = open(self.path_global + "/Config/ResumeState.txt", 'r').read()
+        print("Loading resume state successfully! Resume state: ", self.resume)
+
+    def save_resume_state(self, resume_state='False'):
+        print("Saving resume state...")
+        fresume_state = open(self.path_global + "/Config/ResumeState.txt", 'w')
+        fresume_state.write(resume_state)
+        fresume_state.close()
+        print("Resume state is saved successfully!" + resume_state)
+
+    def save_counter_waypoint(self):
+        print("Saving counter waypoint...")
+        with open(self.path_global + "/Config/counter_waypoint.txt", 'w') as f:
+            f.write('%d' % self.counter_waypoint)
+        f.close()
+        print("Counter waypoint is saved! ", self.counter_waypoint)
+
+    def get_counter_waypoint(self):
+        print("Loading counter waypoint...")
+        self.counter_waypoint = int(open(self.path_global + "/Config/counter_waypoint.txt", 'r').read())
+        print("counter waypoint is loaded successfully! ", self.counter_waypoint)
 
     def updateF(self, ind):
         self.F = np.zeros([1, self.N])
@@ -205,26 +138,25 @@ class PathPlanner_Polygon(DataAssimilator):
         self.updateF(self.ind_next)
         self.data_path_lat.append(self.lat_loc[self.ind_start])
         self.data_path_lon.append(self.lon_loc[self.ind_start])
-        self.auv_handler.setWaypoint(self.deg2rad(self.lat_loc[self.ind_start]), self.deg2rad(self.lon_loc[self.ind_start]), -self.depth_loc[self.ind_start])
+        self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),
+                                     deg2rad(self.lon_loc[self.ind_start]), -self.depth_loc[self.ind_start])
         self.updateWaypoint()
 
     def find_candidates_loc(self):
         '''
         find the candidates location based on distance coverage
         '''
-        delta_x, delta_y = self.latlon2xy(self.lat_loc, self.lon_loc, self.lat_loc[self.ind_now],
+        delta_x, delta_y = latlon2xy(self.lat_loc, self.lon_loc, self.lat_loc[self.ind_now],
                                           self.lon_loc[self.ind_now])  # using the distance
         delta_z = self.depth_loc - self.depth_loc[self.ind_now]  # depth distance in z-direction
         self.distance_vector = np.sqrt(delta_x ** 2 + delta_y ** 2 + delta_z ** 2)
         self.ind_cand = np.where(self.distance_vector <= self.distance_neighbours + self.distanceTolerance)[0]
 
     def GPupd(self, y_sampled):
-        t1 = time.time()
         C = self.F @ self.Sigma_cond @ self.F.T + self.R_sal
         self.mu_cond = self.mu_cond + self.Sigma_cond @ self.F.T @ np.linalg.solve(C,
                                                                                    (y_sampled - self.F @ self.mu_cond))
-        self.Sigma_cond = self.Sigma_cond - self.Sigma_cond @ self.F.T @ np.linalg.solve(C, self.F @ self.Sigma_cond)
-        t2 = time.time()
+        self.Sigma_cond = self.Sigma_cond - self.Sigma_cond @ self.F.T @ np.linalg.solve(C, self.F @ self.Sigma_cond)        
 
     def EIBV_1D(self, threshold, mu, Sig, F, R):
         Sigxi = Sig @ F.T @ np.linalg.solve(F @ Sig @ F.T + R, F @ Sig)
@@ -240,7 +172,7 @@ class PathPlanner_Polygon(DataAssimilator):
     def find_next_EIBV_1D(self, mu, Sig):
         id = []  # ind vector for containing the filtered desired candidate location
         t1 = time.time()
-        dx1, dy1 = self.latlon2xy(self.lat_loc[self.ind_now], self.lon_loc[self.ind_now], self.lat_loc[self.ind_pre],
+        dx1, dy1 = latlon2xy(self.lat_loc[self.ind_now], self.lon_loc[self.ind_now], self.lat_loc[self.ind_pre],
                                   self.lon_loc[self.ind_pre])
         dz1 = self.depth_loc[self.ind_now] - self.depth_loc[self.ind_pre]
         lat_cand_plot = []
@@ -249,7 +181,7 @@ class PathPlanner_Polygon(DataAssimilator):
         vec1 = np.array([dx1, dy1, dz1]).squeeze()
         for i in range(len(self.ind_cand)):
             if self.ind_cand[i] != self.ind_now:
-                dx2, dy2 = self.latlon2xy(self.lat_loc[self.ind_cand[i]], self.lon_loc[self.ind_cand[i]],
+                dx2, dy2 = latlon2xy(self.lat_loc[self.ind_cand[i]], self.lon_loc[self.ind_cand[i]],
                                           self.lat_loc[self.ind_now], self.lon_loc[self.ind_now])
                 dz2 = self.depth_loc[self.ind_cand[i]] - self.depth_loc[self.ind_now]
                 vec2 = np.array([dx2, dy2, dz2]).squeeze()
@@ -328,8 +260,8 @@ class PathPlanner_Polygon(DataAssimilator):
             self.append_mission_data()
             self.save_mission_data()
             print("Sleep {:d} seconds".format(i))
-            self.auv_handler.setWaypoint(self.deg2rad(self.lat_loc[self.ind_pre]),
-                                         self.deg2rad(self.lon_loc[self.ind_pre]),
+            self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_pre]),
+                                         deg2rad(self.lon_loc[self.ind_pre]),
                                          0)
             self.auv_handler.spin()  # publishes the reference, stay on the surface
             self.rate.sleep()  #
@@ -358,14 +290,14 @@ class PathPlanner_Polygon(DataAssimilator):
                 self.append_mission_data()
                 self.save_mission_data()
                 print("Sleep {:d} seconds".format(i))
-                self.auv_handler.setWaypoint(self.deg2rad(self.lat_loc[self.ind_start]),
-                                             self.deg2rad(self.lon_loc[self.ind_start]),
+                self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),
+                                             deg2rad(self.lon_loc[self.ind_start]),
                                              0)
                 self.auv_handler.spin()  # publishes the reference, stay on the surface
                 self.rate.sleep()  #
             self.t1 = self.t2
-        self.auv_handler.setWaypoint(self.deg2rad(self.lat_loc[self.ind_start]),
-                                     self.deg2rad(self.lon_loc[self.ind_start]), -self.depth_loc[self.ind_start])
+        self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),
+                                     deg2rad(self.lon_loc[self.ind_start]), -self.depth_loc[self.ind_start])
         print("moving to the starting location")
 
     def send_next_waypoint(self):
@@ -381,15 +313,15 @@ class PathPlanner_Polygon(DataAssimilator):
                 print("Less than 10 mins, need a shorter break")
                 self.surfacing(30) # surfacing 30 seconds
 
-        self.auv_handler.setWaypoint(self.deg2rad(self.lat_loc[self.ind_next]),
-                                     self.deg2rad(self.lon_loc[self.ind_next]),
+        self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_next]),
+                                     deg2rad(self.lon_loc[self.ind_next]),
                                      -self.depth_loc[self.ind_next])
-        print("next waypoint", self.deg2rad(self.lat_loc[self.ind_next]),
-                               self.deg2rad(self.lon_loc[self.ind_next]),
+        print("next waypoint", deg2rad(self.lat_loc[self.ind_next]),
+                               deg2rad(self.lon_loc[self.ind_next]),
                                -self.depth_loc[self.ind_next])
 
     def run(self):
-        self.createDataPath()
+        self.createDataPath(self.path_global)
         self.t1 = time.time()
         self.counter_waypoint = 0
         self.counter_data_saved = 0
@@ -423,6 +355,6 @@ class PathPlanner_Polygon(DataAssimilator):
             self.rate.sleep()
 
 if __name__ == "__main__":
-    a = PathPlanner_Polygon()
+    a = MASCOT()
     print("Mission complete!!!")
 

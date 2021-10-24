@@ -17,13 +17,16 @@ import matplotlib.pyplot as plt
 class PolygonCircle:
 
     lat_center, lon_center = 41.061874, -8.650977 # center of the circular polygon
-    radius = 1000 # radius of the polygon
+    radius = 1400 # radius of the polygon
     npoints = 200 # boundary points
 
     def __init__(self):
         print("Circular Polygon Generator is initialised successfully! ")
-        # self.getxy()
-        # self.getCircle()
+        self.load_global_path()
+        self.load_prior()
+        self.find_polygon_centre()
+        self.get_polygon_centre()
+        self.getCircularPolygon()
         # self.checkCircle()
 
     def load_global_path(self):
@@ -32,15 +35,51 @@ class PolygonCircle:
         print("global path is set up successfully!")
         print(self.path_global)
 
-    def setCentre(self, lat, lon):
-        print("The previous centre is: ", self.lat_center, self.lon_center)
-        self.lat_center, self.lon_center = lat, lon
-        print("The updated circular polygon center is: ", self.lat_center, self.lon_center)
+    def load_prior(self):
+        self.prior_data = np.loadtxt(self.path_global + "/Data/Corrected/Prior_corrected.txt", delimiter=", ")
+        self.lat_prior = self.prior_data[:, 0]
+        self.lon_prior = self.prior_data[:, 1]
+        self.depth_prior = self.prior_data[:, 2]
+        self.salinity_prior = self.prior_data[:, -1]
+        print("Loading prior successfully.")
+        print("lat_prior: ", self.lat_prior.shape)
+        print("lon_prior: ", self.lon_prior.shape)
+        print("depth_prior: ", self.depth_prior.shape)
+        print("salinity_prior: ", self.salinity_prior.shape)
 
-    def getCircularPolygon(self, lat, lon, radius, npoints = 200):
-        self.setCentre(lat, lon)
-        self.radius = radius
-        self.npoints = npoints
+    def getPriorIndAtLoc(self, loc):
+        '''
+        return the index in the prior data which corresponds to the location
+        '''
+        lat, lon, depth = loc
+        distDepth = self.depth_prior - depth
+        distLat = self.lat_prior - lat
+        distLon = self.lon_prior - lon
+        dist = np.sqrt(distLat ** 2 + distLon ** 2 + distDepth ** 2)
+        ind_loc = np.where(dist == np.nanmin(dist))[0][0]
+        return ind_loc
+
+    def find_polygon_centre(self):
+        self.path_initial_survey = np.loadtxt(self.path_global + "/Config/path_initial_survey.txt", delimiter=", ")
+        self.sal_path_initial_survey = []
+        for i in range(self.path_initial_survey.shape[0]):
+            self.sal_path_initial_survey.append(self.getPriorIndAtLoc([self.path_initial_survey[i, 0],
+                                                                       self.path_initial_survey[i, 1], self.path_initial_survey[i, 2]]))
+        self.sal_gradient = np.gradient(np.array(self.sal_path_initial_survey))
+        self.ind_optimal = np.where(self.sal_gradient == np.nanmax(self.sal_gradient))[0][0]
+        self.lat_centre = self.path_initial_survey[self.ind_optimal, 0] # optimal index is from the maximum gradient
+        self.lon_centre = self.path_initial_survey[self.ind_optimal, 1]
+        print("Saving polygon centre...")
+        np.savetxt(self.path_global + "/Config/polygon_centre.txt", np.array([[self.lat_centre, self.lon_centre]]), delimiter=", ")
+        print("Polygon centre is saved successfully!")
+
+    def get_polygon_centre(self):
+        print("Loading the polygon centre...")
+        self.lat_centre, self.lon_centre = np.loadtxt(self.path_global + "/Config/polygon_centre.txt", delimiter = ", ")
+        print("lat_centre: ", self.lat_centre)
+        print("lon_centre: ", self.lon_centre)
+
+    def getCircularPolygon(self):
         print("Polygon will be generated based on the following parameters!")
         print("Polygon Centre: ", self.lat_center, self.lon_center)
         print("Polygon radius: ", self.radius)
@@ -59,7 +98,7 @@ class PolygonCircle:
         self.y = self.radius * np.cos(self.theta)
 
     def getCircle(self):
-        self.lat_circle, self.lon_circle = xy2latlon(self.x, self.y, self.lat_center, self.lon_center)
+        self.lat_circle, self.lon_circle = xy2latlon(self.x, self.y, self.lat_centre, self.lon_centre)
 
     def checkCircle(self):
         plt.figure(figsize = (5, 5))
@@ -68,8 +107,7 @@ class PolygonCircle:
 
 if __name__ == "__main__":
     a = PolygonCircle()
-    a.getCircularPolygon(0, 0, 1500)
-    a.checkCircle()
+
 
 
 
