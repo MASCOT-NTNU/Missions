@@ -30,6 +30,13 @@ plt.show()
 #     print("Polygon.kml is created successfully")
 # saveKML()
 
+#%%
+import numpy as np
+import matplotlib.pyplot as plt
+
+t = np.loadtxt('test.txt', delimiter = ", ")
+plt.plot(t[:, 1], t[:, 0], 'k.')
+plt.show()
 
 #%%
 import numpy as np

@@ -10,6 +10,8 @@ __status__ = "UnderDevelopment"
 
 import os
 import rospy
+from auv_handler import AuvHandler
+from imc_ros_interface.msg import Temperature, Salinity, EstimatedState, Sms
 import time
 from datetime import datetime
 from AUV import AUV

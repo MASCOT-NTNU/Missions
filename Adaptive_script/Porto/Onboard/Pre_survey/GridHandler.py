@@ -51,63 +51,44 @@ class GridPoly(WaypointNode):
     loc_start = None
     counter_plot = 0  # counter for plot number
     counter_grid = 0  # counter for grid points
-    debug = True
-    voiceCtrl = False
-    figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Grid/fig/"
-    gridpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
 
-    def __init__(self, polygon=np.array([[41.12251, -8.707745],
-                                         [41.12413, -8.713079],
-                                         [41.11937, -8.715101],
-                                         [41.11509, -8.717317],
-                                         [41.11028, -8.716535],
-                                         [41.10336, -8.716813],
-                                         [41.10401, -8.711306],
-                                         [41.11198, -8.710787],
-                                         [41.11764, -8.710245],
-                                         [41.12251, -8.707745]]), debug=True, voiceCtrl=False):
-        if debug:
-            self.checkFolder()
+    def __init__(self):
         self.lat_origin, self.lon_origin = 41.061874, -8.650977  # origin location
         self.grid_poly = []
-        self.polygon = polygon
-        self.debug = debug
-        self.voiceCtrl = voiceCtrl
+        self.load_global_path()
+        self.load_polygon()
         self.polygon_path = mplPath.Path(self.polygon)
-        self.angle_poly = deg2rad(np.arange(0, 6) * 60)  # angles for polygon
+        self.angle_poly = deg2rad(np.arange(0, 6) * 60) + 30  # angles for polygon
         self.getPolygonArea()
-
         print("Grid polygon is activated!")
         print("Distance between neighbouring points: ", self.distance_poly)
         print("Depth to be observed: ", self.depth_obs)
         print("Starting location: ", self.loc_start)
         print("Polygon: ", self.polygon.shape)
         print("Points desired: ", self.pointsPr)
-        print("Debug mode: ", self.debug)
-        print("fig path: ", self.figpath)
         t1 = time.time()
         self.getGridPoly()
         self.savegrid()
         t2 = time.time()
         print("Grid discretisation takes: {:.2f} seconds".format(t2 - t1))
 
-    def checkFolder(self):
-        i = 0
-        while os.path.exists(self.figpath + "P%s" % i):
-            i += 1
-        self.figpath = self.figpath + "P%s" % i
-        if not os.path.exists(self.figpath):
-            print(self.figpath + " is created")
-            os.mkdir(self.figpath)
-        else:
-            print(self.figpath + " is already existed")
+    def load_global_path(self):
+        print("Now it will load the global path.")
+        self.path_global = open("path_global.txt", 'r').read()
+        print("global path is set up successfully!")
+        print(self.path_global)
+
+    def load_polygon(self):
+        print("Loading the polygon...")
+        self.polygon = np.loadtxt(self.path_global + '/Config/polygon.txt', delimiter=", ")
+        print("Polygon is loaded successfully!")
 
     def savegrid(self):
         grid = []
         for i in range(len(self.grid_poly)):
             for j in range(len(self.depth_obs)):
                 grid.append([self.grid_poly[i, 0], self.grid_poly[i, 1], self.depth_obs[j]])
-        np.savetxt(self.gridpath + "grid.txt", grid, delimiter=", ")
+        np.savetxt(self.path_global + "/Config/grid.txt", grid, delimiter=", ")
         print("Grid is created correctly, it is saved to grid.txt")
 
     def revisit(self, loc):
@@ -161,27 +142,11 @@ class GridPoly(WaypointNode):
                 self.grid_poly.append([lat_new[i], lon_new[i]])
                 self.counter_grid = self.counter_grid + 1
 
-        if self.debug:
-            self.counter_plot = self.counter_plot + 1
-            print(self.counter_grid)
-            plt.figure(figsize=(10, 10))
-            temp1 = np.array(self.grid_poly)
-            plt.plot(temp1[:, 1], temp1[:, 0], 'k.')
-            plt.plot(self.loc_start[1], self.loc_start[0], 'bx')
-            plt.plot(self.polygon[:, 1], self.polygon[:, 0], 'r-')
-            plt.xlabel("Lon [deg]")
-            plt.ylabel("Lat [deg]")
-            plt.title(
-                "Step No. {:04d}, added {:1d} new points, {:1d} total points in the grid".format(self.counter_plot, 6, 6))
-
-            plt.savefig(self.figpath + "/I_{:04d}.png".format(self.counter_plot))
-            plt.close("all")
         WaypointNode_start = WaypointNode(len(start_node), start_node, self.loc_start)
         Allwaypoints = self.getAllWaypoints(WaypointNode_start)
         self.grid_poly = np.array(self.grid_poly)
         if len(self.grid_poly) > self.pointsPr:
-            print("{:d} waypoints are generated, only {:d} waypoints are selected!".format(len(self.grid_poly),
-                                                                                           self.pointsPr))
+            print("{:d} waypoints are generated, only {:d} waypoints are selected!".format(len(self.grid_poly),self.pointsPr))
             self.grid_poly = self.grid_poly[:self.pointsPr, :]
         else:
             print("{:d} waypoints are generated, all are selected!".format(len(self.grid_poly)))
@@ -204,23 +169,6 @@ class GridPoly(WaypointNode):
                         self.counter_grid = self.counter_grid + 1
                         length_new = length_new + 1
             if len(subsubwaypoint) > 0:
-                if self.debug:
-                    self.counter_plot = self.counter_plot + 1
-                    print(self.counter_grid)
-                    plt.figure(figsize=(10, 10))
-                    temp1 = np.array(self.grid_poly)
-                    plt.plot(temp1[:, 1], temp1[:, 0], 'k.')
-                    plt.plot(temp1[-length_new:][:, 1], temp1[-length_new:][:, 0], 'g.')
-                    plt.plot(waypoint_node.subwaypoint_loc[i][1], waypoint_node.subwaypoint_loc[i][0], 'bx')
-                    plt.plot(self.polygon[:, 1], self.polygon[:, 0], 'r-')
-                    plt.xlabel("Lon [deg]")
-                    plt.ylabel("Lat [deg]")
-                    plt.title("Step No. {:04d}, added {:1d} new points, {:1d} total points in the grid".format(
-                        self.counter_plot,
-                        length_new,
-                        self.counter_grid))
-                    plt.savefig(self.figpath + "/I_{:04d}.png".format(self.counter_plot))
-                    plt.close("all")
                 Subwaypoint = WaypointNode(len(subsubwaypoint), subsubwaypoint, waypoint_node.subwaypoint_loc[i])
                 self.getAllWaypoints(Subwaypoint)
             else:
@@ -238,8 +186,6 @@ class GridPoly(WaypointNode):
             prev = now
         self.PolyArea = area / 2
         print("Area: ", self.PolyArea / 1e6, " km2")
-        if self.voiceCtrl:
-            os.system("say Area is: {:.1f} squared kilometers".format(self.PolyArea / 1e6))
 
     @staticmethod
     def getDistance(coord1, coord2):
