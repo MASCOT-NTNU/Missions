@@ -19,6 +19,9 @@ from usr_func import *
 
 
 class PreSurveyor(AUV, DataHandler, MessageHandler):
+    resume = 'False'
+    paused = False
+    counter_waypoint = 0
 
     def __init__(self):
         AUV.__init__(self)
@@ -34,34 +37,45 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
         print("global path is set up successfully!")
         print(self.path_global)
 
-
-
     def check_pause(self):
         self.get_resume_state()
-        print(self.resume)
+        if self.resume == 'False':
+            self.paused = False
+            self.save_counter_waypoint()
+            self.get_counter_waypoint()
+            print("Mission is started successfully!")
+        else:
+            self.paused = True
+            self.get_counter_waypoint()
+            print("Mission is resumed successfully!")
+        print("Resume state:", self.resume)
 
     def get_resume_state(self):
         print("Loading resume state...")
-        self.resume = open(self.path_global + "/Config/ResumeState.txt", 'r').read()
+        if not os.path.exists(self.path_global + "/Config/ResumeState.txt"):
+            self.save_resume_state()
+        else:
+            self.resume = open(self.path_global + "/Config/ResumeState.txt", 'r').read()
         print("Loading resume state successfully! Resume state: ", self.resume)
 
     def save_resume_state(self, resume_state = 'False'):
         print("Saving resume state...")
-        resume_state = open(self.path_global + "/Config/ResumeState.txt", 'w')
-        resume_state.write(resume_state)
-        resume_state.close()
+        fresume_state = open(self.path_global + "/Config/ResumeState.txt", 'w')
+        fresume_state.write(resume_state)
+        fresume_state.close()
         print("Resume state is saved successfully!" + resume_state)
 
     def save_counter_waypoint(self):
         print("Saving counter waypoint...")
-        np.savetxt(self.path_global + "/Config/counter_waypoint.txt", self.counter_waypoint, delimiter=", ")
+        with open(self.path_global + "/Config/counter_waypoint.txt", 'w') as f:
+            f.write('%d' % self.counter_waypoint)
+        f.close()
         print("Counter waypoint is saved! ", self.counter_waypoint)
 
-    def load_counter_waypoint(self):
+    def get_counter_waypoint(self):
         print("Loading counter waypoint...")
-        conterwaypoint = np.loadtxt(self.path_global + "/Config/counter_waypoint.txt", delimiter=", ")
+        self.counter_waypoint = int(open(self.path_global + "/Config/counter_waypoint.txt", 'r').read())
         print("counter waypoint is loaded successfully! ", self.counter_waypoint)
-        return conterwaypoint
 
     def load_path_initial_survey(self):
         print("Loading the initial survey path...")
@@ -90,6 +104,7 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
                 print("SMS has been sent: ", lat_auv, lon_auv)
             self.append_mission_data()
             self.save_mission_data()
+            self.save_counter_waypoint()
             print("Sleep {:d} seconds".format(i))
             print("Now AUV is at: ", lat_auv, lon_auv, depth_auv)
             print("Desired loc: ", self.waypoint_lat_now, self.waypoint_lon_now, 0)
@@ -119,10 +134,10 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
         self.createDataPath(self.path_global)
         print("Now it will move to the starting location...")
         self.t1 = time.time()
-        self.counter_waypoint = self.load_counter_waypoint() # initialise the run
+        # self.counter_waypoint = self.get_counter_waypoint() # initialise the run
         self.counter_data_saved = 0
         self.update_waypoint()
-        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
+        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now) # continue with the current waypoint
 
         while not rospy.is_shutdown():
 
@@ -131,12 +146,13 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
                 print("Elapsed time: ", self.t2 - self.t1)
                 self.append_mission_data()
                 self.save_mission_data()
+                self.save_counter_waypoint()
                 print(self.auv_handler.getState())
 
                 if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
                     print("Longer than 10 mins, need a long break")
                     self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
-                    self.t1 = self.t2
+                    self.t1 = time.time() # restart the counter for time
                     self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
 
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
