@@ -8,14 +8,14 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
-# from usr_func import *
-import numpy as np
-
-from Adaptive_script.Porto.Laptop.usr_func import *
+'''
+Objective: generate the desired circular polygon based on the corrected prior
+'''
+from usr_func import *
 import matplotlib.pyplot as plt
 
 class PolygonCircle:
-    path_onboard = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
+
     lat_center, lon_center = 41.061874, -8.650977 # center of the circular polygon
     radius = 1000 # radius of the polygon
     npoints = 200 # boundary points
@@ -25,6 +25,12 @@ class PolygonCircle:
         # self.getxy()
         # self.getCircle()
         # self.checkCircle()
+
+    def load_global_path(self):
+        print("Now it will load the global path.")
+        self.path_global = open("path_global.txt", 'r').read()
+        print("global path is set up successfully!")
+        print(self.path_global)
 
     def setCentre(self, lat, lon):
         print("The previous centre is: ", self.lat_center, self.lon_center)
@@ -43,9 +49,9 @@ class PolygonCircle:
         self.getCircle()
         print("Circular polygon is generated successfully!")
         print("Now I will save it...")
-        np.savetxt(self.path_onboard + "Config/polygon.txt",
-                   np.hstack((self.lat_circle.reshape(-1, 1), self.lon_circle.reshape(-1, 1))), delimiter=", ")
-        print("polygon.txt is saved successfully! ", self.path_onboard + 'Config/polygon.txt')
+        np.savetxt(self.path_global + "/Config/polygon.txt", np.hstack((self.lat_circle.reshape(-1, 1),
+                                                                        self.lon_circle.reshape(-1, 1))), delimiter=", ")
+        print("polygon.txt is saved successfully! ", self.path_global + '/Config/polygon.txt')
 
     def getxy(self):
         self.theta = np.linspace(0, np.pi * 2, self.npoints)

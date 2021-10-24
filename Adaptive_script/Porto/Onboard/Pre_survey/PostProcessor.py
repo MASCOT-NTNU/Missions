@@ -20,7 +20,7 @@ Function: Get in-situ data and find the corresponding delft3D data and then adju
 '''
 
 class PostProcessor:
-    path = None
+
     def __init__(self):
         self.load_global_path()
         self.load_file_path_initial_survey() # filepath to which it has the data from the presurvey
