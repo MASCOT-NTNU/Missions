@@ -25,7 +25,7 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
         self.load_global_path()
         self.load_path_initial_survey()
         self.check_pause()
-        
+
         self.Run()
 
     def load_global_path(self):
@@ -33,6 +33,8 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
         self.path_global = open("path_global.txt", 'r').read()
         print("global path is set up successfully!")
         print(self.path_global)
+
+
 
     def check_pause(self):
         self.get_resume_state()
