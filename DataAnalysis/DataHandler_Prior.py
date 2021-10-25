@@ -179,6 +179,8 @@ class DataHandler_Prior:
                     pass
 
     def checkMerged(self):
+        path_operation_area = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/OperationArea.txt"
+        OpArea = np.loadtxt(path_operation_area, delimiter = ", ")
         files = os.listdir(self.data_folder + "Merged_all/")
         wind_dirs = ['North', 'South', 'West', 'East']  # get wind_data for all conditions
         wind_levels = ['Mild', 'Moderate', 'Heavy']  # get data for all conditions
@@ -199,13 +201,14 @@ class DataHandler_Prior:
                 # print("lon_test: ", self.lon_test)
                 # print("depth_test: ", self.depth_test)
                 # print("salinity_test: ", self.salinity_test)
-                plt.scatter(self.lon_test[:, :, 0], self.lat_test[:, :, 0], c = self.salinity_test[:, :, 0], cmap = "Paired")
+                plt.scatter(self.lon_test[:, :, 0], self.lat_test[:, :, 0], c = self.salinity_test[:, :, 0], vmin = 15, vmax = 36, cmap = "Paired")
+                plt.plot(OpArea[:, 1], OpArea[:, 0], 'k-.')
                 plt.xlabel('Lon [deg]')
                 plt.ylabel("Lat [deg]")
                 plt.title(files[i])
                 plt.colorbar()
                 counter_plot = counter_plot + 1
-        figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/fig/"
+        figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/fig/"
         plt.savefig(figpath + "prior.pdf")
         plt.show()
         # for wind_dir in wind_dirs:
@@ -219,8 +222,9 @@ if __name__ == "__main__":
     data_folder_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Merged/"
     wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Wind/wind_data.txt"
     a = DataHandler_Prior(data_folder, data_folder_new, wind_path)
-    a.merge_all_data_from_file()
-
+    # a.merge_all_data_from_file()
+    # a.Average_all()
+    a.checkMerged()
     # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Nov2019_sal_1.h5"
     # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Wind/wind_data.txt"
     # datahandler = DataHandler_Delft3D(data_path, wind_path, rough = True)

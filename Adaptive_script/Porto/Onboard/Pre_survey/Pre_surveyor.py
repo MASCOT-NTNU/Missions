@@ -54,29 +54,29 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
 
     def get_resume_state(self):
         print("Loading resume state...")
-        if not os.path.exists(self.path_global + "/Config/ResumeState.txt"):
+        if not os.path.exists(self.path_global + "/Config/ResumeState_PreSurvey.txt"):
             self.save_resume_state()
         else:
-            self.resume = open(self.path_global + "/Config/ResumeState.txt", 'r').read()
+            self.resume = open(self.path_global + "/Config/ResumeState_PreSurvey.txt", 'r').read()
         print("Loading resume state successfully! Resume state: ", self.resume)
 
     def save_resume_state(self, resume_state = 'False'):
         print("Saving resume state...")
-        fresume_state = open(self.path_global + "/Config/ResumeState.txt", 'w')
+        fresume_state = open(self.path_global + "/Config/ResumeState_PreSurvey.txt", 'w')
         fresume_state.write(resume_state)
         fresume_state.close()
         print("Resume state is saved successfully!" + resume_state)
 
     def save_counter_waypoint(self):
         print("Saving counter waypoint...")
-        with open(self.path_global + "/Config/counter_waypoint.txt", 'w') as f:
+        with open(self.path_global + "/Config/counter_waypoint_PreSurvey.txt", 'w') as f:
             f.write('%d' % self.counter_waypoint)
         f.close()
         print("Counter waypoint is saved! ", self.counter_waypoint)
 
     def get_counter_waypoint(self):
         print("Loading counter waypoint...")
-        self.counter_waypoint = int(open(self.path_global + "/Config/counter_waypoint.txt", 'r').read())
+        self.counter_waypoint = int(open(self.path_global + "/Config/counter_waypoint_PreSurvey.txt", 'r').read())
         print("counter waypoint is loaded successfully! ", self.counter_waypoint)
 
     def load_path_initial_survey(self):

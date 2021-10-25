@@ -22,6 +22,9 @@ from usr_func import *
 
 
 class MASCOT(AUV, DataHandler):
+    resume = 'False'
+    paused = False
+    counter_waypoint = 0
     ind_start, ind_now, ind_pre, ind_cand, ind_next = [0, 0, 0, 0, 0]  # only use index to make sure it is working properly
     mu_cond, Sigma_cond, F = [None, None, None]  # conditional mean and covariance and design matrix
     mu_prior, Sigma_prior = [None, None]  # prior mean and covariance matrix
@@ -42,8 +45,8 @@ class MASCOT(AUV, DataHandler):
         print("range of neighbours: ", self.distance_neighbours)
         self.load_global_path()
         self.load_prior()
-        self.travelled_waypoints = 0
-        self.move_to_starting_loc()
+        self.check_pause()
+
         self.run()
 
     def load_global_path(self):
@@ -84,39 +87,44 @@ class MASCOT(AUV, DataHandler):
             self.paused = False
             self.save_counter_waypoint()
             self.get_counter_waypoint()
+            self.travelled_waypoints = 0
+            self.move_to_starting_loc()
             print("Mission is started successfully!")
         else:
             self.paused = True
             self.get_counter_waypoint()
+            self.travelled_waypoints = self.counter_waypoint
+            self.send_next_waypoint()
             print("Mission is resumed successfully!")
         print("Resume state:", self.resume)
 
     def get_resume_state(self):
         print("Loading resume state...")
-        if not os.path.exists(self.path_global + "/Config/ResumeState.txt"):
+        if not os.path.exists(self.path_global + "/Config/ResumeState_Mission.txt"):
             self.save_resume_state()
         else:
-            self.resume = open(self.path_global + "/Config/ResumeState.txt", 'r').read()
+            self.resume = open(self.path_global + "/Config/ResumeState_Mission.txt", 'r').read()
         print("Loading resume state successfully! Resume state: ", self.resume)
 
     def save_resume_state(self, resume_state='False'):
         print("Saving resume state...")
-        fresume_state = open(self.path_global + "/Config/ResumeState.txt", 'w')
+        fresume_state = open(self.path_global + "/Config/ResumeState_Mission.txt", 'w')
         fresume_state.write(resume_state)
         fresume_state.close()
         print("Resume state is saved successfully!" + resume_state)
 
     def save_counter_waypoint(self):
         print("Saving counter waypoint...")
-        with open(self.path_global + "/Config/counter_waypoint.txt", 'w') as f:
-            f.write('%d' % self.counter_waypoint)
-        f.close()
-        print("Counter waypoint is saved! ", self.counter_waypoint)
+        np.savetxt(self.path_global + "/Config/counter_waypoint_Mission.txt",
+                   np.array([[self.counter_waypoint], [self.ind_next]]), delimiter=", ")
+        print("Counter waypoint is saved! ", self.counter_waypoint, " ind next is saved! ", self.ind_next)
 
     def get_counter_waypoint(self):
         print("Loading counter waypoint...")
-        self.counter_waypoint = int(open(self.path_global + "/Config/counter_waypoint.txt", 'r').read())
-        print("counter waypoint is loaded successfully! ", self.counter_waypoint)
+        self.counter_waypoint, self.ind_next = np.loadtxt(self.path_global + "/Config/counter_waypoint_Mission.txt",
+                                                          delimiter=", ")
+        print("counter waypoint is loaded successfully! ", self.counter_waypoint,
+              " ind next is loaded successfully!", self.ind_next)
 
     def updateF(self, ind):
         self.F = np.zeros([1, self.N])
@@ -259,6 +267,7 @@ class MASCOT(AUV, DataHandler):
                 self.send_SMS()
             self.append_mission_data()
             self.save_mission_data()
+            self.save_counter_waypoint()
             print("Sleep {:d} seconds".format(i))
             self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_pre]),
                                          deg2rad(self.lon_loc[self.ind_pre]),
@@ -289,6 +298,7 @@ class MASCOT(AUV, DataHandler):
                     self.send_SMS_starting_loc()
                 self.append_mission_data()
                 self.save_mission_data()
+                self.save_counter_waypoint()
                 print("Sleep {:d} seconds".format(i))
                 self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),
                                              deg2rad(self.lon_loc[self.ind_start]),
@@ -302,16 +312,19 @@ class MASCOT(AUV, DataHandler):
 
     def send_next_waypoint(self):
         # Move to the next waypoint
-        self.counter_waypoint = self.counter_waypoint + 1  # needs to be updated before
+        if self.paused:
+            self.counter_waypoint = self.counter_waypoint
+        else:
+            self.counter_waypoint = self.counter_waypoint + 1  # needs to be updated before
 
-        if self.counter_waypoint % 3 == 0: # check whether it needs to surface
-            if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
-                print("Longer than 10 mins, need a long break")
-                self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
-                self.t1 = self.t2
-            else:
-                print("Less than 10 mins, need a shorter break")
-                self.surfacing(30) # surfacing 30 seconds
+        # if self.counter_waypoint % 3 == 0: # check whether it needs to surface
+        if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
+            print("Longer than 10 mins, need a long break")
+            self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
+            self.t1 = self.t2
+        else:
+            print("Less than 10 mins, need a shorter break")
+            # self.surfacing(30) # surfacing 30 seconds
 
         self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_next]),
                                      deg2rad(self.lon_loc[self.ind_next]),
@@ -323,13 +336,14 @@ class MASCOT(AUV, DataHandler):
     def run(self):
         self.createDataPath(self.path_global)
         self.t1 = time.time()
-        self.counter_waypoint = 0
+        # self.counter_waypoint = 0
         self.counter_data_saved = 0
         while not rospy.is_shutdown():
             if self.init:
                 self.t2 = time.time()
                 self.append_mission_data()
                 self.save_mission_data()
+                self.save_counter_waypoint()
                 print(self.auv_handler.getState())
                 print("Counter waypoint: ", self.counter_waypoint)
                 print("Elapsed time after surfacing: ", self.t2 - self.t1)

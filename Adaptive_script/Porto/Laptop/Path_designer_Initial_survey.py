@@ -34,7 +34,8 @@ class PathDesigner:
     Prior1 is built based on the surface data and wind correaltion
     '''
     data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Exemplo_Douro/2021-09-14_2021-09-15/WaterProperties.hdf5"
-    delft_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/Merged_all/"
+    # delft_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/Merged_all/"
+    delft_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Merged_all/"
     figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Pre_survey/fig/"
     path_laptop = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Laptop/"
     path_onboard = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
@@ -180,7 +181,7 @@ class PathDesigner:
         print("Onboard Delft3D Data is created successfully! Time consumed: ", t2 - t1)
 
     def get_transect_lines(self):
-        self.angles = np.arange(40, 75, 5) + 180
+        self.angles = np.arange(45, 75, 5) + 180
         r = 10000
         npoints = 100
         x = r * np.sin(deg2rad(self.angles))
@@ -343,5 +344,16 @@ class PathDesigner:
 
 if __name__ == "__main__":
     a = PathDesigner(debug = True)
+    wind_dirs = ['North', 'South', 'West', 'East']  # get wind_data for all conditions
+    wind_levels = ['Mild', 'Moderate', 'Heavy']  # get data for all conditions
+    for wind_dir in wind_dirs:
+        for wind_level in wind_levels:
+            a.wind_dir = wind_dir
+            a.wind_level = wind_level
+            a.load_all_data()  # load all the essential data
+            a.compute_gradient()  # compute the gradient along
+            a.get_optimal_transect_line()  # get the optimal transect line
+            a.design_path_initial()  # design the optimal path
+            a.plot_gradient_along_lines()  # plot the gradient along designed lines
 
 
