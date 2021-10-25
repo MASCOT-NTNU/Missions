@@ -224,7 +224,7 @@ if __name__ == "__main__":
     a = DataHandler_Prior(data_folder, data_folder_new, wind_path)
     # a.merge_all_data_from_file()
     # a.Average_all()
-    a.checkMerged()
+    # a.checkMerged()
     # data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Nov2019_sal_1.h5"
     # wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Wind/wind_data.txt"
     # datahandler = DataHandler_Delft3D(data_path, wind_path, rough = True)

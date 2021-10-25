@@ -61,13 +61,14 @@ class PathDesigner:
         self.get_optimal_transect_line() # get the optimal transect line
         self.design_path_initial() # design the optimal path
         self.plot_gradient_along_lines() # plot the gradient along designed lines
+        self.save_all()
         # self.checkPath() # check those path to plot them on scatter 3d plot
 
     def DebugMode(self):
         self.string_date = "2021-09-23_2021-09-24"
         self.string_hour = "05_12"
-        self.wind_dir = "South" # [North, East, West, South]
-        self.wind_level = "Heavy" # [Mild, Moderate, Heavy]
+        self.wind_dir = "North" # [North, East, West, South]
+        self.wind_level = "Moderate" # [Mild, Moderate, Heavy]
         self.data_path = self.data_path[:81] + self.string_date + "/WaterProperties.hdf5"
         print("Mission date: ", self.string_date)
         print("Mission hour: ", self.string_hour)
@@ -176,7 +177,7 @@ class PathDesigner:
         self.depth_export = np.array(delft3d.get("depth")).reshape(-1, 1)
         self.salinity_export = np.array(delft3d.get("salinity")).reshape(-1, 1)
         self.dataset_export = np.hstack((self.lat_export, self.lon_export, self.depth_export, self.salinity_export))
-        np.savetxt(self.path_onboard + "Data/" + "Delft3D_" + self.wind_dir + "_" + self.wind_level + ".txt", self.dataset_export, delimiter = ", ")
+        np.savetxt(self.path_onboard + "Data/Prior/" + "Delft3D_" + self.wind_dir + "_" + self.wind_level + ".txt", self.dataset_export, delimiter = ", ")
         t2 = time.time()
         print("Onboard Delft3D Data is created successfully! Time consumed: ", t2 - t1)
 
@@ -210,6 +211,8 @@ class PathDesigner:
         self.ind_optimal = np.where(self.sum_gradient == np.nanmax(self.sum_gradient))[0][0]
 
     def plot_gradient_along_lines(self):
+        grid = np.loadtxt("test.txt", delimiter=", ")
+
         fig = plt.figure(figsize=(20, 5))
         gs = GridSpec(ncols = 3, nrows = 1, figure = fig)
         ax = fig.add_subplot(gs[0])
@@ -218,6 +221,7 @@ class PathDesigner:
         for i in range(self.lat_line.shape[0]):
             ax.plot(self.lon_line[i, :], self.lat_line[i, :], label = str(i))
         ax.plot(self.OpArea[:, 1], self.OpArea[:, 0], 'k-.', label = "Operational Region")
+        ax.plot(grid[:, 1], grid[:, 0], 'k.')
         ax.plot(self.lon_line[self.ind_optimal, -1], self.lat_line[self.ind_optimal, -1], 'b*', markersize = 20, label = "Desired path")
         # ax.plot(self.lon_start, self.lat_start, "ks", markersize = 10)
         # ax.plot(self.lon_end, self.lat_end, 'ks', markersize = 10)
@@ -237,7 +241,7 @@ class PathDesigner:
         lgd = plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         plt.savefig(self.figpath + "TL_" + self.wind_dir + "_" + self.wind_level + "_" + str(self.lat_line.shape[0]) + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
         plt.close("all")
-        # plt.show()
+        plt.show()
 
     def compute_gradient(self):
         self.lat_line, self.lon_line = self.get_transect_lines()
@@ -344,16 +348,16 @@ class PathDesigner:
 
 if __name__ == "__main__":
     a = PathDesigner(debug = True)
-    wind_dirs = ['North', 'South', 'West', 'East']  # get wind_data for all conditions
-    wind_levels = ['Mild', 'Moderate', 'Heavy']  # get data for all conditions
-    for wind_dir in wind_dirs:
-        for wind_level in wind_levels:
-            a.wind_dir = wind_dir
-            a.wind_level = wind_level
-            a.load_all_data()  # load all the essential data
-            a.compute_gradient()  # compute the gradient along
-            a.get_optimal_transect_line()  # get the optimal transect line
-            a.design_path_initial()  # design the optimal path
-            a.plot_gradient_along_lines()  # plot the gradient along designed lines
+    # wind_dirs = ['North', 'South', 'West', 'East']  # get wind_data for all conditions
+    # wind_levels = ['Mild', 'Moderate', 'Heavy']  # get data for all conditions
+    # for wind_dir in wind_dirs:
+    #     for wind_level in wind_levels:
+    #         a.wind_dir = wind_dir
+    #         a.wind_level = wind_level
+    #         a.load_all_data()  # load all the essential data
+    #         a.compute_gradient()  # compute the gradient along
+    #         a.get_optimal_transect_line()  # get the optimal transect line
+    #         a.design_path_initial()  # design the optimal path
+    #         a.plot_gradient_along_lines()  # plot the gradient along designed lines
 
 
