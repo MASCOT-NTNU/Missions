@@ -26,9 +26,8 @@ The following program needs to be run before the adpative mission to prepare the
 '''
 
 class MASCOT(AUV, DataHandler):
-    resume = 'False'
-    paused = False
-    counter_waypoint = 0
+    # resume = 'False'
+    # paused = False
     ind_start, ind_now, ind_pre, ind_cand, ind_next = [0, 0, 0, 0, 0]  # only use index to make sure it is working properly
     mu_cond, Sigma_cond, F = [None, None, None]  # conditional mean and covariance and design matrix
     mu_prior, Sigma_prior = [None, None]  # prior mean and covariance matrix
@@ -52,6 +51,7 @@ class MASCOT(AUV, DataHandler):
         # self.check_pause()
         self.travelled_waypoints = 0
         self.move_to_starting_loc()
+
         self.run()
 
     def load_global_path(self):
@@ -87,81 +87,81 @@ class MASCOT(AUV, DataHandler):
         print("R_sal: ", self.R_sal)
         print("N: ", self.N)
 
-    def check_pause(self):
-        self.get_resume_state()
-        self.t1 = time.time()
-        self.t2 = time.time()
-        if self.resume == 'False':
-            self.paused = False
-            self.counter_waypoint, self.ind_next = [0, 0]
-            self.save_counter_waypoint()
-            self.save_conditional_field()
-            self.get_counter_waypoint()
+    # def check_pause(self):
+    #     self.get_resume_state()
+    #     self.t1 = time.time()
+    #     self.t2 = time.time()
+    #     if self.resume == 'False':
+    #         self.paused = False
+    #         self.counter_waypoint, self.ind_next = [0, 0]
+    #         self.save_counter_waypoint()
+    #         self.save_conditional_field()
+    #         self.get_counter_waypoint()
+    #
+    #         print("Mission is started successfully!")
+    #     else:
+    #         self.paused = True
+    #         self.get_counter_waypoint()
+    #         self.get_conditional_field()
+    #         self.travelled_waypoints = self.counter_waypoint
+    #         self.send_next_waypoint()
+    #         print("Mission is resumed successfully!")
+    #     print("Resume state:", self.resume)
 
-            print("Mission is started successfully!")
-        else:
-            self.paused = True
-            self.get_counter_waypoint()
-            self.get_conditional_field()
-            self.travelled_waypoints = self.counter_waypoint
-            self.send_next_waypoint()
-            print("Mission is resumed successfully!")
-        print("Resume state:", self.resume)
-
-    def get_resume_state(self):
-        print("Loading resume state...")
-        if not os.path.exists(self.path_global + "/Config/ResumeState_Mission.txt"):
-            self.save_resume_state()
-        else:
-            self.resume = open(self.path_global + "/Config/ResumeState_Mission.txt", 'r').read()
-        print("Loading resume state successfully! Resume state: ", self.resume)
-
-    def save_resume_state(self, resume_state='False'):
-        print("Saving resume state...")
-        fresume_state = open(self.path_global + "/Config/ResumeState_Mission.txt", 'w')
-        fresume_state.write(resume_state)
-        fresume_state.close()
-        print("Resume state is saved successfully!" + resume_state)
-
-    def save_counter_waypoint(self):
-        print("Saving counter waypoint...")
-        np.savetxt(self.path_global + "/Config/counter_waypoint_Mission.txt",
-                   np.array([[self.counter_waypoint], [self.ind_next], [self.sal_sampled]]), delimiter=", ")
-        print("Counter waypoint is saved! ", self.counter_waypoint, " ind next is saved! ", self.ind_next)
-
-    def save_conditional_field(self):
-        print("Saving the conditional field...")
-        np.savetxt(self.path_global + '/Config/Sigma_cond.txt', self.Sigma_cond, delimiter = ", ")
-        np.savetxt(self.path_global + "/Config/F.txt", self.F, delimiter = ", ")
-        np.savetxt(self.path_global + "/Config/mu_cond.txt", self.mu_cond, delimiter = ", ")
-        print("Saving the conditional field successfully!")
-
-    def get_conditional_field(self):
-        print("Loading conditional field...")
-        self.Sigma_cond = np.loadtxt(self.path_global + "/Config/Sigma_cond.txt", delimiter = ", ")
-        self.mu_cond = np.loadtxt(self.path_global + "/Config/mu_cond.txt", delimiter = ", ")
-        self.F = np.loadtxt(self.path_global + "/Config/F.txt", delimiter = ", ")
-        print("Loading conditional field successfully!")
-
-    def get_counter_waypoint(self):
-        print("Loading counter waypoint...")
-        self.counter_waypoint, self.ind_next, self.sal_sampled = np.loadtxt(self.path_global + "/Config/counter_waypoint_Mission.txt",
-                                                          delimiter=", ")
-        self.counter_waypoint = int(self.counter_waypoint)
-        self.ind_next = int(self.ind_next)
-        print("counter waypoint is loaded successfully! ", self.counter_waypoint,
-              " ind next is loaded successfully!", self.ind_next)
-
-    def load_file_path_mascot(self):
-        print("Loading the mascot file path...")
-        self.f_pre = open(self.path_global + "/Config/filepath_missiondata.txt", 'r')
-        self.filepath_missiondata = self.f_pre.read()
-        self.f_pre.close()
-        print("Finished mission file path, filepath: ", self.filepath_missiondata)
-
-    def load_resumed_mission_data(self):
-        self.load_file_path_mascot()
-        self.data_salinity = np.loadtxt(self.filepath_missiondata, delimiter = ", ")
+    # def get_resume_state(self):
+    #     print("Loading resume state...")
+    #     if not os.path.exists(self.path_global + "/Config/ResumeState_Mission.txt"):
+    #         self.save_resume_state()
+    #     else:
+    #         self.resume = open(self.path_global + "/Config/ResumeState_Mission.txt", 'r').read()
+    #     print("Loading resume state successfully! Resume state: ", self.resume)
+    #
+    # def save_resume_state(self, resume_state='False'):
+    #     print("Saving resume state...")
+    #     fresume_state = open(self.path_global + "/Config/ResumeState_Mission.txt", 'w')
+    #     fresume_state.write(resume_state)
+    #     fresume_state.close()
+    #     print("Resume state is saved successfully!" + resume_state)
+    #
+    # def save_counter_waypoint(self):
+    #     print("Saving counter waypoint...")
+    #     np.savetxt(self.path_global + "/Config/counter_waypoint_Mission.txt",
+    #                np.array([[self.counter_waypoint], [self.ind_next], [self.sal_sampled]]), delimiter=", ")
+    #     print("Counter waypoint is saved! ", self.counter_waypoint, " ind next is saved! ", self.ind_next)
+    #
+    # def save_conditional_field(self):
+    #     print("Saving the conditional field...")
+    #     np.savetxt(self.path_global + '/Config/Sigma_cond.txt', self.Sigma_cond, delimiter = ", ")
+    #     np.savetxt(self.path_global + "/Config/F.txt", self.F, delimiter = ", ")
+    #     np.savetxt(self.path_global + "/Config/mu_cond.txt", self.mu_cond, delimiter = ", ")
+    #     print("Saving the conditional field successfully!")
+    #
+    # def get_conditional_field(self):
+    #     print("Loading conditional field...")
+    #     self.Sigma_cond = np.loadtxt(self.path_global + "/Config/Sigma_cond.txt", delimiter = ", ")
+    #     self.mu_cond = np.loadtxt(self.path_global + "/Config/mu_cond.txt", delimiter = ", ")
+    #     self.F = np.loadtxt(self.path_global + "/Config/F.txt", delimiter = ", ")
+    #     print("Loading conditional field successfully!")
+    #
+    # def get_counter_waypoint(self):
+    #     print("Loading counter waypoint...")
+    #     self.counter_waypoint, self.ind_next, self.sal_sampled = np.loadtxt(self.path_global + "/Config/counter_waypoint_Mission.txt",
+    #                                                       delimiter=", ")
+    #     self.counter_waypoint = int(self.counter_waypoint)
+    #     self.ind_next = int(self.ind_next)
+    #     print("counter waypoint is loaded successfully! ", self.counter_waypoint,
+    #           " ind next is loaded successfully!", self.ind_next)
+    #
+    # def load_file_path_mascot(self):
+    #     print("Loading the mascot file path...")
+    #     self.f_pre = open(self.path_global + "/Config/filepath_missiondata.txt", 'r')
+    #     self.filepath_missiondata = self.f_pre.read()
+    #     self.f_pre.close()
+    #     print("Finished mission file path, filepath: ", self.filepath_missiondata)
+    #
+    # def load_resumed_mission_data(self):
+    #     self.load_file_path_mascot()
+    #     self.data_salinity = np.loadtxt(self.filepath_missiondata, delimiter = ", ")
 
     def updateF(self, ind):
         self.F = np.zeros([1, self.N])
@@ -311,9 +311,9 @@ class MASCOT(AUV, DataHandler):
                 self.send_SMS()
             self.append_mission_data()
             self.save_mission_data()
-            self.save_counter_waypoint()
-            self.save_resume_state('True')
-            self.save_conditional_field()
+            # self.save_counter_waypoint()
+            # self.save_resume_state('True')
+            # self.save_conditional_field()
             print("Sleep {:d} seconds".format(i))
             self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_pre]),
                                          deg2rad(self.lon_loc[self.ind_pre]),
@@ -344,9 +344,9 @@ class MASCOT(AUV, DataHandler):
                     self.send_SMS_starting_loc()
                 self.append_mission_data()
                 self.save_mission_data()
-                self.save_counter_waypoint()
-                self.save_resume_state('True')
-                self.save_conditional_field()
+                # self.save_counter_waypoint()
+                # self.save_resume_state('True')
+                # self.save_conditional_field()
                 print("Sleep {:d} seconds".format(i))
                 self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),
                                              deg2rad(self.lon_loc[self.ind_start]),
@@ -360,10 +360,10 @@ class MASCOT(AUV, DataHandler):
 
     def send_next_waypoint(self):
         # Move to the next waypoint
-        if self.paused:
-            self.counter_waypoint = self.counter_waypoint
-        else:
-            self.counter_waypoint = self.counter_waypoint + 1  # needs to be updated before
+        # if self.paused:
+        #     self.counter_waypoint = self.counter_waypoint
+        # else:
+        self.counter_waypoint = self.counter_waypoint + 1  # needs to be updated before
 
         # if self.counter_waypoint % 3 == 0: # check whether it needs to surface
         if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
@@ -382,21 +382,18 @@ class MASCOT(AUV, DataHandler):
                                -self.depth_loc[self.ind_next])
 
     def run(self):
-        if self.paused:
-            self.load_resumed_mission_data()
-        else:
-            self.createDataPath(self.path_global)
+        self.createDataPath(self.path_global)
         self.t1 = time.time()
-        # self.counter_waypoint = 0
+        self.counter_waypoint = 0
         self.counter_data_saved = 0
         while not rospy.is_shutdown():
             if self.init:
                 self.t2 = time.time()
                 self.append_mission_data()
                 self.save_mission_data()
-                self.save_counter_waypoint()
-                self.save_resume_state('True')
-                self.save_conditional_field()
+                # self.save_counter_waypoint()
+                # self.save_resume_state('True')
+                # self.save_conditional_field()
                 print(self.auv_handler.getState())
                 print("Counter waypoint: ", self.counter_waypoint)
                 print("Elapsed time after surfacing: ", self.t2 - self.t1)
@@ -404,10 +401,7 @@ class MASCOT(AUV, DataHandler):
                     self.send_starting_waypoint()
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the current location")
-                    if self.paused: # check pause or not
-                        self.sal_sampled = self.sal_sampled
-                    else:
-                        self.sal_sampled = np.mean(self.data_salinity[-10:])  # take the past ten samples and average
+                    self.sal_sampled = np.mean(self.data_salinity[-10:])  # take the past ten samples and average
                     print("Sampled salinity: ", self.sal_sampled)
                     self.GPupd(self.sal_sampled)  # update the field when it arrives the specified location
                     self.find_candidates_loc()
