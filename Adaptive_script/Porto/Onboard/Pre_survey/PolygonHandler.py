@@ -62,7 +62,7 @@ class PolygonCircle:
     def find_polygon_centre(self):
         self.path_initial_survey = np.loadtxt(self.path_global + "/Config/path_initial_survey.txt", delimiter=", ")
         self.sal_path_initial_survey = []
-        for i in range(self.path_initial_survey.shape[0]):
+        for i in range(10, self.path_initial_survey.shape[0] - 10):
             self.sal_path_initial_survey.append(self.getPriorIndAtLoc([self.path_initial_survey[i, 0],
                                                                        self.path_initial_survey[i, 1], self.path_initial_survey[i, 2]]))
         self.sal_gradient = np.gradient(np.array(self.sal_path_initial_survey))

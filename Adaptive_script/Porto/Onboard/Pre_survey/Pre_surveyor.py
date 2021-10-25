@@ -19,6 +19,12 @@ from DataHandler import DataHandler
 from MessageHandler import MessageHandler
 from usr_func import *
 
+'''
+The following modules are used for postprocessing before the adaptive mission
+'''
+from PostProcessor import PostProcessor
+from PolygonHandler import PolygonCircle
+from GridHandler import GridPoly
 
 class PreSurveyor(AUV, DataHandler, MessageHandler):
     resume = 'False'
@@ -164,7 +170,12 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
                         y_auv = self.vehicle_pos[1]  # y distance from the origin
                         lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
                         self.send_SMS_mission_complete(lat_auv, lon_auv)
-                        rospy.signal_shutdown("Mission completed!!!")
+                        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now,
+                                                     0)
+                        b = PostProcessor()
+                        c = PolygonCircle()
+                        d = GridPoly()
+                        # rospy.signal_shutdown("Mission completed!!!")
                         break
                     self.move_to_next_waypoint()
                 self.last_state = self.auv_handler.getState()
