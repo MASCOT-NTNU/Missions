@@ -10,6 +10,7 @@ git rm --cached -r **/.idea
 git rm --cached -r **/__pycache__
 git rm --cached -r *.DS_Store
 
+git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch Adaptive_script/Porto/Onboard.zip' --prune-empty --tag-name-filter cat -- --all
 
 
 
