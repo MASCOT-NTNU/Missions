@@ -46,10 +46,8 @@ class MASCOT(AUV, DataHandler):
         print("range of neighbours: ", self.distance_neighbours)
         self.load_global_path()
         self.load_prior()
-        # self.check_pause()
         self.travelled_waypoints = 0
         self.move_to_starting_loc()
-
         self.run()
 
     def load_global_path(self):
@@ -85,82 +83,6 @@ class MASCOT(AUV, DataHandler):
         print("R_sal: ", self.R_sal)
         print("N: ", self.N)
 
-    # def check_pause(self):
-    #     self.get_resume_state()
-    #     self.t1 = time.time()
-    #     self.t2 = time.time()
-    #     if self.resume == 'False':
-    #         self.paused = False
-    #         self.counter_waypoint, self.ind_next = [0, 0]
-    #         self.save_counter_waypoint()
-    #         self.save_conditional_field()
-    #         self.get_counter_waypoint()
-    #
-    #         print("Mission is started successfully!")
-    #     else:
-    #         self.paused = True
-    #         self.get_counter_waypoint()
-    #         self.get_conditional_field()
-    #         self.travelled_waypoints = self.counter_waypoint
-    #         self.send_next_waypoint()
-    #         print("Mission is resumed successfully!")
-    #     print("Resume state:", self.resume)
-
-    # def get_resume_state(self):
-    #     print("Loading resume state...")
-    #     if not os.path.exists(self.path_global + "/Config/ResumeState_Mission.txt"):
-    #         self.save_resume_state()
-    #     else:
-    #         self.resume = open(self.path_global + "/Config/ResumeState_Mission.txt", 'r').read()
-    #     print("Loading resume state successfully! Resume state: ", self.resume)
-    #
-    # def save_resume_state(self, resume_state='False'):
-    #     print("Saving resume state...")
-    #     fresume_state = open(self.path_global + "/Config/ResumeState_Mission.txt", 'w')
-    #     fresume_state.write(resume_state)
-    #     fresume_state.close()
-    #     print("Resume state is saved successfully!" + resume_state)
-    #
-    # def save_counter_waypoint(self):
-    #     print("Saving counter waypoint...")
-    #     np.savetxt(self.path_global + "/Config/counter_waypoint_Mission.txt",
-    #                np.array([[self.counter_waypoint], [self.ind_next], [self.sal_sampled]]), delimiter=", ")
-    #     print("Counter waypoint is saved! ", self.counter_waypoint, " ind next is saved! ", self.ind_next)
-    #
-    # def save_conditional_field(self):
-    #     print("Saving the conditional field...")
-    #     np.savetxt(self.path_global + '/Config/Sigma_cond.txt', self.Sigma_cond, delimiter = ", ")
-    #     np.savetxt(self.path_global + "/Config/F.txt", self.F, delimiter = ", ")
-    #     np.savetxt(self.path_global + "/Config/mu_cond.txt", self.mu_cond, delimiter = ", ")
-    #     print("Saving the conditional field successfully!")
-    #
-    # def get_conditional_field(self):
-    #     print("Loading conditional field...")
-    #     self.Sigma_cond = np.loadtxt(self.path_global + "/Config/Sigma_cond.txt", delimiter = ", ")
-    #     self.mu_cond = np.loadtxt(self.path_global + "/Config/mu_cond.txt", delimiter = ", ")
-    #     self.F = np.loadtxt(self.path_global + "/Config/F.txt", delimiter = ", ")
-    #     print("Loading conditional field successfully!")
-    #
-    # def get_counter_waypoint(self):
-    #     print("Loading counter waypoint...")
-    #     self.counter_waypoint, self.ind_next, self.sal_sampled = np.loadtxt(self.path_global + "/Config/counter_waypoint_Mission.txt",
-    #                                                       delimiter=", ")
-    #     self.counter_waypoint = int(self.counter_waypoint)
-    #     self.ind_next = int(self.ind_next)
-    #     print("counter waypoint is loaded successfully! ", self.counter_waypoint,
-    #           " ind next is loaded successfully!", self.ind_next)
-    #
-    # def load_file_path_mascot(self):
-    #     print("Loading the mascot file path...")
-    #     self.f_pre = open(self.path_global + "/Config/filepath_missiondata.txt", 'r')
-    #     self.filepath_missiondata = self.f_pre.read()
-    #     self.f_pre.close()
-    #     print("Finished mission file path, filepath: ", self.filepath_missiondata)
-    #
-    # def load_resumed_mission_data(self):
-    #     self.load_file_path_mascot()
-    #     self.data_salinity = np.loadtxt(self.filepath_missiondata, delimiter = ", ")
-
     def updateF(self, ind):
         self.F = np.zeros([1, self.N])
         self.F[0, ind] = True
@@ -184,7 +106,6 @@ class MASCOT(AUV, DataHandler):
         self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),
                                      deg2rad(self.lon_loc[self.ind_start]), -self.depth_loc[self.ind_start])
         self.updateWaypoint()
-        # self.send_next_waypoint()
 
     def find_candidates_loc(self):
         '''
@@ -198,9 +119,7 @@ class MASCOT(AUV, DataHandler):
 
     def GPupd(self, y_sampled):
         C = self.F @ self.Sigma_cond @ self.F.T + self.R_sal
-        self.mu_cond = self.mu_cond + self.Sigma_cond @ self.F.T @ np.linalg.solve(C,
-                                                                                   (y_sampled - self.F @ self.mu_cond))
-
+        self.mu_cond = self.mu_cond + self.Sigma_cond @ self.F.T @ np.linalg.solve(C,(y_sampled - self.F @ self.mu_cond))
         self.Sigma_cond = self.Sigma_cond - self.Sigma_cond @ self.F.T @ np.linalg.solve(C, self.F @ self.Sigma_cond)        
 
     def EIBV_1D(self, threshold, mu, Sig, F, R):
@@ -265,28 +184,6 @@ class MASCOT(AUV, DataHandler):
         self.ind_pre = self.ind_now
         self.ind_now = self.ind_next
 
-    def send_SMS(self):
-        print("Message has been sent to: ", self.phone_number)
-        SMS = Sms()
-        SMS.number.data = self.phone_number
-        SMS.timeout.data = 60
-        x_auv = self.vehicle_pos[0]
-        y_auv = self.vehicle_pos[1]
-        lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
-        SMS.contents.data = "LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(lon_auv)
-        self.sms_pub_.publish(SMS)
-
-    def send_SMS_starting_loc(self):
-        print("Message has been sent to: ", self.phone_number)
-        SMS = Sms()
-        SMS.number.data = self.phone_number
-        SMS.timeout.data = 60
-        x_auv = self.vehicle_pos[0]
-        y_auv = self.vehicle_pos[1]
-        lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
-        SMS.contents.data = "I am moving to the starting location. LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(lon_auv)
-        self.sms_pub_.publish(SMS)
-
     def send_SMS_mission_complete(self):
         print("Mission complete Message has been sent to: ", self.phone_number)
         SMS = Sms()
@@ -297,22 +194,6 @@ class MASCOT(AUV, DataHandler):
         lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
         SMS.contents.data = "Congrats, Mission complete. LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(lon_auv)
         self.sms_pub_.publish(SMS)
-
-    def surfacing(self, time_length):
-        for i in range(time_length):
-            if (i + 1) % 15 == 0:
-                self.send_SMS()
-            self.append_mission_data()
-            self.save_mission_data()
-            # self.save_counter_waypoint()
-            # self.save_resume_state('True')
-            # self.save_conditional_field()
-            print("Sleep {:d} seconds".format(i))
-            self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_pre]),
-                                         deg2rad(self.lon_loc[self.ind_pre]),
-                                         0)
-            self.auv_handler.spin()  # publishes the reference, stay on the surface
-            self.rate.sleep()  #
 
     def save_mission_data(self):
         if np.around((self.t2 - self.t1), 0) % 10 == 0:
@@ -331,48 +212,24 @@ class MASCOT(AUV, DataHandler):
     def send_starting_waypoint(self):
         if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
             print("Longer than 10 mins, need a long break")
-            # time_length = 90
-            # for i in range(time_length):
-            #     if (i + 1) % 15 == 0:
-            #         self.send_SMS_starting_loc()
             self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=90,
                                    phone_number=self.phone_number,
                                    iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
-            # self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
             self.t1 = time.time()
             self.t2 = time.time()
-            #     self.append_mission_data()
-            #     self.save_mission_data()
-                # self.save_counter_waypoint()
-                # self.save_resume_state('True')
-                # self.save_conditional_field()
-                # print("Sleep {:d} seconds".format(i))
-                # self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),
-                #                              deg2rad(self.lon_loc[self.ind_start]),
-                #                              0)
-                # self.auv_handler.spin()  # publishes the reference, stay on the surface
-                # self.rate.sleep()  #
-            # self.t1 = self.t2
         self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),
                                      deg2rad(self.lon_loc[self.ind_start]), -self.depth_loc[self.ind_start])
         print("moving to the starting location")
 
     def send_next_waypoint(self):
         self.counter_waypoint = self.counter_waypoint + 1  # needs to be updated before
-        # if self.counter_waypoint % 3 == 0: # check whether it needs to surface
         if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
             print("Longer than 10 mins, need a long break")
             self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=90,
                                    phone_number=self.phone_number,
                                    iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
-            # self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
             self.t1 = time.time()
             self.t2 = time.time()
-                # self.t1 = self.t2
-            # else:
-            #     print("Less than 10 mins, need a shorter break")
-
-            # self.surfacing(30) # surfacing 30 seconds
 
         self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_next]),
                                      deg2rad(self.lon_loc[self.ind_next]),
@@ -392,9 +249,6 @@ class MASCOT(AUV, DataHandler):
                 self.t2 = time.time()
                 self.append_mission_data()
                 self.save_mission_data()
-                # self.save_counter_waypoint()
-                # self.save_resume_state('True')
-                # self.save_conditional_field()
                 print(self.auv_handler.getState())
                 print("Counter waypoint: ", self.counter_waypoint)
                 print("Elapsed time after surfacing: ", self.t2 - self.t1)
@@ -410,6 +264,12 @@ class MASCOT(AUV, DataHandler):
                     self.updateWaypoint()
                     self.travelled_waypoints += 1
                     if self.travelled_waypoints >= self.Total_waypoints:
+                        self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=90,
+                                               phone_number=self.phone_number,
+                                               iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
+                        self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_now]),
+                                                     deg2rad(self.lon_loc[self.ind_now]),
+                                                     0)
                         self.send_SMS_mission_complete()
                         rospy.signal_shutdown("Mission completed!!!")
                         break
@@ -422,4 +282,5 @@ class MASCOT(AUV, DataHandler):
 if __name__ == "__main__":
     a = MASCOT()
     print("Mission complete!!!")
+
 

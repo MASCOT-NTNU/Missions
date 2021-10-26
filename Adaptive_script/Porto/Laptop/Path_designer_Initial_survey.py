@@ -270,7 +270,7 @@ class PathDesigner:
 
         self.path = []
         self.duration = self.popup_interval * 60 * self.speed
-        self.path.append([self.lat_interval[0], self.lon_interval[0], 0])
+        # self.path.append([self.lat_interval[0], self.lon_interval[0], 0])
         for i in range(len(self.lat_interval)):
             # if self.interval[i] % self.duration < 100:
             #     self.path.append([self.lat_interval[i], self.lon_interval[i], 0])
