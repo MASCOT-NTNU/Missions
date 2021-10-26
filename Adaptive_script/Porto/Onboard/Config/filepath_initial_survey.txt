@@ -1,1 +1,0 @@
-/home/yaoling/MASCOT/catkin_ws/src/adaframe_examples/scripts/Data/Pre_survey/Pre_survey_data_on_2021_1025_1720
