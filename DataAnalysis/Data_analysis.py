@@ -39,6 +39,7 @@ class AUVData:
         # self.plot_on_map()
         # self.load_pre_survey()
         self.load_adaptive_mission()
+
         # self.plot_data_in3D(self.waypoint_adaptive, self.salinity_adaptive)
         # self.plot_data_in3D(self.waypoint_adaptive, self.salinity_adaptive)
 
@@ -56,11 +57,9 @@ class AUVData:
         # self.Sigma_cond = np.loadtxt(path_config + "Sigma_cond.txt", delimiter=", ")
         print("finished with config")
 
-    # def load_path_designed(self):
-
     def load_adaptive_mission(self):
         datapath_adaptive = self.path_data
-        # files = os.listdir(datapath_adaptive)
+        files = os.listdir(datapath_adaptive)
         # for file in files:
         #     if file == ".DS_Store":
         #         pass
@@ -99,6 +98,7 @@ class AUVData:
         self.waypoint_presurvey = self.waypoint_presurvey[ind_selected, :]
         self.timestamp_presurvey = self.timestamp_presurvey[ind_selected]
         self.plot_data_in3D(self.waypoint_presurvey, self.salinity_presurvey, "test")
+
 
     def plot_on_map(self):
 
@@ -139,6 +139,7 @@ class AUVData:
         #               colormap='hsv')
         gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
 
+
     def plot_data_in3D(self, waypoint, salinity, file_string):
         import plotly.express as px
         lat = waypoint[:, 0]
@@ -173,6 +174,39 @@ class AUVData:
         #             # color=sal.squeeze(),
         #             # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
         #             # showscale=True
+        #         ),
+        #     ),
+        #     row=1, col=1,
+        # )
+
+        # grid_lat = self.polygon[:, 0]
+        # grid_lon = self.polygon[:, 1]
+        # grid_depth = np.zeros_like(grid_lon)
+        # fig.add_trace(
+        #     go.Scatter3d(
+        #         x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=grid_depth.squeeze(),
+        #         # mode='markers',
+        #         # marker=dict(
+        #             # size=4,
+        #             # color=sal.squeeze(),
+        #             # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
+        #             # showscale=True
+        #         # ),
+        #     ),
+        #     row=1, col=1,
+        # )
+        # grid_lat = self.grid[:, 0]
+        # grid_lon = self.grid[:, 1]
+        # grid_depth = self.grid[:, 2]
+        # fig.add_trace(
+        #     go.Scatter3d(
+        #         x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=grid_depth.squeeze(),
+        #         mode = "markers",
+        #         marker=dict(
+        #         size=2,
+        #         # color=sal.squeeze(),
+        #         # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
+        #         # showscale=True
         #         ),
         #     ),
         #     row=1, col=1,

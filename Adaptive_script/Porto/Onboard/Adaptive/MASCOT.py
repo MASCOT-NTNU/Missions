@@ -26,7 +26,6 @@ The following program needs to be run before the adpative mission to prepare the
 '''
 
 class MASCOT(AUV, DataHandler):
-    # counter_waypoint = 0
     ind_start, ind_now, ind_pre, ind_cand, ind_next = [0, 0, 0, 0, 0]  # only use index to make sure it is working properly
     mu_cond, Sigma_cond, F = [None, None, None]  # conditional mean and covariance and design matrix
     mu_prior, Sigma_prior = [None, None]  # prior mean and covariance matrix
@@ -372,6 +371,7 @@ class MASCOT(AUV, DataHandler):
                 # self.t1 = self.t2
             # else:
             #     print("Less than 10 mins, need a shorter break")
+
             # self.surfacing(30) # surfacing 30 seconds
 
         self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_next]),
