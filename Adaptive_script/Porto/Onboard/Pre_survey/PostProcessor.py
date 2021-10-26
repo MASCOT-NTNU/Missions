@@ -23,12 +23,12 @@ class PostProcessor:
 
     def __init__(self):
         self.load_global_path()
+        self.load_waypoint_initial_survey()
         self.load_file_path_initial_survey() # filepath to which it has the data from the presurvey
         self.data_path_mission = self.filepath_initial_survey
         print("filepath_initial_survey: ", self.filepath_initial_survey)
         print("data_path_mission: ", self.data_path_mission)
-        self.path = np.loadtxt(self.data_path_mission + "/data_path.txt", delimiter=", ")
-        self.salinity_auv = np.loadtxt(self.data_path_mission + "/data_salinity.txt", delimiter=", ")
+        self.load_auv_data()
         self.load_prior()
         self.prior_calibrator()
 
@@ -37,6 +37,11 @@ class PostProcessor:
         self.path_global = open("path_global.txt", 'r').read()
         print("global path is set up successfully!")
         print(self.path_global)
+
+    def load_waypoint_initial_survey(self):
+        print("Now loading the initial survey waypoint...")
+        self.waypoint_presurvey = np.loadtxt(self.path_global + "/Config/path_initial_survey.txt", delimiter=", ")
+        print("Loading initial survey waypoint successfully!", self.waypoint_presurvey.shape)
 
     def load_file_path_initial_survey(self):
         print("Loading the pre survey file path...")
@@ -55,6 +60,25 @@ class PostProcessor:
         self.wind_level = s[ind_wind_level + 13:]
         print("wind_dir: ", self.wind_dir)
         print("wind_level: ", self.wind_level)
+
+    def load_auv_data(self):
+        print("Now loading AUV data...")
+        self.path = np.loadtxt(self.data_path_mission + "/data_path.txt", delimiter=", ")
+        self.salinity_auv = np.loadtxt(self.data_path_mission + "/data_salinity.txt", delimiter=", ")
+        dist = np.sqrt((self.path[:, 0] - self.waypoint_presurvey[0, 0]) ** 2 +
+                       (self.path[:, 1] - self.waypoint_presurvey[0, 1]) ** 2 +
+                       (self.path[:, 2] - self.waypoint_presurvey[0, 2]) ** 2)
+        self.ind_start = np.where(dist == np.nanmin(dist))[0][0]
+        print("ind_start: ", self.ind_start, "len: ", len(self.salinity_auv))
+        print("Before selecting: ")
+        print("path: ", self.path.shape)
+        print("salinity_auv: ", self.salinity_auv.shape)
+        self.path_selected = self.path[self.ind_start:, :]
+        self.salinity_auv_selected = self.salinity_auv[self.ind_start:, :]
+        print("After selecting: ")
+        print("path_selected: ", self.path_selected.shape)
+        print("salinity_auv_selected: ", self.salinity_auv_selected.shape)
+        print("Loading AUV data successfully!")
 
     def load_prior(self):
         self.load_windcondition()
@@ -85,16 +109,18 @@ class PostProcessor:
         '''
         calibrate the prior, return the data matrix
         '''
-        self.lat_auv = self.path[:, 0]
-        self.lon_auv = self.path[:, 1]
-        self.depth_auv = self.path[:, 2]
+        print("Here comes the prior calibrator...")
+        print("salinity_auv: ", self.salinity_auv.shape)
+        self.lat_auv = self.path_selected[:, 0]
+        self.lon_auv = self.path_selected[:, 1]
+        self.depth_auv = self.path_selected[:, 2]
         self.salinity_prior_reg = []
         for i in range(len(self.lat_auv)):
             ind_loc = self.getPriorIndAtLoc([self.lat_auv[i], self.lon_auv[i], self.depth_auv[i]])
             self.salinity_prior_reg.append(self.salinity_prior[ind_loc])
         self.salinity_prior_reg = np.array(self.salinity_prior_reg).reshape(-1, 1)
         X = np.hstack((np.ones_like(self.salinity_prior_reg), self.salinity_prior_reg))
-        Y = self.salinity_auv
+        Y = self.salinity_auv_selected
         self.beta = np.linalg.solve(X.T @ X, (X.T @ Y))
         print("Prior is calibrated, beta: ", self.beta)
         np.savetxt(self.path_global + "/Config/beta.txt", self.beta, delimiter=", ")

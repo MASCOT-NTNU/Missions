@@ -26,15 +26,16 @@ import pandas as pd
 from DataAnalysis.usr_func import *
 
 class AUVData:
-    path_data = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Data/"
+    # path_data = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Data/"
+    path_data = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Simulation/Data/"
     path_global = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
     figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Simulation/fig/"
 
     def __init__(self):
         print("hello;-)")
-        # self.load_pre_survey()
-        self.load_config()
-        self.load_adaptive_mission()
+        self.load_path_designed()
+        self.load_pre_survey()
+        # self.load_adaptive_mission()
         # self.plot_data_in3D(self.waypoint_adaptive, self.salinity_adaptive)
         # self.plot_data_in3D(self.waypoint_adaptive, self.salinity_adaptive)
 
@@ -51,13 +52,12 @@ class AUVData:
         self.Sigma_cond = np.loadtxt(path_config + "Sigma_cond.txt", delimiter=", ")
         print("finished with config")
 
-
-
-
+    def load_path_designed(self):
+        self.path_designed = np.loadtxt(self.path_global + "Config/path_initial_survey.txt", delimiter=", ")
 
 
     def load_adaptive_mission(self):
-        datapath_adaptive = self.path_data + "MASCOT/"
+        datapath_adaptive = self.path_data
         files = os.listdir(datapath_adaptive)
         # for file in files:
         #     if file == ".DS_Store":
@@ -66,7 +66,7 @@ class AUVData:
         #         print(file)
         file = files[-3]
         print(file)
-        datapath_adaptive = datapath_adaptive + file + "/"
+        # datapath_adaptive = datapath_adaptive + file + "/"
         path_salinity = datapath_adaptive + "data_salinity.txt"
         path_timestamp = datapath_adaptive + "data_timestamp.txt"
         path_waypoint = datapath_adaptive + "data_path.txt"
@@ -81,10 +81,11 @@ class AUVData:
         self.plot_data_in3D(self.waypoint_adaptive, self.salinity_adaptive, file)
 
     def load_pre_survey(self):
-        datapath_pre_survey = self.path_data + "Pre_survey/"
-        files = os.listdir(datapath_pre_survey)
-        file = files[-1]
-        datapath_pre_survey = datapath_pre_survey + file + "/"
+        # datapath_pre_survey = self.path_data + "Pre_survey/"
+        datapath_pre_survey = self.path_data
+        # files = os.listdir(datapath_pre_survey)
+        # file = files[-1]
+        datapath_pre_survey = datapath_pre_survey
         path_salinity = datapath_pre_survey + "data_salinity.txt"
         path_timestamp = datapath_pre_survey + "data_timestamp.txt"
         path_waypoint = datapath_pre_survey + "data_path.txt"
@@ -95,7 +96,7 @@ class AUVData:
         self.salinity_presurvey = self.salinity_presurvey[ind_selected]
         self.waypoint_presurvey = self.waypoint_presurvey[ind_selected, :]
         self.timestamp_presurvey = self.timestamp_presurvey[ind_selected]
-
+        self.plot_data_in3D(self.waypoint_presurvey, self.salinity_presurvey, "test")
 
     def plot_data_in3D(self, waypoint, salinity, file_string):
         import plotly.express as px
@@ -118,38 +119,56 @@ class AUVData:
             ),
             row=1, col=1,
         )
-        grid_lat = self.polygon[:, 0]
-        grid_lon = self.polygon[:, 1]
-        grid_depth = np.zeros_like(grid_lon)
+
+        grid_lat = self.path_designed[:, 0]
+        grid_lon = self.path_designed[:, 1]
+        grid_depth = self.path_designed[:, 2]
         fig.add_trace(
             go.Scatter3d(
-                x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=grid_depth.squeeze(),
+                x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=-grid_depth.squeeze(),
                 # mode='markers',
-                # marker=dict(
-                    # size=4,
+                marker=dict(
+                    size=4,
                     # color=sal.squeeze(),
                     # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
                     # showscale=True
-                # ),
-            ),
-            row=1, col=1,
-        )
-        grid_lat = self.grid[:, 0]
-        grid_lon = self.grid[:, 1]
-        grid_depth = self.grid[:, 2]
-        fig.add_trace(
-            go.Scatter3d(
-                x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=grid_depth.squeeze(),
-                mode = "markers",
-                marker=dict(
-                size=2,
-                # color=sal.squeeze(),
-                # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
-                # showscale=True
                 ),
             ),
             row=1, col=1,
         )
+
+        # grid_lat = self.polygon[:, 0]
+        # grid_lon = self.polygon[:, 1]
+        # grid_depth = np.zeros_like(grid_lon)
+        # fig.add_trace(
+        #     go.Scatter3d(
+        #         x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=grid_depth.squeeze(),
+        #         # mode='markers',
+        #         # marker=dict(
+        #             # size=4,
+        #             # color=sal.squeeze(),
+        #             # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
+        #             # showscale=True
+        #         # ),
+        #     ),
+        #     row=1, col=1,
+        # )
+        # grid_lat = self.grid[:, 0]
+        # grid_lon = self.grid[:, 1]
+        # grid_depth = self.grid[:, 2]
+        # fig.add_trace(
+        #     go.Scatter3d(
+        #         x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=grid_depth.squeeze(),
+        #         mode = "markers",
+        #         marker=dict(
+        #         size=2,
+        #         # color=sal.squeeze(),
+        #         # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
+        #         # showscale=True
+        #         ),
+        #     ),
+        #     row=1, col=1,
+        # )
 
         fig.update_layout(
             scene={
@@ -169,8 +188,8 @@ class AUVData:
 
 if __name__ == "__main__":
     a = AUVData()
-    t = a.salinity_adaptive
-    t1 = a.timestamp_adaptive
-    t2 = a.waypoint_adaptive
+    # t = a.salinity_adaptive
+    # t1 = a.timestamp_adaptive
+    # t2 = a.waypoint_adaptive
 
 
