@@ -52,10 +52,10 @@ class PreProcessor:
     def load_prior_corrected(self):
         print("Loading corrected prior...")
         self.prior_corrected = np.loadtxt(self.path_global + "/Data/Corrected/Prior_corrected.txt", delimiter = ", ")
-        self.lat_prior = self.prior_corrected[:, 0]
-        self.lon_prior = self.prior_corrected[:, 1]
-        self.depth_prior = self.prior_corrected[:, 2]
-        self.salinity_prior = self.prior_corrected[:, -1]
+        self.lat_prior_corrected = self.prior_corrected[:, 0]
+        self.lon_prior_corrected = self.prior_corrected[:, 1]
+        self.depth_prior_corrected = self.prior_corrected[:, 2]
+        self.salinity_prior_corrected = self.prior_corrected[:, -1]
         print("Corrected prior is loaded successfully! ", self.prior_corrected.shape)
 
     def getPriorIndAtLoc(self, loc):
@@ -63,9 +63,9 @@ class PreProcessor:
         return the index in the prior data which corresponds to the location
         '''
         lat, lon, depth = loc
-        distDepth = self.depth_prior - depth
-        distLat = self.lat_prior - lat
-        distLon = self.lon_prior - lon
+        distDepth = self.depth_prior_corrected - depth
+        distLat = self.lat_prior_corrected - lat
+        distLon = self.lon_prior_corrected - lon
         dist = np.sqrt(distLat ** 2 + distLon ** 2 + distDepth ** 2)
         ind_loc = np.where(dist == np.nanmin(dist))[0][0]
         return ind_loc
@@ -75,7 +75,7 @@ class PreProcessor:
         t1 = time.time()
         for loc in self.grid:
             ind_loc = self.getPriorIndAtLoc(loc)
-            self.sal_grid.append(self.salinity_prior[ind_loc])
+            self.sal_grid.append(self.salinity_prior_corrected[ind_loc])
         self.sal_grid = np.array(self.sal_grid)
         self.prior_extracted = np.hstack((self.grid[:, 0].reshape(-1, 1), self.grid[:, 1].reshape(-1, 1),
                                          self.grid[:, 2].reshape(-1, 1), self.sal_grid.reshape(-1, 1)))

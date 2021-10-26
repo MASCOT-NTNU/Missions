@@ -9,14 +9,15 @@ This repo contains all the essential files for conducting the autonomous ocean s
 
 <!-- - Next run `Config.sh` to configure the essential paths -->
 - Create a new tab from terminal, run the following commands inside adaframe_ws/:
-`#!bin/bash
+```bash
+#!bin/bash
 
 cd adaframe_ws/
 source devel/setup.bash
 cd src
 
 roslaunch imc_ros_interface/launch/bridge.launch
-`
+```
 - Create a new tab and navigate into `/adaframe_ws/src/adaframe_examples/scripts/MASCOT/`
 
 ---

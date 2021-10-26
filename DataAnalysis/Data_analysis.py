@@ -33,9 +33,12 @@ class AUVData:
 
     def __init__(self):
         print("hello;-)")
-        self.load_path_designed()
-        self.load_pre_survey()
-        # self.load_adaptive_mission()
+        # self.load_path_designed()
+
+        # self.load_config()
+        # self.plot_on_map()
+        # self.load_pre_survey()
+        self.load_adaptive_mission()
         # self.plot_data_in3D(self.waypoint_adaptive, self.salinity_adaptive)
         # self.plot_data_in3D(self.waypoint_adaptive, self.salinity_adaptive)
 
@@ -43,29 +46,28 @@ class AUVData:
         path_config = self.path_global + "Config/"
         self.grid = np.loadtxt(path_config + "grid.txt", delimiter=", ")
         self.beta = np.loadtxt(path_config + "beta.txt", delimiter=", ")
-        self.counter_waypoint = np.loadtxt(path_config + "counter_waypoint_Mission.txt", delimiter=", ")
+        # self.counter_waypoint = np.loadtxt(path_config + "counter_waypoint_Mission.txt", delimiter=", ")
         self.OpArea = np.loadtxt(path_config + "OperationArea.txt", delimiter=", ")
         self.polygon_c = np.loadtxt(path_config + "polygon_centre.txt", delimiter=", ")
         self.polygon = np.loadtxt(path_config + "polygon.txt", delimiter=", ")
         self.threshold = np.loadtxt(path_config + "threshold.txt", delimiter=", ")
-        self.mu_cond = np.loadtxt(path_config + "mu_cond.txt", delimiter=", ")
-        self.Sigma_cond = np.loadtxt(path_config + "Sigma_cond.txt", delimiter=", ")
+        self.path_designed = np.loadtxt(self.path_global + "Config/path_initial_survey.txt", delimiter=", ")
+        # self.mu_cond = np.loadtxt(path_config + "mu_cond.txt", delimiter=", ")
+        # self.Sigma_cond = np.loadtxt(path_config + "Sigma_cond.txt", delimiter=", ")
         print("finished with config")
 
-    def load_path_designed(self):
-        self.path_designed = np.loadtxt(self.path_global + "Config/path_initial_survey.txt", delimiter=", ")
-
+    # def load_path_designed(self):
 
     def load_adaptive_mission(self):
         datapath_adaptive = self.path_data
-        files = os.listdir(datapath_adaptive)
+        # files = os.listdir(datapath_adaptive)
         # for file in files:
         #     if file == ".DS_Store":
         #         pass
         #     else:
         #         print(file)
-        file = files[-3]
-        print(file)
+        # file = files[-3]
+        # print(file)
         # datapath_adaptive = datapath_adaptive + file + "/"
         path_salinity = datapath_adaptive + "data_salinity.txt"
         path_timestamp = datapath_adaptive + "data_timestamp.txt"
@@ -78,7 +80,7 @@ class AUVData:
         self.waypoint_adaptive = self.waypoint_adaptive[ind_selected, :]
         self.timestamp_adaptive = self.timestamp_adaptive[ind_selected]
         print("finsihed")
-        self.plot_data_in3D(self.waypoint_adaptive, self.salinity_adaptive, file)
+        self.plot_data_in3D(self.waypoint_adaptive, self.salinity_adaptive, "test")
 
     def load_pre_survey(self):
         # datapath_pre_survey = self.path_data + "Pre_survey/"
@@ -97,6 +99,45 @@ class AUVData:
         self.waypoint_presurvey = self.waypoint_presurvey[ind_selected, :]
         self.timestamp_presurvey = self.timestamp_presurvey[ind_selected]
         self.plot_data_in3D(self.waypoint_presurvey, self.salinity_presurvey, "test")
+
+    def plot_on_map(self):
+
+        from gmplot import GoogleMapPlotter
+        from matplotlib.colors import Normalize
+        from matplotlib.cm import ScalarMappable
+
+        def color_scatter(gmap, lats, lngs, values=None, colormap='coolwarm',
+                          size=None, marker=False, s=None, **kwargs):
+            def rgb2hex(rgb):
+                """ Convert RGBA or RGB to #RRGGBB """
+                rgb = list(rgb[0:3])  # remove alpha if present
+                rgb = [int(c * 255) for c in rgb]
+                hexcolor = '#%02x%02x%02x' % tuple(rgb)
+                return hexcolor
+
+            if values is None:
+                colors = [None for _ in lats]
+            else:
+                cmap = plt.get_cmap(colormap)
+                norm = Normalize(vmin=min(values), vmax=max(values))
+                scalar_map = ScalarMappable(norm=norm, cmap=cmap)
+                colors = [rgb2hex(scalar_map.to_rgba(value)) for value in values]
+            for lat, lon, c in zip(lats, lngs, colors):
+                gmap.scatter(lats=[lat], lngs=[lon], c=c, size=size, marker=marker, s=s, **kwargs)
+
+        initial_zoom = 12
+        apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
+        gmap = GoogleMapPlotter(self.grid[0, 0], self.grid[0, 1], initial_zoom, apikey=apikey)
+        color_scatter(gmap, self.grid[:, 0], self.grid[:, 1], np.zeros_like(self.grid[:, 0]), size=20,
+                      colormap='hsv')
+        color_scatter(gmap, self.polygon[:, 0], self.polygon[:, 1], np.zeros_like(self.polygon[:, 0]), size=20,
+                      colormap='hsv')
+        color_scatter(gmap, self.path_designed[:, 0], self.path_designed[:, 1], np.zeros_like(self.path_designed[:, 0]), size=20,
+                      colormap='hsv')
+        gmap.polygon(self.OpArea[:, 0], self.OpArea[:, 1])
+        # color_scatter(gmap, self.OpArea[:, 0], self.OpArea[:, 1], np.zeros_like(self.OpArea[:, 0]), size=20,
+        #               colormap='hsv')
+        gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
 
     def plot_data_in3D(self, waypoint, salinity, file_string):
         import plotly.express as px
@@ -120,22 +161,22 @@ class AUVData:
             row=1, col=1,
         )
 
-        grid_lat = self.path_designed[:, 0]
-        grid_lon = self.path_designed[:, 1]
-        grid_depth = self.path_designed[:, 2]
-        fig.add_trace(
-            go.Scatter3d(
-                x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=-grid_depth.squeeze(),
-                # mode='markers',
-                marker=dict(
-                    size=4,
-                    # color=sal.squeeze(),
-                    # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
-                    # showscale=True
-                ),
-            ),
-            row=1, col=1,
-        )
+        # grid_lat = self.path_designed[:, 0]
+        # grid_lon = self.path_designed[:, 1]
+        # grid_depth = self.path_designed[:, 2]
+        # fig.add_trace(
+        #     go.Scatter3d(
+        #         x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=-grid_depth.squeeze(),
+        #         # mode='markers',
+        #         marker=dict(
+        #             size=4,
+        #             # color=sal.squeeze(),
+        #             # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
+        #             # showscale=True
+        #         ),
+        #     ),
+        #     row=1, col=1,
+        # )
 
         # grid_lat = self.polygon[:, 0]
         # grid_lon = self.polygon[:, 1]

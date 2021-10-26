@@ -74,7 +74,7 @@ class PostProcessor:
         print("path: ", self.path.shape)
         print("salinity_auv: ", self.salinity_auv.shape)
         self.path_selected = self.path[self.ind_start:, :]
-        self.salinity_auv_selected = self.salinity_auv[self.ind_start:, :]
+        self.salinity_auv_selected = self.salinity_auv[self.ind_start:]
         print("After selecting: ")
         print("path_selected: ", self.path_selected.shape)
         print("salinity_auv_selected: ", self.salinity_auv_selected.shape)
@@ -110,12 +110,13 @@ class PostProcessor:
         calibrate the prior, return the data matrix
         '''
         print("Here comes the prior calibrator...")
-        print("salinity_auv: ", self.salinity_auv.shape)
+        print("salinity_auv: ", self.salinity_auv_selected.shape)
         self.lat_auv = self.path_selected[:, 0]
         self.lon_auv = self.path_selected[:, 1]
         self.depth_auv = self.path_selected[:, 2]
         self.salinity_prior_reg = []
         for i in range(len(self.lat_auv)):
+            print(i)
             ind_loc = self.getPriorIndAtLoc([self.lat_auv[i], self.lon_auv[i], self.depth_auv[i]])
             self.salinity_prior_reg.append(self.salinity_prior[ind_loc])
         self.salinity_prior_reg = np.array(self.salinity_prior_reg).reshape(-1, 1)

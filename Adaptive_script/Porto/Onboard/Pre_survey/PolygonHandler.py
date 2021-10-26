@@ -36,25 +36,25 @@ class PolygonCircle:
         print(self.path_global)
 
     def load_prior(self):
-        self.prior_data = np.loadtxt(self.path_global + "/Data/Corrected/Prior_corrected.txt", delimiter=", ")
-        self.lat_prior = self.prior_data[:, 0]
-        self.lon_prior = self.prior_data[:, 1]
-        self.depth_prior = self.prior_data[:, 2]
-        self.salinity_prior = self.prior_data[:, -1]
+        self.prior_data_corrected = np.loadtxt(self.path_global + "/Data/Corrected/Prior_corrected.txt", delimiter=", ")
+        self.lat_prior_corrected = self.prior_data_corrected[:, 0]
+        self.lon_prior_corrected = self.prior_data_corrected[:, 1]
+        self.depth_prior_corrected = self.prior_data_corrected[:, 2]
+        self.salinity_prior_corrected = self.prior_data_corrected[:, -1]
         print("Loading prior successfully.")
-        print("lat_prior: ", self.lat_prior.shape)
-        print("lon_prior: ", self.lon_prior.shape)
-        print("depth_prior: ", self.depth_prior.shape)
-        print("salinity_prior: ", self.salinity_prior.shape)
+        print("lat_prior: ", self.lat_prior_corrected.shape)
+        print("lon_prior: ", self.lon_prior_corrected.shape)
+        print("depth_prior: ", self.depth_prior_corrected.shape)
+        print("salinity_prior: ", self.salinity_prior_corrected.shape)
 
     def getPriorIndAtLoc(self, loc):
         '''
         return the index in the prior data which corresponds to the location
         '''
         lat, lon, depth = loc
-        distDepth = self.depth_prior - depth
-        distLat = self.lat_prior - lat
-        distLon = self.lon_prior - lon
+        distDepth = self.depth_prior_corrected - depth
+        distLat = self.lat_prior_corrected - lat
+        distLon = self.lon_prior_corrected - lon
         dist = np.sqrt(distLat ** 2 + distLon ** 2 + distDepth ** 2)
         ind_loc = np.where(dist == np.nanmin(dist))[0][0]
         return ind_loc
