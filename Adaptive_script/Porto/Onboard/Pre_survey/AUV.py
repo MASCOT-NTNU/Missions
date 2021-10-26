@@ -37,9 +37,10 @@ class AUV:
         self.currentSalinity = 0.0
         self.vehicle_pos = [0, 0, 0]
 
-        # self.sms_pub_ = rospy.Publisher("/IMC/In/Sms", Sms, queue_size = 10)
-        # self.phone_number = "+351969459285"
-        # # self.phone_number = "+4792526858"
+        self.sms_pub_ = rospy.Publisher("/IMC/In/Sms", Sms, queue_size = 10)
+        self.phone_number = "+351969459285"
+        self.iridium_destination = "manta-ntnu-1"
+        # self.phone_number = "+4792526858"
 
     def TemperatureCB(self, msg):
         self.currentTemperature = msg.value.data

@@ -270,14 +270,15 @@ class PathDesigner:
 
         self.path = []
         self.duration = self.popup_interval * 60 * self.speed
+        self.path.append([self.lat_interval[0], self.lon_interval[0], 0])
         for i in range(len(self.lat_interval)):
-            if self.interval[i] % self.duration < 100:
-                self.path.append([self.lat_interval[i], self.lon_interval[i], 0])
+            # if self.interval[i] % self.duration < 100:
+            #     self.path.append([self.lat_interval[i], self.lon_interval[i], 0])
+            # else:
+            if i % 2 == 0:
+                self.path.append([self.lat_interval[i], self.lon_interval[i], self.depth_top])
             else:
-                if i % 2 == 0:
-                    self.path.append([self.lat_interval[i], self.lon_interval[i], self.depth_top])
-                else:
-                    self.path.append([self.lat_interval[i], self.lon_interval[i], self.depth_bottom])
+                self.path.append([self.lat_interval[i], self.lon_interval[i], self.depth_bottom])
         lat_finish, lon_finish = xy2latlon(-100, -100, self.lat_interval[-1], self.lon_interval[-1])
         self.path.append([lat_finish, lon_finish, 0])
         self.path_initial_survey = np.array(self.path)

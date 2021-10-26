@@ -22,9 +22,6 @@ from usr_func import *
 '''
 The following modules are used for postprocessing before the adaptive mission
 '''
-from PostProcessor import PostProcessor
-from PolygonHandler import PolygonCircle
-from GridHandler import GridPoly
 
 class PreSurveyor(AUV, DataHandler, MessageHandler):
     resume = 'False'
@@ -35,7 +32,7 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
         AUV.__init__(self)
         self.load_global_path()
         self.load_path_initial_survey()
-        self.check_pause()
+        # self.check_pause()
 
         self.Run()
 
@@ -53,9 +50,9 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
             self.get_counter_waypoint()
             print("Mission is started successfully!")
         else:
-            self.paused = True
-            self.get_counter_waypoint()
-            print("Mission is resumed successfully!")
+            # self.paused = True
+            # self.get_counter_waypoint()
+            # print("Mission is resumed successfully!")
         print("Resume state:", self.resume)
 
     def get_resume_state(self):
@@ -143,6 +140,7 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
         print("Now it will move to the starting location...")
         self.t1 = time.time()
         # self.counter_waypoint = self.get_counter_waypoint() # initialise the run
+        self.counter_waypoint = 0
         self.counter_data_saved = 0
         self.update_waypoint()
         self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now) # continue with the current waypoint
@@ -159,9 +157,13 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
 
                 if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
                     print("Longer than 10 mins, need a long break")
-                    self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
+                    self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=90,
+                                           phone_number=self.phone_number,
+                                           iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
+                    # self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
                     self.t1 = time.time() # restart the counter for time
-                    self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
+                    self.t2 = time.time()
+                    # self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
 
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the current location")
@@ -172,10 +174,10 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
                         self.send_SMS_mission_complete(lat_auv, lon_auv)
                         self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now,
                                                      0)
-                        b = PostProcessor()
-                        c = PolygonCircle()
-                        d = GridPoly()
-                        # rospy.signal_shutdown("Mission completed!!!")
+                        # b = PostProcessor()
+                        # c = PolygonCircle()
+                        # d = GridPoly()
+                        rospy.signal_shutdown("Mission completed!!!")
                         break
                     self.move_to_next_waypoint()
                 self.last_state = self.auv_handler.getState()
