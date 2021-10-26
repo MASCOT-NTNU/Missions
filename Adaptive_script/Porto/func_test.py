@@ -29,6 +29,13 @@ plt.show()
 #     kml.save("Adaptive_script/Porto/Onboard/Import/Polygon.kml")
 #     print("Polygon.kml is created successfully")
 # saveKML()
+#%%
+print("Hello")
+
+from Adaptive_script.Nidelva.usr_func import EP_1D
+
+EP_1D(0, 0, 0)
+
 
 #%%
 import numpy as np
