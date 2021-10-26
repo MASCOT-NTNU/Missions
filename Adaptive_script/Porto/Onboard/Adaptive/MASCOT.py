@@ -381,6 +381,7 @@ class MASCOT(AUV, DataHandler):
                                deg2rad(self.lon_loc[self.ind_next]),
                                -self.depth_loc[self.ind_next])
 
+
     def run(self):
         self.createDataPath(self.path_global)
         self.t1 = time.time()
