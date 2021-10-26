@@ -35,7 +35,8 @@ class AUVData:
         print("hello;-)")
         # self.load_path_designed()
 
-        # self.load_config()
+        self.load_config()
+        self.load_prior_extracted()
         # self.plot_on_map()
         # self.load_pre_survey()
         self.load_adaptive_mission()
@@ -57,6 +58,10 @@ class AUVData:
         # self.Sigma_cond = np.loadtxt(path_config + "Sigma_cond.txt", delimiter=", ")
         print("finished with config")
 
+    def load_prior_extracted(self):
+        self.prior_extracted = np.loadtxt(self.path_data + "Prior_extracted.txt", delimiter=", ")
+        print(self.prior_extracted.shape)
+
     def load_adaptive_mission(self):
         datapath_adaptive = self.path_data
         files = os.listdir(datapath_adaptive)
@@ -71,6 +76,7 @@ class AUVData:
         path_salinity = datapath_adaptive + "data_salinity.txt"
         path_timestamp = datapath_adaptive + "data_timestamp.txt"
         path_waypoint = datapath_adaptive + "data_path.txt"
+
         self.salinity_adaptive= np.loadtxt(path_salinity, delimiter=", ")
         self.waypoint_adaptive = np.loadtxt(path_waypoint, delimiter=", ")
         self.timestamp_adaptive = np.loadtxt(path_timestamp, delimiter=", ")
@@ -155,6 +161,7 @@ class AUVData:
                 marker=dict(
                     size=4,
                     color=sal.squeeze(),
+                    # colorscale = "RdBu",
                     colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
                     showscale=True
                 ),
@@ -162,22 +169,24 @@ class AUVData:
             row=1, col=1,
         )
 
-        # grid_lat = self.path_designed[:, 0]
-        # grid_lon = self.path_designed[:, 1]
-        # grid_depth = self.path_designed[:, 2]
-        # fig.add_trace(
-        #     go.Scatter3d(
-        #         x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=-grid_depth.squeeze(),
-        #         # mode='markers',
-        #         marker=dict(
-        #             size=4,
-        #             # color=sal.squeeze(),
-        #             # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
-        #             # showscale=True
-        #         ),
-        #     ),
-        #     row=1, col=1,
-        # )
+        grid_lat = self.prior_extracted[:, 0]
+        grid_lon = self.prior_extracted[:, 1]
+        grid_depth = self.prior_extracted[:, 2]
+        sal_val = self.prior_extracted[:, 3]
+        fig.add_trace(
+            go.Scatter3d(
+                x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=grid_depth.squeeze(),
+                mode='markers',
+                marker=dict(
+                    size=1,
+                    # color=sal_val.squeeze(),
+                    # colorscale = "RdBu",
+                    # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
+                    # showscale=True
+                ),
+            ),
+            row=1, col=1,
+        )
 
         # grid_lat = self.polygon[:, 0]
         # grid_lon = self.polygon[:, 1]
@@ -239,7 +248,7 @@ class AUVData:
         #         size=2,
         #         # color=sal.squeeze(),
         #         # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
-        #         # showscale=True
+        #         showscale=False
         #         ),
         #     ),
         #     row=1, col=1,
