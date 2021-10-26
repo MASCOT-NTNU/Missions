@@ -8,10 +8,9 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
-from Adaptive_script.Porto.Onboard.Pre_survey.usr_func import *
+from usr_func import *
+# from Adaptive_script.Porto.Onboard.Pre_survey.usr_func import *
 import time
-import os
-import matplotlib.pyplot as plt
 import matplotlib.path as mplPath  # used to determine whether a point is inside the grid or not
 
 '''
@@ -74,7 +73,8 @@ class GridPoly(WaypointNode):
 
     def load_global_path(self):
         print("Now it will load the global path.")
-        self.path_global = open("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/path_global.txt", 'r').read()
+        # self.path_global = open("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/path_global.txt", 'r').read()
+        self.path_global = open("path_global.txt", 'r').read()
         print("global path is set up successfully!")
         print(self.path_global)
 

@@ -9,10 +9,15 @@ __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
 
-from ..Pre_survey.PostProcessor import PostProcessor
-from ..Pre_survey.PolygonHandler import PolygonCircle
-from ..Pre_survey.GridHandler import GridPoly
-from ..Adaptive.PreProcessor import PreProcessor
+'''
+Objective: Processing the data collected from the pre_survey and conduct the preprocessing before the adaptive mission
+'''
+
+
+from PostProcessor import PostProcessor
+from PolygonHandler import PolygonCircle
+from GridHandler import GridPoly
+from PreProcessor import PreProcessor
 
 if __name__ == "__main__":
     a = PostProcessor()

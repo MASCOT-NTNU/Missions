@@ -361,4 +361,54 @@ if __name__ == "__main__":
     #         a.design_path_initial()  # design the optimal path
     #         a.plot_gradient_along_lines()  # plot the gradient along designed lines
 
+#%%
+path_presurvey = np.loadtxt("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/path_initial_survey.txt", delimiter = ", ")
+
+fig = go.Figure(data=[go.Scatter3d(x=path_presurvey[:, 1], y=path_presurvey[:, 0],
+                                   z=-path_presurvey[:, 2],
+                                   marker=dict(size=12, color="black"), line=dict(color='darkblue', width=2), )])
+fig.update_layout(
+    scene={
+        'aspectmode': 'manual',
+        'xaxis_title': 'Lon [deg]',
+        'yaxis_title': 'Lat [deg]',
+        'zaxis_title': 'Depth [m]',
+        'aspectratio': dict(x=1, y=1, z=.5),
+    },
+    showlegend=True,
+    title="Initial survey path visualisation",
+)
+fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Pre_survey/fig/"
+plotly.offline.plot(fig, filename=figpath + "Path.html", auto_open=True)
+
+from gmplot import GoogleMapPlotter
+from matplotlib.colors import Normalize
+from matplotlib.cm import ScalarMappable
+
+def color_scatter(gmap, lats, lngs, values=None, colormap='coolwarm',
+                  size=None, marker=False, s=None, **kwargs):
+    def rgb2hex(rgb):
+        """ Convert RGBA or RGB to #RRGGBB """
+        rgb = list(rgb[0:3])  # remove alpha if present
+        rgb = [int(c * 255) for c in rgb]
+        hexcolor = '#%02x%02x%02x' % tuple(rgb)
+        return hexcolor
+
+    if values is None:
+        colors = [None for _ in lats]
+    else:
+        cmap = plt.get_cmap(colormap)
+        norm = Normalize(vmin=min(values), vmax=max(values))
+        scalar_map = ScalarMappable(norm=norm, cmap=cmap)
+        colors = [rgb2hex(scalar_map.to_rgba(value)) for value in values]
+    for lat, lon, c in zip(lats, lngs, colors):
+        gmap.scatter(lats=[lat], lngs=[lon], c=c, size=size, marker=marker, s=s, **kwargs)
+
+
+initial_zoom = 12
+apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
+gmap = GoogleMapPlotter(path_presurvey[0, 0], path_presurvey[0, 1], initial_zoom, apikey=apikey)
+color_scatter(gmap, path_presurvey[:, 0], path_presurvey[:, 1], np.zeros_like(path_presurvey[:, 0]), size=20, colormap='hsv')
+gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
 
