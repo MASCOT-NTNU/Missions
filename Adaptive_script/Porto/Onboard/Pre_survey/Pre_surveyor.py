@@ -42,33 +42,34 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
         print("global path is set up successfully!")
         print(self.path_global)
 
-    def check_pause(self):
-        self.get_resume_state()
-        if self.resume == 'False':
-            self.paused = False
-            self.save_counter_waypoint()
-            self.get_counter_waypoint()
-            print("Mission is started successfully!")
-        else:
+    # def check_pause(self):
+    #     self.get_resume_state()
+    #     if self.resume == 'False':
+    #         self.paused = False
+    #         self.save_counter_waypoint()
+    #         self.get_counter_waypoint()
+    #         print("Mission is started successfully!")
+    #     else:
+    #         pass
             # self.paused = True
             # self.get_counter_waypoint()
             # print("Mission is resumed successfully!")
-        print("Resume state:", self.resume)
+        # print("Resume state:", self.resume)
 
-    def get_resume_state(self):
-        print("Loading resume state...")
-        if not os.path.exists(self.path_global + "/Config/ResumeState_PreSurvey.txt"):
-            self.save_resume_state()
-        else:
-            self.resume = open(self.path_global + "/Config/ResumeState_PreSurvey.txt", 'r').read()
-        print("Loading resume state successfully! Resume state: ", self.resume)
-
-    def save_resume_state(self, resume_state = 'False'):
-        print("Saving resume state...")
-        fresume_state = open(self.path_global + "/Config/ResumeState_PreSurvey.txt", 'w')
-        fresume_state.write(resume_state)
-        fresume_state.close()
-        print("Resume state is saved successfully!" + resume_state)
+    # def get_resume_state(self):
+    #     print("Loading resume state...")
+    #     if not os.path.exists(self.path_global + "/Config/ResumeState_PreSurvey.txt"):
+    #         self.save_resume_state()
+    #     else:
+    #         self.resume = open(self.path_global + "/Config/ResumeState_PreSurvey.txt", 'r').read()
+    #     print("Loading resume state successfully! Resume state: ", self.resume)
+    #
+    # def save_resume_state(self, resume_state = 'False'):
+    #     print("Saving resume state...")
+    #     fresume_state = open(self.path_global + "/Config/ResumeState_PreSurvey.txt", 'w')
+    #     fresume_state.write(resume_state)
+    #     fresume_state.close()
+    #     print("Resume state is saved successfully!" + resume_state)
 
     def save_counter_waypoint(self):
         print("Saving counter waypoint...")

@@ -26,8 +26,6 @@ The following program needs to be run before the adpative mission to prepare the
 '''
 
 class MASCOT(AUV, DataHandler):
-    # resume = 'False'
-    # paused = False
     ind_start, ind_now, ind_pre, ind_cand, ind_next = [0, 0, 0, 0, 0]  # only use index to make sure it is working properly
     mu_cond, Sigma_cond, F = [None, None, None]  # conditional mean and covariance and design matrix
     mu_prior, Sigma_prior = [None, None]  # prior mean and covariance matrix
@@ -186,6 +184,7 @@ class MASCOT(AUV, DataHandler):
         self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),
                                      deg2rad(self.lon_loc[self.ind_start]), -self.depth_loc[self.ind_start])
         self.updateWaypoint()
+        self.send_next_waypoint()
 
     def find_candidates_loc(self):
         '''
@@ -353,19 +352,19 @@ class MASCOT(AUV, DataHandler):
         print("moving to the starting location")
 
     def send_next_waypoint(self):
-        # Move to the next waypoint
-        # if self.paused:
-        #     self.counter_waypoint = self.counter_waypoint
-        # else:
         self.counter_waypoint = self.counter_waypoint + 1  # needs to be updated before
-
-        # if self.counter_waypoint % 3 == 0: # check whether it needs to surface
-        if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
-            print("Longer than 10 mins, need a long break")
-            self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
-            self.t1 = self.t2
-        else:
-            print("Less than 10 mins, need a shorter break")
+        if self.counter_waypoint % 3 == 0: # check whether it needs to surface
+            if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
+                print("Longer than 10 mins, need a long break")
+                self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=90,
+                                       phone_number=self.phone_number,
+                                       iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
+                # self.surfacing(90)  # surfacing 90 seconds after 10 mins of travelling
+                self.t1 = time.time()
+                self.t2 = time.time()
+                # self.t1 = self.t2
+            else:
+                print("Less than 10 mins, need a shorter break")
             # self.surfacing(30) # surfacing 30 seconds
 
         self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_next]),
@@ -391,8 +390,8 @@ class MASCOT(AUV, DataHandler):
                 print(self.auv_handler.getState())
                 print("Counter waypoint: ", self.counter_waypoint)
                 print("Elapsed time after surfacing: ", self.t2 - self.t1)
-                if self.counter_waypoint == 0:
-                    self.send_starting_waypoint()
+                # if self.counter_waypoint == 0:
+                #     self.send_starting_waypoint()
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the current location")
                     self.sal_sampled = np.mean(self.data_salinity[-10:])  # take the past ten samples and average
