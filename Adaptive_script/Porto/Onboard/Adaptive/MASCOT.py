@@ -198,13 +198,7 @@ class MASCOT(AUV, DataHandler):
         self.ind_cand = np.where(self.distance_vector <= self.distance_neighbours + self.distanceTolerance)[0]
 
     def GPupd(self, y_sampled):
-        print(self.F.shape)
-        print(self.Sigma_cond.shape)
-        print(self.R_sal.shape)
-
         C = self.F @ self.Sigma_cond @ self.F.T + self.R_sal
-        print(C.shape)
-        print((y_sampled - self.F @ self.mu_cond).shape)
         self.mu_cond = self.mu_cond + self.Sigma_cond @ self.F.T @ np.linalg.solve(C,
                                                                                    (y_sampled - self.F @ self.mu_cond))
 

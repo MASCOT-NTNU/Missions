@@ -7,9 +7,9 @@ This repo contains all the essential files for conducting the autonomous ocean s
 ## Mission Prepration
 - Copy all the files from [REPO](https://github.com/MASCOT-NTNU/Missions/tree/master/Adaptive_script/Porto/Onboard) to the script folder which contains Tore's code
 
-- Next run `Config.sh` to configure the essential paths
+- Tore should have set up the right path for IMC-broker.
 
-- Clean the folder
+- Run the IMC-broker before launching the program `sh setup.sh`.
 
 ---
 

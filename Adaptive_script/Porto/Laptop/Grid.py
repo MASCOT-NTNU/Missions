@@ -137,30 +137,32 @@ class GridPoly(WaypointNode):
         '''
         get new locations around the current location 
         '''
-        lat_delta, lon_delta = self.xy2latlon(self.distance_poly * np.sin(self.angle_poly),
-                                              self.distance_poly * np.cos(self.angle_poly), 0, 0)
-        return lat_delta + loc[0], lon_delta + loc[1]
+        lat_new, lon_new = self.xy2latlon(self.distance_poly * np.sin(self.angle_poly),
+                                          self.distance_poly * np.cos(self.angle_poly), loc[0], loc[1])
+        return lat_new, lon_new
 
     def getStartLocation(self):
-        lat_min = np.amin(self.polygon[:, 0])
-        lat_max = np.amax(self.polygon[:, 0])
-        lon_min = np.amin(self.polygon[:, 1])
-        lon_max = np.amax(self.polygon[:, 1])
-        path_polygon = mplPath.Path(self.polygon)
-        while True:
-            lat_random = np.random.uniform(lat_min, lat_max)
-            lon_random = np.random.uniform(lon_min, lon_max)
-            if path_polygon.contains_point((lat_random, lon_random)):
-                break
-        print("The generated random starting location is: ")
-        print([lat_random, lon_random])
-        self.loc_start = [lat_random, lon_random]
+        # lat_min = np.amin(self.polygon[:, 0])
+        # lat_max = np.amax(self.polygon[:, 0])
+        # lon_min = np.amin(self.polygon[:, 1])
+        # lon_max = np.amax(self.polygon[:, 1])
+        # path_polygon = mplPath.Path(self.polygon)
+        # while True:
+        #     lat_random = np.random.uniform(lat_min, lat_max)
+        #     lon_random = np.random.uniform(lon_min, lon_max)
+        #     if path_polygon.contains_point((lat_random, lon_random)):
+        #         break
+        # print("The generated random starting location is: ")
+        # print([lat_random, lon_random])
+        # self.loc_start = [lat_random, lon_random]
+        self.loc_start = [self.polygon[0, 0], self.polygon[0, 1]]
     
     def getGridPoly(self):
         '''        
         get the polygon grid discretisation 
         '''
         self.getStartLocation()
+        # lat_new, lon_new = self.polygon[0, :]
         lat_new, lon_new = self.getNewLocations(self.loc_start)
         start_node = []
         for i in range(len(self.angle_poly)):
@@ -309,7 +311,9 @@ class GridPoly(WaypointNode):
 
 if __name__ == "__main__":
     # polygon = np.array([[0, 0]])
-    grid = GridPoly()
+    path_polygon = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/polygon.txt"
+    polygon = np.loadtxt(path_polygon, delimiter = ", ")
+    grid = GridPoly(polygon)
 
 
 

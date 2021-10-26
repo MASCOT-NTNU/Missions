@@ -8,7 +8,7 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
-from usr_func import *
+from Adaptive_script.Porto.Onboard.Pre_survey.usr_func import *
 import time
 import os
 import matplotlib.pyplot as plt
@@ -74,7 +74,7 @@ class GridPoly(WaypointNode):
 
     def load_global_path(self):
         print("Now it will load the global path.")
-        self.path_global = open("path_global.txt", 'r').read()
+        self.path_global = open("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/path_global.txt", 'r').read()
         print("global path is set up successfully!")
         print(self.path_global)
 
@@ -110,24 +110,25 @@ class GridPoly(WaypointNode):
         '''
         get new locations around the current location
         '''
-        lat_delta, lon_delta = xy2latlon(self.distance_poly * np.sin(self.angle_poly),
-                                         self.distance_poly * np.cos(self.angle_poly), 0, 0)
-        return lat_delta + loc[0], lon_delta + loc[1]
+        lat_new, lon_new = xy2latlon(self.distance_poly * np.sin(self.angle_poly),
+                                         self.distance_poly * np.cos(self.angle_poly), loc[0], loc[1])
+        return lat_new, lon_new
 
     def getStartLocation(self):
-        lat_min = np.amin(self.polygon[:, 0])
-        lat_max = np.amax(self.polygon[:, 0])
-        lon_min = np.amin(self.polygon[:, 1])
-        lon_max = np.amax(self.polygon[:, 1])
-        path_polygon = mplPath.Path(self.polygon)
-        while True:
-            lat_random = np.random.uniform(lat_min, lat_max)
-            lon_random = np.random.uniform(lon_min, lon_max)
-            if path_polygon.contains_point((lat_random, lon_random)):
-                break
-        print("The generated random starting location is: ")
-        print([lat_random, lon_random])
-        self.loc_start = [lat_random, lon_random]
+        # lat_min = np.amin(self.polygon[:, 0])
+        # lat_max = np.amax(self.polygon[:, 0])
+        # lon_min = np.amin(self.polygon[:, 1])
+        # lon_max = np.amax(self.polygon[:, 1])
+        # path_polygon = mplPath.Path(self.polygon)
+        # while True:
+        #     lat_random = np.random.uniform(lat_min, lat_max)
+        #     lon_random = np.random.uniform(lon_min, lon_max)
+        #     if path_polygon.contains_point((lat_random, lon_random)):
+        #         break
+        # print("The generated random starting location is: ")
+        # print([lat_random, lon_random])
+        # self.loc_start = [lat_random, lon_random]
+        self.loc_start = [self.polygon[0, 0], self.polygon[0, 1]]
 
     def getGridPoly(self):
         '''
