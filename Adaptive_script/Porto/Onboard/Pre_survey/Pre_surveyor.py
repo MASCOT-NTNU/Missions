@@ -64,7 +64,6 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
         SMS.contents.data = "Congrats, Mission complete. LAUV-Xplore-1 location: " + str(lat) + ", " + str(lon)
         self.sms_pub_.publish(SMS)
 
-
     def getVehiclePos(self):
         x_auv = self.vehicle_pos[0]  # x distance from the origin
         y_auv = self.vehicle_pos[1]  # y distance from the origin
