@@ -87,6 +87,9 @@ class AUVData:
         print("finsihed")
         self.plot_data_in3D(self.waypoint_adaptive, self.salinity_adaptive, "test")
 
+    def update_the_field(self):
+        pass 
+
     def load_pre_survey(self):
         # datapath_pre_survey = self.path_data + "Pre_survey/"
         datapath_pre_survey = self.path_data
