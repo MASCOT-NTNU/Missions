@@ -91,6 +91,7 @@ class DataHandler_Prior:
             print("after ebb checking: ", len(self.ind_selected_ebb))
 
             if len(self.ind_selected_ebb) > 0:
+                # print(self.ind_selected_ebb)
                 print("Found ", wind_dir, wind_level, " {:d} timeframes are used to average".format(len(self.ind_selected_ebb)))
                 self.salinity_merged = np.mean(self.salinity[self.ind_selected_ebb, :, :, :self.depth_layers], axis = 0)
                 self.depth_merged = np.mean(self.depth[self.ind_selected_ebb, :, :, :self.depth_layers], axis = 0)
@@ -129,6 +130,15 @@ class DataHandler_Prior:
                         os.system("say Step {:d} of {:d}, time consumed {:.1f} seconds".format(counter, len(os.listdir(self.data_folder)) * len(wind_dirs) * len(wind_levels), t2 - t1))
                         print("Step {:d} of {:d}, time consumed {:.1f} seconds".format(counter, len(os.listdir(self.data_folder)) * len(wind_dirs) * len(wind_levels), t2 - t1))
                         counter = counter + 1
+
+    def check_for_wind_condition(self):
+        wind_dir = "North"
+        wind_level = "Heavy"
+        data_folder = "/Volumes/LaCie/MASCOT/Data/Nov/h5/"
+
+        for file in os.listdir(data_folder):
+            if file.endswith(".h5"):
+                self.merge_data_for_wind(wind_dir, wind_level, data_folder + file)
 
     def Average_all(self):
         new_data_path = self.data_folder + "Merged_all/"
@@ -217,11 +227,16 @@ class DataHandler_Prior:
         #             folder_content = os.listdir(folder)
 
 
+
 if __name__ == "__main__":
-    data_folder = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/"
-    data_folder_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Merged/"
+    # data_folder = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/"
+    # data_folder_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Merged/"
     wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Wind/wind_data.txt"
+
+    data_folder = "/Volumes/LaCie/MASCOT/Data/Nov/h5/"
+    data_folder_new = "/Volumes/LaCie/MASCOT/Data/Nov/h5/"
     a = DataHandler_Prior(data_folder, data_folder_new, wind_path)
+    a.check_for_wind_condition()
     # a.merge_all_data_from_file()
     # a.Average_all()
     # a.checkMerged()

@@ -92,7 +92,7 @@ class AUVData:
         self.salinity_adaptive = self.salinity_adaptive[ind_selected]
         self.waypoint_adaptive = self.waypoint_adaptive[ind_selected, :]
         self.waypoint_adaptive[:, 2] = self.myround(self.waypoint_adaptive[:, 2] + .5) - .5
-        
+
         self.timestamp_adaptive = self.timestamp_adaptive[ind_selected]
         print("finsihed")
 

@@ -192,7 +192,7 @@ class MASCOT(AUV, DataHandler):
         x_auv = self.vehicle_pos[0]
         y_auv = self.vehicle_pos[1]
         lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
-        SMS.contents.data = "Congrats, Adaptive Mission complete. LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(lon_auv)
+        SMS.contents.data = "Congrats, Mission complete. LAUV-Xplore-1 location: " + str(lat_auv) + ", " + str(lon_auv)
         self.sms_pub_.publish(SMS)
 
     def save_mission_data(self):
@@ -282,5 +282,4 @@ class MASCOT(AUV, DataHandler):
 if __name__ == "__main__":
     a = MASCOT()
     print("Mission complete!!!")
-
 
