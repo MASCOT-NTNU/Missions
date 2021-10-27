@@ -37,9 +37,13 @@ class AUVData:
 
         self.load_config()
         self.load_prior_extracted()
+        # self.load_prior_corrected()
         # self.plot_on_map()
         # self.load_pre_survey()
         self.load_adaptive_mission()
+        self.update_the_field()
+        self.plot_data()
+        # self.plot_data_in3D(self.waypoint_adaptive, self.salinity_adaptive, "test")
 
         # self.plot_data_in3D(self.waypoint_adaptive, self.salinity_adaptive)
         # self.plot_data_in3D(self.waypoint_adaptive, self.salinity_adaptive)
@@ -62,6 +66,10 @@ class AUVData:
         self.prior_extracted = np.loadtxt(self.path_data + "Prior_extracted.txt", delimiter=", ")
         print(self.prior_extracted.shape)
 
+    def load_prior_corrected(self):
+        self.prior_corrected = np.loadtxt(self.path_data + "Prior_corrected.txt", delimiter=", ")
+        print(self.prior_corrected.shape)
+
     def load_adaptive_mission(self):
         datapath_adaptive = self.path_data
         files = os.listdir(datapath_adaptive)
@@ -83,12 +91,71 @@ class AUVData:
         ind_selected = np.where(self.salinity_adaptive >= 20)[0]
         self.salinity_adaptive = self.salinity_adaptive[ind_selected]
         self.waypoint_adaptive = self.waypoint_adaptive[ind_selected, :]
+        self.waypoint_adaptive[:, 2] = self.myround(self.waypoint_adaptive[:, 2] + .5) - .5
+        
         self.timestamp_adaptive = self.timestamp_adaptive[ind_selected]
         print("finsihed")
-        self.plot_data_in3D(self.waypoint_adaptive, self.salinity_adaptive, "test")
+
+    def myround(self, value, base = .75):
+        return base * np.round(value / base)
 
     def update_the_field(self):
-        pass 
+        print("salinity: ", self.salinity_adaptive.shape)
+        self.lat_auv = self.waypoint_adaptive[:, 0].reshape(-1, 1)
+        self.lon_auv = self.waypoint_adaptive[:, 1].reshape(-1, 1)
+        self.depth_auv = self.waypoint_adaptive[:, 2].reshape(-1, 1)
+        self.salinity_auv = self.salinity_adaptive.reshape(-1, 1)
+        self.x_auv, self.y_auv = latlon2xy(self.lat_auv, self.lon_auv, self.lat_auv[0], self.lon_auv[0])
+
+        self.lat_prior = self.prior_extracted[:, 0].reshape(-1, 1)
+        self.lon_prior = self.prior_extracted[:, 1].reshape(-1, 1)
+        self.depth_prior = self.prior_extracted[:, 2].reshape(-1, 1)
+        self.salinity_prior = self.prior_extracted[:, 3].reshape(-1, 1)
+        self.x_prior, self.y_prior = latlon2xy(self.lat_prior, self.lon_prior, self.lat_auv[0], self.lon_auv[0])
+
+        obs = np.hstack((self.x_auv, self.y_auv, self.depth_auv))
+        range_lateral = 550
+        range_vertical = 2
+        ksi = range_lateral / range_vertical
+        sigma = np.sqrt(.5)
+        eta = 4.5 / range_lateral
+        tau = np.sqrt(.04)
+        H_obs = compute_H(obs, obs, ksi)
+        Sigma_obs = Matern_cov(sigma, eta, H_obs) + tau ** 2 * np.identity(H_obs.shape[0])
+
+        sal_est = []
+        for i in range(len(self.salinity_auv)):
+            ind = self.getPriorIndAtLoc([self.lat_auv[i], self.lon_auv[i], self.depth_auv[i]])
+            sal_est.append(self.salinity_prior[ind])
+        sal_est = np.array(sal_est).reshape(-1, 1)
+
+        grid = np.hstack((self.x_prior, self.y_prior, self.depth_prior))
+        H_grid = compute_H(grid, grid, ksi)
+        Sigma_grid = Matern_cov(sigma, eta, H_grid)
+
+        H_grid_obs = compute_H(grid, obs, ksi)
+        Sigma_grid_obs = Matern_cov(sigma, eta, H_grid_obs)
+
+        self.mu_cond = self.salinity_prior + Sigma_grid_obs @ np.linalg.solve(Sigma_obs, (self.salinity_auv - sal_est))
+        self.Sigma_cond = Sigma_grid - Sigma_grid_obs @ np.linalg.solve(Sigma_obs, Sigma_grid_obs.T)
+        self.perr = np.diag(self.Sigma_cond).reshape(-1, 1)
+
+        self.ep = EP_1D(self.mu_cond, self.Sigma_cond, self.threshold)
+        self.ep_prior = EP_1D(self.salinity_prior, Sigma_grid, self.threshold)
+
+        pass
+
+    def getPriorIndAtLoc(self, loc):
+        '''
+        return the index in the prior data which corresponds to the location
+        '''
+        lat, lon, depth = loc
+        distDepth = self.depth_prior - depth
+        distLat = self.lat_prior - lat
+        distLon = self.lon_prior - lon
+        dist = np.sqrt(distLat ** 2 + distLon ** 2 + distDepth ** 2)
+        ind_loc = np.where(dist == np.nanmin(dist))[0][0]
+        return ind_loc
 
     def load_pre_survey(self):
         # datapath_pre_survey = self.path_data + "Pre_survey/"
@@ -148,6 +215,21 @@ class AUVData:
         #               colormap='hsv')
         gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
 
+    def plot_data(self):
+        fig = plt.figure(figsize=(25, 10))
+        gs = GridSpec(ncols=3, nrows=1, figure=fig)
+        for i in range(len(np.unique(self.depth_prior))):
+            ind_auv = (self.waypoint_adaptive[:, 2] == )
+            ind = (self.depth_prior == np.unique(self.depth_prior)[i])
+            ax = fig.add_subplot(gs[i])
+            im = ax.scatter(self.lon_prior[ind], self.lat_prior[ind], s=300, c=self.ep[ind], cmap="RdBu", vmin=0,
+                            vmax=1)
+            plt.colorbar(im, fraction=0.08, pad=0.04)
+            ax.set_xlabel("Lon [deg]")
+            ax.set_ylabel("Lat [deg]")
+            ax.set_title("Depth: " + str(np.unique(self.depth_prior)[i]))
+        plt.show()
+
 
     def plot_data_in3D(self, waypoint, salinity, file_string):
         import plotly.express as px
@@ -155,107 +237,28 @@ class AUVData:
         lon = waypoint[:, 1]
         depth = waypoint[:, 2]
         sal = salinity
+
         # Make 3D plot # #
         fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
+        grid_lat, grid_lon = latlon2xy(self.lat_prior, self.lon_prior, 0, 0)
+        grid_lat = self.lat_prior
+        grid_lon = self.lon_prior
+        grid_depth = self.depth_prior
+        sal = self.mu_cond
+        # sal = self.ep_prior
+
         fig.add_trace(
-            go.Scatter3d(
-                x=lon.squeeze(), y=lat.squeeze(), z=depth.squeeze(),
-                # mode='markers',
-                marker=dict(
-                    size=4,
-                    color=sal.squeeze(),
-                    # colorscale = "RdBu",
-                    colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
-                    showscale=True
-                ),
+            go.Volume(
+                x=grid_lon.flatten(), y=grid_lat.flatten(), z=grid_depth.flatten(),
+                value=sal.flatten(),
+                # isomin=isomin,
+                # isomax=isomax,
+                # opacity=opacity,
+                # surface_count=surface_count,
+                # colorbar=colorbar,
             ),
-            row=1, col=1,
+            row=1, col=1
         )
-
-        grid_lat = self.prior_extracted[:, 0]
-        grid_lon = self.prior_extracted[:, 1]
-        grid_depth = self.prior_extracted[:, 2]
-        sal_val = self.prior_extracted[:, 3]
-        fig.add_trace(
-            go.Scatter3d(
-                x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=grid_depth.squeeze(),
-                mode='markers',
-                marker=dict(
-                    size=1,
-                    # color=sal_val.squeeze(),
-                    # colorscale = "RdBu",
-                    # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
-                    # showscale=True
-                ),
-            ),
-            row=1, col=1,
-        )
-
-        # grid_lat = self.polygon[:, 0]
-        # grid_lon = self.polygon[:, 1]
-        # grid_depth = np.zeros_like(grid_lon)
-        # fig.add_trace(
-        #     go.Scatter3d(
-        #         x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=grid_depth.squeeze(),
-        #         # mode='markers',
-        #         # marker=dict(
-        #             # size=4,
-        #             # color=sal.squeeze(),
-        #             # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
-        #             # showscale=True
-        #         # ),
-        #     ),
-        #     row=1, col=1,
-        # )
-        # grid_lat = self.grid[:, 0]
-        # grid_lon = self.grid[:, 1]
-        # grid_depth = self.grid[:, 2]
-        # fig.add_trace(
-        #     go.Scatter3d(
-        #         x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=grid_depth.squeeze(),
-        #         mode = "markers",
-        #         marker=dict(
-        #         size=2,
-        #         # color=sal.squeeze(),
-        #         # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
-        #         # showscale=True
-        #         ),
-        #     ),
-        #     row=1, col=1,
-        # )
-
-        # grid_lat = self.polygon[:, 0]
-        # grid_lon = self.polygon[:, 1]
-        # grid_depth = np.zeros_like(grid_lon)
-        # fig.add_trace(
-        #     go.Scatter3d(
-        #         x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=grid_depth.squeeze(),
-        #         # mode='markers',
-        #         # marker=dict(
-        #             # size=4,
-        #             # color=sal.squeeze(),
-        #             # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
-        #             # showscale=True
-        #         # ),
-        #     ),
-        #     row=1, col=1,
-        # )
-        # grid_lat = self.grid[:, 0]
-        # grid_lon = self.grid[:, 1]
-        # grid_depth = self.grid[:, 2]
-        # fig.add_trace(
-        #     go.Scatter3d(
-        #         x=grid_lon.squeeze(), y=grid_lat.squeeze(), z=grid_depth.squeeze(),
-        #         mode = "markers",
-        #         marker=dict(
-        #         size=2,
-        #         # color=sal.squeeze(),
-        #         # colorscale=px.colors.qualitative.Light24,  # to have quantitified colorbars and colorscales
-        #         showscale=False
-        #         ),
-        #     ),
-        #     row=1, col=1,
-        # )
 
         fig.update_layout(
             scene={
@@ -278,5 +281,20 @@ if __name__ == "__main__":
     # t = a.salinity_adaptive
     # t1 = a.timestamp_adaptive
     # t2 = a.waypoint_adaptive
+#%%
 
+def plot_data(self):
+    fig = plt.figure(figsize=(25, 10))
+    gs = GridSpec(ncols=3, nrows=1, figure=fig)
+    for i in range(len(np.unique(self.depth_prior))):
+        ind = (self.depth_prior == np.unique(self.depth_prior)[i])
+        ax = fig.add_subplot(gs[i])
+        im = ax.scatter(self.lon_prior[ind], self.lat_prior[ind], s = 300, c = self.ep[ind], cmap = "RdBu", vmin = 0, vmax = 1)
+        plt.colorbar(im, fraction=0.08, pad=0.04)
+        ax.set_xlabel("Lon [deg]")
+        ax.set_ylabel("Lat [deg]")
+        ax.set_title("Depth: " + str(np.unique(self.depth_prior)[i]))
+    plt.show()
+
+plot_data(a)
 

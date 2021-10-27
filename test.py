@@ -1,25 +1,37 @@
-import h5py
 import numpy as np
-import time
+from mayavi.mlab import *
+
+def test_points3d():
+    x = np.arange(5)
+    y = np.arange(5)
+    xx, yy = np.meshgrid(x, y)
+    xx = xx.flatten()
+    yy = yy.flatten()
+    zz = np.zeros_like(xx)
+
+    return points3d(xx, yy, zz, np.random.randn(len(xx)), colormap="copper", scale_factor=.25)
+
+# import numpy
+# from mayavi.mlab import *
+
+def test_imshow():
+    """ Use imshow to visualize a 2D 10x10 random array.
+    """
+    s = np.random.random((10, 10))
+    return imshow(s, colormap='gist_earth')
+# test_points3d()
 
 
-datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Merged/Merged_North_Mild_2019_sal_2.h5"
-t1 = time.time()
-data = h5py.File(datapath, 'r')
-lat = np.array(data.get("lat"))
-lon = np.array(data.get("lon"))
-depth = np.array(data.get("depth"))
-salinity = np.array(data.get("salinity"))
-t2 = time.time()
-print("Time consuemed: ", t2 - t1)
+def test_contour3d():
+    x, y, z = np.ogrid[-5:5:64j, -5:5:64j, -5:5:64j]
 
-print(lat.shape)
-print(lon.shape)
-print(depth.shape)
-print(salinity.shape)
+    scalars = x * x * 0.5 + y * y + z * z * 2.0
 
-import matplotlib.pyplot as plt
-plt.scatter(lon[:, :, 0], lat[:, :, 0], c = salinity[:, :, 0], cmap = "Paired")
-plt.colorbar()
-plt.show()
+    obj = contour3d(scalars, contours=4, transparent=True)
+    return obj
 
+
+# test_imshow()
+test_contour3d(
+
+)

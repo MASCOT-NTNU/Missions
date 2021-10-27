@@ -1,3 +1,65 @@
+import plotly
+import plotly.graph_objects as go
+import numpy as np
+
+x = np.arange(5)
+y = np.arange(5)
+xx, yy = np.meshgrid(x, y)
+xx = xx.flatten()
+yy = yy.flatten()
+zz = np.zeros_like(xx)
+val = np.random.randn(len(xx)) + xx ** 2 + yy ** 2
+fig= go.Figure(data=go.Isosurface(
+    x=xx,
+    y=yy,
+    z=zz,
+    value=val,
+    isomin=2,
+    isomax=6,
+))
+
+plotly.offline.plot(fig, filename="test.html", auto_open=True)
+#%%
+import matplotlib.pyplot as plt
+# Create figure and add axis
+fig = plt.figure(figsize=(8,6))
+ax = plt.subplot(111, projection='3d')
+# Remove gray panes and axis grid
+ax.xaxis.pane.fill = False
+ax.xaxis.pane.set_edgecolor('white')
+ax.yaxis.pane.fill = False
+ax.yaxis.pane.set_edgecolor('white')
+ax.zaxis.pane.fill = False
+ax.zaxis.pane.set_edgecolor('white')
+ax.grid(False)
+# Remove z-axis
+ax.w_zaxis.line.set_lw(0.)
+ax.set_zticks([])
+# Create meshgrid
+X, Y = np.meshgrid(np.linspace(0, 2, 20), np.linspace(0, 2, 20))
+
+# Plot surface
+plot = ax.plot_surface(X=X, Y=Y, Z=np.random.randn(len(X), len(Y)), cmap='YlGnBu_r', vmin=0, vmax=200)
+# Adjust plot view
+ax.view_init(elev=50, azim=225)
+ax.dist=11
+# Add colorbar
+cbar = fig.colorbar(plot, ax=ax, shrink=0.6)
+cbar.set_ticks([0, 50, 100, 150, 200])
+cbar.set_ticklabels(['0', '50', '100', '150', '200 nm'])
+# Set tick marks
+# ax.xaxis.set_major_locator(mpl.ticker.MultipleLocator(0.5))
+# ax.yaxis.set_major_locator(mpl.ticker.MultipleLocator(0.5))
+# Set axis labels
+ax.set_xlabel(r'$\mathregular{\mu}$m', labelpad=20)
+ax.set_ylabel(r'$\mathregular{\mu}$m', labelpad=20)
+# Set z-limit
+ax.set_zlim(50, 200)
+plt.show()
+
+
+
+#%%
 import numpy as np
 import matplotlib.pyplot as plt
 
