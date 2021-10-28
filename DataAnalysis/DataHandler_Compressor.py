@@ -18,6 +18,7 @@ import matplotlib.path as mplPath  # used to determine whether a point is inside
 
 class DataCompressor:
     path_data = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Merged_all/"
+    path_data_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Merged_all_extracted/"
     path_OpArea = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/OperationArea.txt"
 
     def __init__(self):
@@ -71,14 +72,15 @@ class DataCompressor:
                         pass
 
     def extract_data_inside_box(self):
-        ind_matrix = np.zeros_like(self.lat[:, :, 0])
+        t1 = time.time()
         self.filterNaN()
+        t2 = time.time()
+        print("Filtering takes: ", t2 - t1)
+        ind_matrix = np.zeros_like(self.lat[:, :, 0])
         for i in range(self.lat.shape[0]):
             for j in range(self.lon.shape[1]):
                 if self.polygon_box.contains_point((self.lat[i, j, 0], self.lon[i, j, 0])):
                     ind_matrix[i, j] = True
-
-
         self.lat_extracted = self.lat[np.nonzero(self.lat[:, :, 0] * ind_matrix)]
         self.lon_extracted = self.lon[np.nonzero(self.lon[:, :, 0] * ind_matrix)]
         self.depth_extracted = self.depth[np.nonzero(self.depth[:, :, 0] * ind_matrix)]
@@ -89,6 +91,25 @@ class DataCompressor:
             # self.depth_extracted[:, k] = self.depth[np.nonzero(self.depth[:, :, k] * ind_matrix)]
             # self.salinity_extracted[:, k] = self.salinity[np.nonzero(self.salinity[:, :, k] * ind_matrix)]
 
+    def save_extracted_data(self):
+        t1 = time.time()
+        self.path_data_save = self.path_data_new + self.filename
+        print(self.path_data_save)
+        data_hdf = h5py.File(self.path_data_save, 'w')
+        print("Finished: file creation")
+        data_hdf.create_dataset("lon", data=self.lon_extracted)
+        print("Finished: lon dataset creation")
+        data_hdf.create_dataset("lat", data=self.lat_extracted)
+        print("Finished: lat dataset creation")
+        # data_hdf.create_dataset("timestamp", data=self.timestamp_data)
+        # print("Finished: timestamp dataset creation")
+        data_hdf.create_dataset("depth", data=self.depth_extracted)
+        print("Finished: depth dataset creation")
+        data_hdf.create_dataset("salinity", data=self.salinity_extracted)
+        print("Finished: salinity dataset creation")
+        t2 = time.time()
+        print("Saving data takes: ", t2 - t1, " seconds")
+
 
     def load_merged_data(self):
         files = os.listdir(self.path_data)
@@ -96,7 +117,8 @@ class DataCompressor:
 
         for file in files:
             if file.endswith(".h5"):
-
+                print(file)
+                self.filename = file
                 self.data = h5py.File(self.path_data + file)
                 self.lat = np.array(self.data.get("lat"))
                 self.lon = np.array(self.data.get("lon"))
@@ -105,17 +127,21 @@ class DataCompressor:
 
                 print(self.data)
                 self.extract_data_inside_box()
-                break
+                self.save_extracted_data()
+
+                # break
 
 if __name__ == "__main__":
     a = DataCompressor()
 
 
-#%%
+c#%%
+ind_depth = 8
 
 import matplotlib.pyplot as plt
-plt.scatter(a.lon_extracted[:, 0], a.lat_extracted[:, 0], c = a.salinity_extracted[:, 0])
+plt.scatter(a.lon_extracted[:, ind_depth], a.lat_extracted[:, ind_depth], c = a.salinity_extracted[:, ind_depth], vmin = 10, vmax = 35, cmap = "Paired")
 plt.plot(a.operational_area[:, 1], a.operational_area[:, 0])
+plt.colorbar()
 plt.show()
 
 
