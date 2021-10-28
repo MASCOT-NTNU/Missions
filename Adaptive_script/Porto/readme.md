@@ -1,16 +1,9 @@
-# The folder is cleaned
+# Porto folder contains essential scripts and data for mission execution
 
-# Existing scripts
-## Grid.py --> build grid for the mission
-## GP.py --> build gaussian kernel for the mission
-## Prior.py --> build prior for the mission
-## test.py --> test script (workable / non-workable: ROS or not)
-## Simulator.py --> purely testing the path planning
-## func_test.py --> test random functions
+# It is composed of two major components such as `Laptop` and `Onboard`.
 
-# Existing folder
-## backup --> including all the old grid and old prior scripts
-## Polygon --> for testing onboard
+# `Laptop` needs to be run on the usr laptop before copying everything from `Onboard` to the AUV.
+
 
 ### Notes
 - nan needs to be filtered out before it is fed into the average system
