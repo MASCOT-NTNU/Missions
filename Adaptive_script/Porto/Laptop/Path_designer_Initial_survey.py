@@ -159,9 +159,12 @@ class PathDesigner:
         print(self.delft_path)
         delft3dpath = self.delft_path + self.wind_dir + "_" + self.wind_level + "_all.h5"
         delft3d = h5py.File(delft3dpath, 'r')
-        self.lat_delft3d = np.array(delft3d.get("lat"))[:, :, 0]
-        self.lon_delft3d = np.array(delft3d.get("lon"))[:, :, 0]
-        self.salinity_delft3d = np.array(delft3d.get("salinity"))[:, :, 0]
+        self.lat_delft3d = np.array(delft3d.get("lat"))[:, 0]
+        self.lon_delft3d = np.array(delft3d.get("lon"))[:, 0]
+        self.salinity_delft3d = np.array(delft3d.get("salinity"))[:, 0]
+        # self.lat_delft3d = np.array(delft3d.get("lat"))[:, :, 0]
+        # self.lon_delft3d = np.array(delft3d.get("lon"))[:, :, 0]
+        # self.salinity_delft3d = np.array(delft3d.get("salinity"))[:, :, 0]
         print("Delft3D data is loaded successfully. ")
         print("lat_delft: ", self.lat_delft3d.shape)
         print("lon_delft: ", self.lon_delft3d.shape)
@@ -183,7 +186,7 @@ class PathDesigner:
         print("Onboard Delft3D Data is created successfully! Time consumed: ", t2 - t1)
 
     def get_transect_lines(self):
-        self.angles = np.arange(45, 75, 5) + 180
+        self.angles = np.arange(50, 75, 3) + 180
         r = 10000
         npoints = 100
         x = r * np.sin(deg2rad(self.angles))
@@ -212,7 +215,7 @@ class PathDesigner:
         self.ind_optimal = np.where(self.sum_gradient == np.nanmax(self.sum_gradient))[0][0]
 
     def plot_gradient_along_lines(self):
-        grid = np.loadtxt("test.txt", delimiter=", ")
+        # grid = np.loadtxt("test.txt", delimiter=", ")
 
         fig = plt.figure(figsize=(20, 5))
         gs = GridSpec(ncols = 3, nrows = 1, figure = fig)
@@ -222,10 +225,8 @@ class PathDesigner:
         for i in range(self.lat_line.shape[0]):
             ax.plot(self.lon_line[i, :], self.lat_line[i, :], label = str(i))
         ax.plot(self.OpArea[:, 1], self.OpArea[:, 0], 'k-.', label = "Operational Region")
-        ax.plot(grid[:, 1], grid[:, 0], 'k.')
+        # ax.plot(grid[:, 1], grid[:, 0], 'k.')
         ax.plot(self.lon_line[self.ind_optimal, -1], self.lat_line[self.ind_optimal, -1], 'b*', markersize = 20, label = "Desired path")
-        # ax.plot(self.lon_start, self.lat_start, "ks", markersize = 10)
-        # ax.plot(self.lon_end, self.lat_end, 'ks', markersize = 10)
         ax.plot(self.lon_interval, self.lat_interval, 'k.')
         ax.set_title("Salinity field for " + self.wind_dir + " " + self.wind_level)
         ax.set(xlabel = "Lon [deg]", ylabel = "Lat [deg]")
@@ -305,7 +306,6 @@ class PathDesigner:
         print("Total distance needs to be travelled: ", dist)
         print("Time estimated: ", str(datetime.timedelta(seconds = dist / self.speed)))
 
-
     def saveKML(self):
         print("I will create a polygon kml file for importing...")
         with open(self.path_onboard + "Config/path_initial_survey.txt", "r") as a_file:
@@ -321,7 +321,6 @@ class PathDesigner:
         ls.altitudemode = simplekml.AltitudeMode.relativetoground
         kml.save(self.path_onboard + "Import/Path_initial_survey.kml")
         print("Path_initial_survey.kml is created successfully")
-
 
     def save_wind_condition(self):
         f_wind = open(self.path_onboard + "Config/wind_condition.txt", 'w')
@@ -350,66 +349,66 @@ class PathDesigner:
 
 if __name__ == "__main__":
     a = PathDesigner(debug = True)
-    # wind_dirs = ['North', 'South', 'West', 'East']  # get wind_data for all conditions
-    # wind_levels = ['Mild', 'Moderate', 'Heavy']  # get data for all conditions
-    # for wind_dir in wind_dirs:
-    #     for wind_level in wind_levels:
-    #         a.wind_dir = wind_dir
-    #         a.wind_level = wind_level
-    #         a.load_all_data()  # load all the essential data
-    #         a.compute_gradient()  # compute the gradient along
-    #         a.get_optimal_transect_line()  # get the optimal transect line
-    #         a.design_path_initial()  # design the optimal path
-    #         a.plot_gradient_along_lines()  # plot the gradient along designed lines
+    wind_dirs = ['North', 'South', 'West', 'East']  # get wind_data for all conditions
+    wind_levels = ['Mild', 'Moderate', 'Heavy']  # get data for all conditions
+    for wind_dir in wind_dirs:
+        for wind_level in wind_levels:
+            a.wind_dir = wind_dir
+            a.wind_level = wind_level
+            a.load_all_data()  # load all the essential data
+            a.compute_gradient()  # compute the gradient along
+            a.get_optimal_transect_line()  # get the optimal transect line
+            a.design_path_initial()  # design the optimal path
+            a.plot_gradient_along_lines()  # plot the gradient along designed lines
 
 #%%
-path_presurvey = np.loadtxt("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/path_initial_survey.txt", delimiter = ", ")
-
-fig = go.Figure(data=[go.Scatter3d(x=path_presurvey[:, 1], y=path_presurvey[:, 0],
-                                   z=-path_presurvey[:, 2],
-                                   marker=dict(size=12, color="black"), line=dict(color='darkblue', width=2), )])
-fig.update_layout(
-    scene={
-        'aspectmode': 'manual',
-        'xaxis_title': 'Lon [deg]',
-        'yaxis_title': 'Lat [deg]',
-        'zaxis_title': 'Depth [m]',
-        'aspectratio': dict(x=1, y=1, z=.5),
-    },
-    showlegend=True,
-    title="Initial survey path visualisation",
-)
-fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
-figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Pre_survey/fig/"
-plotly.offline.plot(fig, filename=figpath + "Path.html", auto_open=True)
-
-from gmplot import GoogleMapPlotter
-from matplotlib.colors import Normalize
-from matplotlib.cm import ScalarMappable
-
-def color_scatter(gmap, lats, lngs, values=None, colormap='coolwarm',
-                  size=None, marker=False, s=None, **kwargs):
-    def rgb2hex(rgb):
-        """ Convert RGBA or RGB to #RRGGBB """
-        rgb = list(rgb[0:3])  # remove alpha if present
-        rgb = [int(c * 255) for c in rgb]
-        hexcolor = '#%02x%02x%02x' % tuple(rgb)
-        return hexcolor
-
-    if values is None:
-        colors = [None for _ in lats]
-    else:
-        cmap = plt.get_cmap(colormap)
-        norm = Normalize(vmin=min(values), vmax=max(values))
-        scalar_map = ScalarMappable(norm=norm, cmap=cmap)
-        colors = [rgb2hex(scalar_map.to_rgba(value)) for value in values]
-    for lat, lon, c in zip(lats, lngs, colors):
-        gmap.scatter(lats=[lat], lngs=[lon], c=c, size=size, marker=marker, s=s, **kwargs)
-
-
-initial_zoom = 12
-apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
-gmap = GoogleMapPlotter(path_presurvey[0, 0], path_presurvey[0, 1], initial_zoom, apikey=apikey)
-color_scatter(gmap, path_presurvey[:, 0], path_presurvey[:, 1], np.zeros_like(path_presurvey[:, 0]), size=20, colormap='hsv')
-gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
+# path_presurvey = np.loadtxt("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/path_initial_survey.txt", delimiter = ", ")
+#
+# fig = go.Figure(data=[go.Scatter3d(x=path_presurvey[:, 1], y=path_presurvey[:, 0],
+#                                    z=-path_presurvey[:, 2],
+#                                    marker=dict(size=12, color="black"), line=dict(color='darkblue', width=2), )])
+# fig.update_layout(
+#     scene={
+#         'aspectmode': 'manual',
+#         'xaxis_title': 'Lon [deg]',
+#         'yaxis_title': 'Lat [deg]',
+#         'zaxis_title': 'Depth [m]',
+#         'aspectratio': dict(x=1, y=1, z=.5),
+#     },
+#     showlegend=True,
+#     title="Initial survey path visualisation",
+# )
+# fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+# figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Pre_survey/fig/"
+# plotly.offline.plot(fig, filename=figpath + "Path.html", auto_open=True)
+#
+# from gmplot import GoogleMapPlotter
+# from matplotlib.colors import Normalize
+# from matplotlib.cm import ScalarMappable
+#
+# def color_scatter(gmap, lats, lngs, values=None, colormap='coolwarm',
+#                   size=None, marker=False, s=None, **kwargs):
+#     def rgb2hex(rgb):
+#         """ Convert RGBA or RGB to #RRGGBB """
+#         rgb = list(rgb[0:3])  # remove alpha if present
+#         rgb = [int(c * 255) for c in rgb]
+#         hexcolor = '#%02x%02x%02x' % tuple(rgb)
+#         return hexcolor
+#
+#     if values is None:
+#         colors = [None for _ in lats]
+#     else:
+#         cmap = plt.get_cmap(colormap)
+#         norm = Normalize(vmin=min(values), vmax=max(values))
+#         scalar_map = ScalarMappable(norm=norm, cmap=cmap)
+#         colors = [rgb2hex(scalar_map.to_rgba(value)) for value in values]
+#     for lat, lon, c in zip(lats, lngs, colors):
+#         gmap.scatter(lats=[lat], lngs=[lon], c=c, size=size, marker=marker, s=s, **kwargs)
+#
+#
+# initial_zoom = 12
+# apikey = 'AIzaSyAZ_VZXoJULTFQ9KSPg1ClzHEFjyPbJUro'
+# gmap = GoogleMapPlotter(path_presurvey[0, 0], path_presurvey[0, 1], initial_zoom, apikey=apikey)
+# color_scatter(gmap, path_presurvey[:, 0], path_presurvey[:, 1], np.zeros_like(path_presurvey[:, 0]), size=20, colormap='hsv')
+# gmap.draw("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/MapPlot/map.html")
 

@@ -1,21 +1,41 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-t = np.random.rand(3, 4)
-t1 = np.zeros_like(t)
-t1[0, 0] = 1
-t1[1, 0] = 1
-t1[0, 1] = 1
-# t1[2, 0] = 1
+# check prior
+path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Data/Prior/Delft3D_North_Moderate.txt"
+data = np.loadtxt(path, delimiter = ", ")
+lat = data[:, 0]
+lon = data[:, 1]
+depth = data[:, 2]
+sal = data[:, 3]
+import plotly
+import plotly.graph_objects as go
+import numpy as np
+from plotly.subplots import make_subplots
+fig = make_subplots(rows=1, cols=1, specs=[[{'type': 'scene'}]])
+fig.add_trace(
+    go.Scatter3d(
+        x=lon.squeeze(), y=lat.squeeze(), z=depth.squeeze(),
+        mode='markers',
+        marker=dict(
+            size=2,
+            color=sal.squeeze(),
+            showscale=True
+        ),
+    ),
+    row=1, col=1,
+)
+# fig= go.Figure(data=go.Isosurface(
+#     x=lon,
+#     y=lat,
+#     z=depth,
+#     value=sal,
+#     isomin=2,
+#     isomax=6,
+# ))
 
-# t1[2, ] = 1
+plotly.offline.plot(fig, filename="test.html", auto_open=True)
 
-t3 = t * t1
-
-print(t)
-print(t1)
-print(t3)
-print(t3[np.nonzero(t3)])
 
 #%%
 import plotly
