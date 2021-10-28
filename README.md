@@ -49,6 +49,17 @@ Given the current setup, two alternative prior can be used for comparison.
   Output:
   - selected regional data based on the forcasted model.
 
+
+### Delft3D data visualisation with wind and tide
+
+#### The November month data for 2016 ~ 2019 with their corresponding wind direction and speed and tidal window is visualised below:
+
+![Delft3D data for 2016~2019 during November months](/Porto/Delft3D/fig/Nov/all/test.mp4).
+
+#### The November month data for 2016 ~ 2019 with only North Heavy ebb tide is visualised below:
+
+![Delft3D data for 2016~2019 during November months](/Porto/Delft3D/fig/Nov/NorthHeavyEbb/test.mp4).
+
 ## AUV-Runner module
 
 The objective of this module is to communicate with ROS and achieve of controlling function by using the adaptive sampling framework developed by the AURLab at NTNU.
