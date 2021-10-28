@@ -75,7 +75,7 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
         self.counter_waypoint = self.counter_waypoint + 1 # should not be changed to the other order, since it can damage the reference
         self.update_waypoint()
         print("Now is: " ,self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
-        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
+        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now, speed = self.speed)
 
     def update_waypoint(self):
         self.waypoint_lat_now = deg2rad(self.path_initial_survey[self.counter_waypoint, 0]) # convert to rad so it works
@@ -108,7 +108,7 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
                     self.t1 = time.time() # restart the counter for time
                     self.t2 = time.time()
                 else:
-                    self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
+                    self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now, speed = self.speed)
 
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the current location")
@@ -119,8 +119,7 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
                         self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=30,
                                                phone_number=self.phone_number,
                                                iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
-                        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now,
-                                                     0)
+                        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, 0, speed = self.speed)
                         self.send_SMS_mission_complete(lat_auv, lon_auv)
                         rospy.signal_shutdown("Mission completed!!!")
                         break
