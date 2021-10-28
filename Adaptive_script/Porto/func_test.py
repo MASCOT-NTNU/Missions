@@ -1,3 +1,23 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+t = np.random.rand(3, 4)
+t1 = np.zeros_like(t)
+t1[0, 0] = 1
+t1[1, 0] = 1
+t1[0, 1] = 1
+# t1[2, 0] = 1
+
+# t1[2, ] = 1
+
+t3 = t * t1
+
+print(t)
+print(t1)
+print(t3)
+print(t3[np.nonzero(t3)])
+
+#%%
 import plotly
 import plotly.graph_objects as go
 import numpy as np
