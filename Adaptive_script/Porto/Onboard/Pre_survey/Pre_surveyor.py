@@ -73,14 +73,14 @@ class PreSurveyor(AUV, DataHandler):
         # Move to the next waypoint
         self.counter_waypoint = self.counter_waypoint + 1 # should not be changed to the other order, since it can damage the reference
         self.update_waypoint()
-        print("Now is: ", self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
+        print("Now is: ", self.waypoint_lat_now, self.waypoint_lon_now, self.waypoint_depth_now)
         print("speed: ", self.speed)
-        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now, speed = self.speed)
+        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoint_depth_now, speed = self.speed)
 
     def update_waypoint(self):
         self.waypoint_lat_now = deg2rad(self.path_initial_survey[self.counter_waypoint, 0]) # convert to rad so it works
         self.waypoint_lon_now = deg2rad(self.path_initial_survey[self.counter_waypoint, 1])
-        self.waypoin_depth_now = self.path_initial_survey[self.counter_waypoint, 2]
+        self.waypoint_depth_now = self.path_initial_survey[self.counter_waypoint, 2]
 
     def Run(self):
         self.createDataPath(self.path_global)
@@ -89,7 +89,9 @@ class PreSurveyor(AUV, DataHandler):
         self.counter_waypoint = 0
         self.counter_data_saved = 0
         self.update_waypoint()
-        # self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now) # continue with the current waypoint
+        self.move_to_starting_location = True
+        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoint_depth_now,speed=self.speed)
+        # self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoint_depth_now) # continue with the current waypoint
 
         while not rospy.is_shutdown():
 
@@ -107,12 +109,11 @@ class PreSurveyor(AUV, DataHandler):
                                            iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
                     self.t1 = time.time() # restart the counter for time
                     self.t2 = time.time()
-                else:
-                    self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now, speed = self.speed)
 
                 # if self.auv_handler.getState() == "waiting":
                 if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the current location")
+                    self.move_to_starting_location = False
                     if self.counter_waypoint + 1 >= len(self.path_initial_survey):
                         x_auv = self.vehicle_pos[0]  # x distance from the origin
                         y_auv = self.vehicle_pos[1]  # y distance from the origin
@@ -125,7 +126,8 @@ class PreSurveyor(AUV, DataHandler):
                         rospy.signal_shutdown("Mission completed!!!")
                         break
                     else:
-                        self.move_to_next_waypoint()
+                        if not self.move_to_starting_location:
+                            self.move_to_next_waypoint()
                 self.last_state = self.auv_handler.getState()
                 self.auv_handler.spin()
             self.rate.sleep()
