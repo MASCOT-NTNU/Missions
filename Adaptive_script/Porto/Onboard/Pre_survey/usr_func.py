@@ -1,4 +1,4 @@
-# ! /usr/bin/env python3
+#!/usr/bin/env python3
 __author__ = "Yaolin Ge"
 __copyright__ = "Copyright 2021, The MASCOT Project, NTNU (https://wiki.math.ntnu.no/mascot)"
 __credits__ = ["Yaolin Ge"]
