@@ -103,10 +103,7 @@ class MASCOT(AUV, DataHandler):
         self.updateF(self.ind_next)
         self.data_path_lat.append(self.lat_loc[self.ind_start])
         self.data_path_lon.append(self.lon_loc[self.ind_start])
-        self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),
-                                     deg2rad(self.lon_loc[self.ind_start]),
-                                     -self.depth_loc[self.ind_start],
-                                     speed = self.speed)
+        self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),deg2rad(self.lon_loc[self.ind_start]),-self.depth_loc[self.ind_start],speed = self.speed)
         self.updateWaypoint()
 
     def find_candidates_loc(self):
@@ -219,10 +216,7 @@ class MASCOT(AUV, DataHandler):
                                    iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
             self.t1 = time.time()
             self.t2 = time.time()
-        self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),
-                                     deg2rad(self.lon_loc[self.ind_start]),
-                                     -self.depth_loc[self.ind_start],
-                                     speed = self.speed)
+        self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),deg2rad(self.lon_loc[self.ind_start]),-self.depth_loc[self.ind_start],speed = self.speed)
         print("moving to the starting location")
 
     def send_next_waypoint(self):
@@ -235,10 +229,7 @@ class MASCOT(AUV, DataHandler):
             self.t1 = time.time()
             self.t2 = time.time()
 
-        self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_next]),
-                                     deg2rad(self.lon_loc[self.ind_next]),
-                                     -self.depth_loc[self.ind_next],
-                                     speed = self.speed)
+        self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_next]),deg2rad(self.lon_loc[self.ind_next]),-self.depth_loc[self.ind_next],speed = self.speed)
         print("next waypoint", deg2rad(self.lat_loc[self.ind_next]),
                                deg2rad(self.lon_loc[self.ind_next]),
                                -self.depth_loc[self.ind_next])
@@ -272,10 +263,7 @@ class MASCOT(AUV, DataHandler):
                         self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=90,
                                                phone_number=self.phone_number,
                                                iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
-                        self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_now]),
-                                                     deg2rad(self.lon_loc[self.ind_now]),
-                                                     0,
-                                                     speed = self.speed)
+                        self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_now]),deg2rad(self.lon_loc[self.ind_now]),0,speed = self.speed)
                         self.send_SMS_mission_complete()
                         rospy.signal_shutdown("Mission completed!!!")
                         break

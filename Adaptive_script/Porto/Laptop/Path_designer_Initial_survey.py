@@ -362,19 +362,19 @@ if __name__ == "__main__":
     #         a.plot_gradient_along_lines()  # plot the gradient along designed lines
 
 #%%
-import matplotlib.pyplot as plt
-import numpy as np
-
-path_laptop = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Laptop/"
-path_onboard = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
-path_operational_area = path_onboard + "Config/OperationArea.txt"
-path_presurvey = np.loadtxt("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/path_initial_survey.txt", delimiter = ", ")
-opa = np.loadtxt(path_operational_area, delimiter = ", ")
-
-plt.figure()
-plt.plot(opa[:, 1], opa[:, 0], 'k.')
-plt.plot(path_presurvey[:, 1], path_presurvey[:, 0], 'r-')
-plt.show()
+# import matplotlib.pyplot as plt
+# import numpy as np
+#
+# path_laptop = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Laptop/"
+# path_onboard = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
+# path_operational_area = path_onboard + "Config/OperationArea.txt"
+# path_presurvey = np.loadtxt("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/path_initial_survey.txt", delimiter = ", ")
+# opa = np.loadtxt(path_operational_area, delimiter = ", ")
+#
+# plt.figure()
+# plt.plot(opa[:, 1], opa[:, 0], 'k.')
+# plt.plot(path_presurvey[:, 1], path_presurvey[:, 0], 'r-')
+# plt.show()
 
 
 

@@ -110,8 +110,8 @@ class PreSurveyor(AUV, DataHandler):
                 else:
                     self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now, speed = self.speed)
 
-                if self.auv_handler.getState() == "waiting":
-                # if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
+                # if self.auv_handler.getState() == "waiting":
+                if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
                     print("Arrived the current location")
                     if self.counter_waypoint + 1 >= len(self.path_initial_survey):
                         x_auv = self.vehicle_pos[0]  # x distance from the origin
