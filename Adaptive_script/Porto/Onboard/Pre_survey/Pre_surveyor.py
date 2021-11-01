@@ -69,6 +69,16 @@ class PreSurveyor(AUV, DataHandler):
         lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
         return lat_auv, lon_auv, self.vehicle_pos[2]
 
+    def checkArrivedStartingLoc(self):
+        lat, lon, depth = self.getVehiclePos()
+        dist_x, dist_y = latlon2xy(self.waypoint_lat_now, self.waypoint_lon_now, lat, lon)
+        dist_depth = (self.waypoint_depth_now - depth)
+        dist = np.sqrt(dist_x ** 2 + dist_y ** 2 + dist_depth ** 2)
+        if dist <= 50:
+            return True
+        else:
+            return False
+
     def move_to_next_waypoint(self):
         # Move to the next waypoint
         self.counter_waypoint = self.counter_waypoint + 1 # should not be changed to the other order, since it can damage the reference
@@ -89,7 +99,7 @@ class PreSurveyor(AUV, DataHandler):
         self.counter_waypoint = 0
         self.counter_data_saved = 0
         self.update_waypoint()
-        self.move_to_starting_location = True
+        self.popup = False
         self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoint_depth_now,speed=self.speed)
         # self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoint_depth_now) # continue with the current waypoint
 
@@ -102,32 +112,37 @@ class PreSurveyor(AUV, DataHandler):
                 self.save_mission_data()
                 print(self.auv_handler.getState())
 
-                if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
+                if (self.t2 - self.t1) / self.maxtime_underwater >= 1 and (self.t2 - self.t1) % self.maxtime_underwater >= 0:
                     print("Longer than 10 mins, need a long break")
-                    self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=90,
+                    self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.popup_duration,
                                            phone_number=self.phone_number,
                                            iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
+                    self.popup = True
                     self.t1 = time.time() # restart the counter for time
                     self.t2 = time.time()
 
-                # if self.auv_handler.getState() == "waiting":
-                if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
-                    print("Arrived the current location")
-                    self.move_to_starting_location = False
-                    if self.counter_waypoint + 1 >= len(self.path_initial_survey):
-                        x_auv = self.vehicle_pos[0]  # x distance from the origin
-                        y_auv = self.vehicle_pos[1]  # y distance from the origin
-                        lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
-                        self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=30,
-                                               phone_number=self.phone_number,
-                                               iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
-                        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, 0, speed = self.speed)
-                        self.send_SMS_mission_complete(lat_auv, lon_auv)
-                        rospy.signal_shutdown("Mission completed!!!")
-                        break
+                if self.auv_handler.getState() == "waiting":
+                    if self.popup:
+                        print("Only popping up, I will resume moving...")
+                        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoint_depth_now,speed=self.speed)
+                        self.popup = False
                     else:
-                        if not self.move_to_starting_location:
+                        print("Arrived the current location")
+                        if self.counter_waypoint + 1 >= len(self.path_initial_survey):
+                            x_auv = self.vehicle_pos[0]  # x distance from the origin
+                            y_auv = self.vehicle_pos[1]  # y distance from the origin
+                            lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
+                            self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.popup_duration,
+                                                   phone_number=self.phone_number,
+                                                   iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
+                            self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, 0,
+                                                         speed=self.speed)
+                            self.send_SMS_mission_complete(lat_auv, lon_auv)
+                            rospy.signal_shutdown("Mission completed!!!")
+                            break
+                        else:
                             self.move_to_next_waypoint()
+
                 self.last_state = self.auv_handler.getState()
                 self.auv_handler.spin()
             self.rate.sleep()

@@ -209,9 +209,9 @@ class MASCOT(AUV, DataHandler):
         self.append_timestamp(datetime.now().timestamp())
 
     def send_starting_waypoint(self):
-        if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
+        if (self.t2 - self.t1) / self.maxtime_underwater >= 1 and (self.t2 - self.t1) % self.maxtime_underwater >= 0:
             print("Longer than 10 mins, need a long break")
-            self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=90,
+            self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.popup_duration,
                                    phone_number=self.phone_number,
                                    iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
             self.t1 = time.time()
@@ -221,9 +221,9 @@ class MASCOT(AUV, DataHandler):
 
     def send_next_waypoint(self):
         self.counter_waypoint = self.counter_waypoint + 1  # needs to be updated before
-        if (self.t2 - self.t1) / 600 >= 1 and (self.t2 - self.t1) % 600 >= 0:
+        if (self.t2 - self.t1) / self.maxtime_underwater >= 1 and (self.t2 - self.t1) % self.maxtime_underwater >= 0:
             print("Longer than 10 mins, need a long break")
-            self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=90,
+            self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.popup_duration,
                                    phone_number=self.phone_number,
                                    iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
             self.t1 = time.time()
@@ -260,7 +260,7 @@ class MASCOT(AUV, DataHandler):
                     self.updateWaypoint()
                     self.travelled_waypoints += 1
                     if self.travelled_waypoints >= self.Total_waypoints:
-                        self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=90,
+                        self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.popup_duration,
                                                phone_number=self.phone_number,
                                                iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
                         self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_now]),deg2rad(self.lon_loc[self.ind_now]),0,speed = self.speed)

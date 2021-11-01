@@ -37,6 +37,9 @@ class AUV:
         self.currentSalinity = 0.0
         self.vehicle_pos = [0, 0, 0]
 
+        self.maxtime_underwater = 600
+        self.popup_duration = 10
+
         self.sms_pub_ = rospy.Publisher("/IMC/In/Sms", Sms, queue_size = 10)
         self.phone_number = "+351969459285"
         self.iridium_destination = "manta-ntnu-1"

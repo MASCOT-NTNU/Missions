@@ -17,9 +17,26 @@ path_tide = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Tide/tide.txt"
 path_water_discharge = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/WaterDischarge/Data/douro_discharge_2015_2021.csv"
 
 import pandas as pd
-data_water_discharge = pd.read_csv(path_water_discharge, sep = '\t', dayfirst = True)
-print(data_water_discharge)
+my_cols = ['time', 'water_discharge', 'flag', 'water_discharge2', 'flag2', 'none']
+data_water_discharge = pd.read_csv(path_water_discharge,
+                                   sep=",",
+                                   names=my_cols,
+                                   header=None,
+                                   engine="python",
+                                   skiprows = 4)
+# I tested with s = StringIO(text_from_OP) on my computer
 
+# data_water_discharge = pd.read_csv(path_water_discharge, sep = ' |:|,', dayfirst = True)
+data_water_discharge = data_water_discharge.iloc[:-2]
+data_water_discharge = data_water_discharge.iloc[:, 0:2]
+from datetime import datetime
+for i in range(len(data_water_discharge)):
+    print(type(data_water_discharge.iloc[i, 0]))
+
+
+
+# timestamp_water_discharge = datetime.timestamp(pd.to_datetime(data_water_discharge.iloc[:, 0]))
+# pd.to_datetime((data_water_discharge.index * 1e9).astype('int64'), utc=True,).tz_convert('Europe/Oslo')
 
 #%%
 
