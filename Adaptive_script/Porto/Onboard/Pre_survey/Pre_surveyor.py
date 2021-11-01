@@ -16,14 +16,13 @@ import time
 from datetime import datetime
 from AUV import AUV
 from DataHandler import DataHandler
-from MessageHandler import MessageHandler
 from usr_func import *
 
 '''
 The following modules are used for postprocessing before the adaptive mission
 '''
 
-class PreSurveyor(AUV, DataHandler, MessageHandler):
+class PreSurveyor(AUV, DataHandler):
 
     def __init__(self):
         AUV.__init__(self)
