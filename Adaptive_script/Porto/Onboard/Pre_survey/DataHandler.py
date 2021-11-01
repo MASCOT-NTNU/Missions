@@ -11,8 +11,9 @@ __status__ = "UnderDevelopment"
 
 import os
 from usr_func import *
-from pathlib import Path
+# from pathlib import Path
 from datetime import datetime
+import errno
 
 class DataHandler:
     data_salinity = []
@@ -43,11 +44,22 @@ class DataHandler:
         f_pre.write(self.data_path_mission)
         f_pre.close()
         if not os.path.exists(self.data_path_mission):
+            self.mkdir_p(self.data_path_mission)
+            # path = Path(self.data_path_mission)
+            # path.mkdir(parents = True, exist_ok=True)
             print("New data path is created: ", self.data_path_mission)
-            path = Path(self.data_path_mission)
-            path.mkdir(parents = True, exist_ok=True)
         else:
             print("Folder is already existing, no need to create! ")
+
+    def mkdir_p(self, path):
+        try:
+            os.makedirs(path)
+        except OSError as exc:  # Python ≥ 2.5
+            if exc.errno == errno.EEXIST and os.path.isdir(path):
+                pass
+            # possibly handle other errno cases here, otherwise finally:
+            else:
+                raise
 
     def save_data(self):
         self.data_salinity_saved = np.array(self.data_salinity).reshape(-1, 1)

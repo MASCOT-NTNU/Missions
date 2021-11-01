@@ -74,7 +74,8 @@ class PreSurveyor(AUV, DataHandler, MessageHandler):
         # Move to the next waypoint
         self.counter_waypoint = self.counter_waypoint + 1 # should not be changed to the other order, since it can damage the reference
         self.update_waypoint()
-        print("Now is: " ,self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
+        print("Now is: ", self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now)
+        print("speed: ", self.speed)
         self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoin_depth_now, speed = self.speed)
 
     def update_waypoint(self):

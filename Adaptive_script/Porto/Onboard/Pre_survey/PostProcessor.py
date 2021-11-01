@@ -9,8 +9,9 @@ __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
 from usr_func import *
-from pathlib import Path
+# from pathlib import Path
 import os
+import errno
 
 '''
 
@@ -134,11 +135,22 @@ class PostProcessor:
         np.savetxt(self.path_global + "/Data/Corrected/Prior_corrected.txt", self.data_prior_corrected, delimiter=", ")
         print("corrected prior is saved correctly, it is saved in prior_corrected.txt")
 
+    def mkdir_p(self, path):
+        try:
+            os.makedirs(path)
+        except OSError as exc:  # Python ≥ 2.5
+            if exc.errno == errno.EEXIST and os.path.isdir(path):
+                pass
+            # possibly handle other errno cases here, otherwise finally:
+            else:
+                raise
+
     def checkPath(self, path):
         if not os.path.exists(path):
+            # path = Path(path)
+            # path.mkdir(parents = True, exist_ok=True)
+            self.mkdir_p(path)
             print("New data path is created: ", path)
-            path = Path(path)
-            path.mkdir(parents = True, exist_ok=True)
         else:
             print("Folder is already existing, no need to create! ")
 
