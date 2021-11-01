@@ -349,17 +349,17 @@ class PathDesigner:
 
 if __name__ == "__main__":
     a = PathDesigner(debug = True)
-    wind_dirs = ['North', 'South', 'West', 'East']  # get wind_data for all conditions
-    wind_levels = ['Mild', 'Moderate', 'Heavy']  # get data for all conditions
-    for wind_dir in wind_dirs:
-        for wind_level in wind_levels:
-            a.wind_dir = wind_dir
-            a.wind_level = wind_level
-            a.load_all_data()  # load all the essential data
-            a.compute_gradient()  # compute the gradient along
-            a.get_optimal_transect_line()  # get the optimal transect line
-            a.design_path_initial()  # design the optimal path
-            a.plot_gradient_along_lines()  # plot the gradient along designed lines
+    # wind_dirs = ['North', 'South', 'West', 'East']  # get wind_data for all conditions
+    # wind_levels = ['Mild', 'Moderate', 'Heavy']  # get data for all conditions
+    # for wind_dir in wind_dirs:
+    #     for wind_level in wind_levels:
+    #         a.wind_dir = wind_dir
+    #         a.wind_level = wind_level
+    #         a.load_all_data()  # load all the essential data
+    #         a.compute_gradient()  # compute the gradient along
+    #         a.get_optimal_transect_line()  # get the optimal transect line
+    #         a.design_path_initial()  # design the optimal path
+    #         a.plot_gradient_along_lines()  # plot the gradient along designed lines
 
 #%%
 # path_presurvey = np.loadtxt("/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/path_initial_survey.txt", delimiter = ", ")
