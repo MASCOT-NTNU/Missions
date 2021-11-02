@@ -214,14 +214,12 @@ class MASCOT(AUV, DataHandler):
 
     def send_next_waypoint(self):
         self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_next]),deg2rad(self.lon_loc[self.ind_next]),-self.depth_loc[self.ind_next],speed = self.speed)
-        print("next waypoint", deg2rad(self.lat_loc[self.ind_next]),
-                               deg2rad(self.lon_loc[self.ind_next]),
-                               -self.depth_loc[self.ind_next])
+        print("next waypoint", deg2rad(self.lat_loc[self.ind_next]),deg2rad(self.lon_loc[self.ind_next]),-self.depth_loc[self.ind_next])
 
     def run(self):
         self.createDataPath(self.path_global)
         self.t1 = time.time()
-        self.counter_waypoint = 0
+        # self.counter_waypoint = 0
         self.counter_data_saved = 0
         self.send_starting_waypoint()
         self.popup = False
@@ -232,7 +230,7 @@ class MASCOT(AUV, DataHandler):
                 self.append_mission_data()
                 self.save_mission_data()
                 print(self.auv_handler.getState())
-                print("Counter waypoint: ", self.counter_waypoint)
+                print("Counter waypoint: ", self.travelled_waypoints)
                 print("Elapsed time after surfacing: ", self.t2 - self.t1)
 
                 if (self.t2 - self.t1) / self.maxtime_underwater >= 1 and (
@@ -263,6 +261,9 @@ class MASCOT(AUV, DataHandler):
                             self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.popup_duration,
                                                    phone_number=self.phone_number,
                                                    iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
+                            self.t1 = time.time()
+                            self.t2 = time.time()
+                            self.popup = True
                             self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_now]),deg2rad(self.lon_loc[self.ind_now]),0,speed = self.speed)
                             self.send_SMS_mission_complete()
                             rospy.signal_shutdown("Mission completed!!!")
