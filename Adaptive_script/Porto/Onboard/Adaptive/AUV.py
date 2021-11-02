@@ -38,7 +38,7 @@ class AUV:
         self.vehicle_pos = [0, 0, 0]
 
         self.maxtime_underwater = 600
-        self.popup_duration = 10
+        self.popup_duration = 90
 
         self.sms_pub_ = rospy.Publisher("/IMC/In/Sms", Sms, queue_size = 10)
         self.phone_number = "+351969459285"

@@ -209,37 +209,23 @@ class MASCOT(AUV, DataHandler):
         self.append_timestamp(datetime.now().timestamp())
 
     def send_starting_waypoint(self):
-        if (self.t2 - self.t1) / self.maxtime_underwater >= 1 and (self.t2 - self.t1) % self.maxtime_underwater >= 0:
-            print("Longer than 10 mins, need a long break")
-            self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.popup_duration,
-                                   phone_number=self.phone_number,
-                                   iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
-            self.t1 = time.time()
-            self.t2 = time.time()
         self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),deg2rad(self.lon_loc[self.ind_start]),-self.depth_loc[self.ind_start],speed = self.speed)
         print("moving to the starting location")
 
     def send_next_waypoint(self):
-        self.counter_waypoint = self.counter_waypoint + 1  # needs to be updated before
-        if (self.t2 - self.t1) / self.maxtime_underwater >= 1 and (self.t2 - self.t1) % self.maxtime_underwater >= 0:
-            print("Longer than 10 mins, need a long break")
-            self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.popup_duration,
-                                   phone_number=self.phone_number,
-                                   iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
-            self.t1 = time.time()
-            self.t2 = time.time()
-
         self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_next]),deg2rad(self.lon_loc[self.ind_next]),-self.depth_loc[self.ind_next],speed = self.speed)
         print("next waypoint", deg2rad(self.lat_loc[self.ind_next]),
                                deg2rad(self.lon_loc[self.ind_next]),
                                -self.depth_loc[self.ind_next])
-
 
     def run(self):
         self.createDataPath(self.path_global)
         self.t1 = time.time()
         self.counter_waypoint = 0
         self.counter_data_saved = 0
+        self.send_starting_waypoint()
+        self.popup = False
+
         while not rospy.is_shutdown():
             if self.init:
                 self.t2 = time.time()
@@ -248,26 +234,40 @@ class MASCOT(AUV, DataHandler):
                 print(self.auv_handler.getState())
                 print("Counter waypoint: ", self.counter_waypoint)
                 print("Elapsed time after surfacing: ", self.t2 - self.t1)
-                if self.counter_waypoint == 0:
-                    self.send_starting_waypoint()
-                if self.auv_handler.getState() == "waiting" and self.last_state != "waiting":
-                    print("Arrived the current location")
-                    self.sal_sampled = np.mean(self.data_salinity[-10:])  # take the past ten samples and average
-                    print("Sampled salinity: ", self.sal_sampled)
-                    self.GPupd(self.sal_sampled)  # update the field when it arrives the specified location
-                    self.find_candidates_loc()
-                    self.find_next_EIBV_1D(self.mu_cond, self.Sigma_cond)
-                    self.updateWaypoint()
-                    self.travelled_waypoints += 1
-                    if self.travelled_waypoints >= self.Total_waypoints:
-                        self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.popup_duration,
-                                               phone_number=self.phone_number,
-                                               iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
+
+                if (self.t2 - self.t1) / self.maxtime_underwater >= 1 and (
+                        self.t2 - self.t1) % self.maxtime_underwater >= 0:
+                    print("Longer than 10 mins, need a long break")
+                    self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.popup_duration,
+                                           phone_number=self.phone_number,
+                                           iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
+                    self.t1 = time.time()
+                    self.t2 = time.time()
+                    self.popup = True
+
+                if self.auv_handler.getState() == "waiting":
+                    if self.popup:
+                        print("Only popuping, resuming the previous waypoint")
                         self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_now]),deg2rad(self.lon_loc[self.ind_now]),0,speed = self.speed)
-                        self.send_SMS_mission_complete()
-                        rospy.signal_shutdown("Mission completed!!!")
-                        break
-                    self.send_next_waypoint()
+                        self.popup = False
+                    else:
+                        print("Arrived the current location")
+                        self.sal_sampled = np.mean(self.data_salinity[-10:])  # take the past ten samples and average
+                        print("Sampled salinity: ", self.sal_sampled)
+                        self.GPupd(self.sal_sampled)  # update the field when it arrives the specified location
+                        self.find_candidates_loc()
+                        self.find_next_EIBV_1D(self.mu_cond, self.Sigma_cond)
+                        self.updateWaypoint()
+                        self.travelled_waypoints += 1
+                        if self.travelled_waypoints >= self.Total_waypoints:
+                            self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.popup_duration,
+                                                   phone_number=self.phone_number,
+                                                   iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
+                            self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_now]),deg2rad(self.lon_loc[self.ind_now]),0,speed = self.speed)
+                            self.send_SMS_mission_complete()
+                            rospy.signal_shutdown("Mission completed!!!")
+                            break
+                        self.send_next_waypoint()
 
                 self.last_state = self.auv_handler.getState()
                 self.auv_handler.spin()
