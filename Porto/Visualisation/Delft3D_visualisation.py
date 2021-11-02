@@ -1,169 +1,186 @@
 import mat73
 import time
-import numpy as np
 import matplotlib.pyplot as plt
 import os
 from datetime import datetime
-
-
-# path = "/home/ahomea/y/yaoling/MASCOT/Porto_Data_Processing/Data/"
-# path_wind = "wind_data.txt"
-# path_tide = "tide.txt"
-# figpath = "/home/ahomea/y/yaoling/MASCOT/Porto_Data_Processing/Data/fig/NHEbb/"
-
-path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/"
-path_wind = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Wind/wind_data.txt"
-path_tide = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Tide/tide.txt"
-path_water_discharge = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/WaterDischarge/Data/douro_discharge_2015_2021.csv"
-
-import pandas as pd
-my_cols = ['time', 'water_discharge', 'flag', 'water_discharge2', 'flag2', 'none']
-data_water_discharge = pd.read_csv(path_water_discharge,
-                                   sep=",",
-                                   names=my_cols,
-                                   header=None,
-                                   engine="python",
-                                   skiprows = 4)
-# I tested with s = StringIO(text_from_OP) on my computer
-
-# data_water_discharge = pd.read_csv(path_water_discharge, sep = ' |:|,', dayfirst = True)
-data_water_discharge = data_water_discharge.iloc[:-2]
-data_water_discharge = data_water_discharge.iloc[:, 0:2]
-from datetime import datetime
-for i in range(len(data_water_discharge)):
-    print(type(data_water_discharge.iloc[i, 0]))
-
-
-#%%
-# import matplotlib.pyplot as plt
-# plt.plot()
-# plt.show()
-
-
-
-# timestamp_water_discharge = datetime.timestamp(pd.to_datetime(data_water_discharge.iloc[:, 0]))
-# pd.to_datetime((data_water_discharge.index * 1e9).astype('int64'), utc=True,).tz_convert('Europe/Oslo')
-
-#%%
-
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams.update({'font.size': 12})
 plt.rcParams.update({'font.style': 'oblique'})
-lat_river_mouth, lon_river_mouth = 41.139024, -8.680089
+from matplotlib.gridspec import GridSpec
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-wind = np.loadtxt(path_wind, delimiter=",")
-tide = np.loadtxt(path_tide, delimiter=", ")
+# server = False
+server = True
+if server:
+    from usr_func import *
+else:
+    from Porto.Visualisation.usr_func import *
 
-def angle2anle(angle):
-    return 270 - angle
 
-def s2uv(s, angle):
-    angle = angle2anle(angle)
-    u = s * np.cos(deg2rad(angle))
-    v = s * np.sin(deg2rad(angle))
-    return u, v
+class Delft3D:
 
-def rad2deg(rad):
-    return rad / np.pi * 180
+    server = False
+    lat_river_mouth, lon_river_mouth = 41.139024, -8.680089
 
-def deg2rad(deg):
-    return deg / 180 * np.pi
+    def __init__(self, server = False):
+        print("hello ")
+        self.server = server
+        self.which_path()
+        self.load_tide()
+        self.load_wind()
+        self.load_water_discharge()
+        self.ini_wind_classifier()
+        self.make_png()
 
-counter = 0
-files = os.listdir(path)
+    def which_path(self):
 
-angles = np.arange(4) * 90 + 45
-directions = ['East', 'South', 'West', 'North']
-speeds = np.array([0, 2.5, 6])
-levels = ['Mild', 'Moderate', 'Heavy']
+        if self.server:
+            print("Server mode is activated")
+            self.path = "/home/ahomea/y/yaoling/MASCOT/Porto_Data_Processing/Data/"
+            self.path_wind = "wind_data.txt"
+            self.path_tide = "tide.txt"
+            self.path_water_discharge = "data_water_discharge.txt"
+            self.figpath = "/home/ahomea/y/yaoling/MASCOT/Porto_Data_Processing/Data/fig/NHEbbW/"
+        else:
+            print("Local mode is activated")
+            self.path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/"
+            self.path_wind = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Wind/wind_data.txt"
+            self.path_tide = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Tide/tide.txt"
+            self.path_water_discharge = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/WaterDischarge/data_water_discharge.txt"
+            self.figpath = None
 
-for file in files:
-    # if file.endswith("9_sal_3.mat"):
-    if file.endswith(".mat"):
-        print(file)
+    def load_wind(self):
+        self.wind = np.loadtxt(self.path_wind, delimiter=",")
+        print("Wind is loaded successfully!")
+
+    def load_tide(self):
+        self.tide = np.loadtxt(self.path_tide, delimiter=", ")
+        print("Tide is loaded successfully!")
+
+    def load_water_discharge(self):
+        self.water_discharge = np.loadtxt(self.path_water_discharge, delimiter=", ")
+        print("Water discharge is loaded successfully!")
+
+    def ini_wind_classifier(self):
+        self.angles = np.arange(4) * 90 + 45
+        self.directions = ['East', 'South', 'West', 'North']
+        self.speeds = np.array([0, 2.5, 6])
+        self.levels = ['Mild', 'Moderate', 'Heavy']
+        print("Wind classifier is initialised successfully!")
+
+    def load_mat_data(self, file):
         t1 = time.time()
-        data = mat73.loadmat(path + file)
-        data = data["data"]
-        lon = data["X"]
-        lat = data["Y"]
-        depth = data["Z"]
-        Time = data['Time']
-        timestamp_data = (Time - 719529) * 24 * 3600  # 719529 is how many days have passed from Jan1 0,
+        self.data = mat73.loadmat(self.path + file)
+        self.data = self.data["data"]
+        self.lon = self.data["X"]
+        self.lat = self.data["Y"]
+        self.depth = self.data["Z"]
+        self.Time = self.data['Time']
+        self.timestamp_data = (self.Time - 719529) * 24 * 3600  # 719529 is how many days have passed from Jan1 0,
         # to Jan1 1970. Since 1970Jan1, is used as the starting index for datetime
-        sal_data = data["Val"]
-        string_date = datetime.fromtimestamp(timestamp_data[0]).strftime("%Y_%m")
+        self.sal_data = self.data["Val"]
+        self.string_date = datetime.fromtimestamp(self.timestamp_data[0]).strftime("%Y_%m")
         t2 = time.time()
         print("loading takes: ", t2 - t1, " seconds")
 
-        for i in range(sal_data.shape[0]):
-            dist_wind = np.abs(timestamp_data[i] - wind[:, 0])
-            ind_wind = np.where(dist_wind == np.nanmin(dist_wind))[0][0]
+    def make_png(self):
+        counter = 0
+        files = os.listdir(self.path)
+        files = sorted(files)
+        for file in files:
+            # if file.endswith("9_sal_3.mat"):
+            if file.endswith(".mat"):
+                self.load_mat_data(file)
+                for i in range(self.sal_data.shape[0]):
+                    dist_wind = np.abs(self.timestamp_data[i] - self.wind[:, 0])
+                    ind_wind = np.where(dist_wind == np.nanmin(dist_wind))[0][0]
 
-            dist_tide = np.abs(timestamp_data[i] - tide[:, 0])
-            ind_tide = np.where(dist_tide == np.nanmin(dist_tide))[0][0]
+                    dist_tide = np.abs(self.timestamp_data[i] - self.tide[:, 0])
+                    ind_tide = np.where(dist_tide == np.nanmin(dist_tide))[0][0]
 
-            id_wind_dir = len(angles[angles < wind[ind_wind, 2]]) - 1
-            id_wind_level = len(speeds[speeds < wind[ind_wind, 1]]) - 1
-            wind_dir = directions[id_wind_dir]
-            wind_level = levels[id_wind_level]
+                    dist_water_discharge = np.abs(self.timestamp_data[i] - self.water_discharge[:, 0])
+                    ind_water_discharge = np.where(dist_water_discharge == np.nanmin(dist_water_discharge))[0][0]
 
-            if wind_dir == "North" and wind_level == "Heavy":
+                    id_wind_dir = len(self.angles[self.angles < self.wind[ind_wind, 2]]) - 1
+                    id_wind_level = len(self.speeds[self.speeds < self.wind[ind_wind, 1]]) - 1
+                    wind_dir = self.directions[id_wind_dir]
+                    wind_level = self.levels[id_wind_level]
 
-                # ind_wind = 0
-                u, v = s2uv(wind[ind_wind, 1], wind[ind_wind, 2])
+                    u, v = s2uv(self.wind[ind_wind, 1], self.wind[ind_wind, 2])
 
-                if tide[ind_tide, 2] == 1:
-                    if timestamp_data[i] >= tide[ind_tide, 0]:
-                        plt.figure(figsize=(10, 10))
-                        im = plt.scatter(lon[:, :, 0], lat[:, :, 0], c=sal_data[i, :, :, 0], vmin=15, vmax=36,
-                                         cmap="Paired")
-                        plt.quiver(lon_river_mouth, lat_river_mouth, u, v, scale=25)
-                        plt.quiver(-8.65, 41.2, -1, 0)
-                        plt.text(-8.65, 41.205, 'Ebb tide')
-                        plt.text(-8.7, 41.04, "Wind direction: " + wind_dir)
-                        plt.text(-8.7, 41.035, "Wind level: " + wind_level)
+                    fig = plt.figure(figsize=(10, 10))
+                    gs = GridSpec(ncols=10, nrows=10, figure=fig)
+                    ax = fig.add_subplot(gs[:, :-1])
+                    im = ax.scatter(self.lon[:, :, 0], self.lat[:, :, 0], c=self.sal_data[i, :, :, 0], vmin=15,
+                                    vmax=36,
+                                    cmap="Paired")
+                    ax.quiver(self.lon_river_mouth, self.lat_river_mouth, u, v, scale=30)
 
-                        plt.xlabel("Lon [deg]")
-                        plt.ylabel("Lat [deg]")
-                        plt.title("Surface salinity on " + datetime.fromtimestamp(timestamp_data[i]).strftime(
-                            "%Y%m%d - %H:%M"))
-                        plt.colorbar(im)
-                        plt.savefig(figpath + "I_{:05d}.png".format(counter))
-                        counter = counter + 1
-                        print(counter)
+                    if self.tide[ind_tide, 2] == 1:
+                        if self.timestamp_data[i] >= self.tide[ind_tide, 0]:
+                            ax.quiver(-8.64, 41.2, -1, 0, color='g')
+                            ax.text(-8.65, 41.205, 'Ebb tide')
+                        else:
+                            ax.quiver(-8.65, 41.2, 1, 0, color="r")
+                            ax.text(-8.65, 41.205, 'Flood tide')
+                    else:
+                        if self.timestamp_data[i] >= self.tide[ind_tide, 0]:
+                            ax.quiver(-8.65, 41.2, 1, 0, color="r")
+                            ax.text(-8.65, 41.205, 'Flood tide')
+                        else:
+                            ax.quiver(-8.64, 41.2, -1, 0, color='g')
+                            ax.text(-8.65, 41.205, 'Ebb tide')
+
+                    ax.text(-8.7, 41.04, "Wind direction: " + wind_dir)
+                    ax.text(-8.7, 41.035, "Wind level: " + wind_level)
+
+                    ax.set_xlabel("Lon [deg]")
+                    ax.xaxis.set_label_position('top')
+                    ax.xaxis.tick_top()
+                    ax.set_ylabel("Lat [deg]")
+                    ax.set_title("Surface salinity on " + datetime.fromtimestamp(self.timestamp_data[i]).strftime(
+                        "%Y%m%d - %H:%M"))
+
+                    divider = make_axes_locatable(ax)
+                    cax = divider.new_vertical(size="2%", pad=0.05, pack_start=True)
+                    fig.add_axes(cax)
+                    fig.colorbar(im, cax=cax, orientation="horizontal")
+
+                    ax = fig.add_subplot(gs[:, -1])
+                    if self.water_discharge[ind_water_discharge, 1] <= 400:
+                        ax.bar(0, self.water_discharge[ind_water_discharge, 1], width=.1, align="edge", color='green')
+                    elif self.water_discharge[ind_water_discharge, 1] <= 800:
+                        ax.bar(0, self.water_discharge[ind_water_discharge, 1], width=.1, align="edge", color='orange')
+                    else:
+                        ax.bar(0, self.water_discharge[ind_water_discharge, 1], width=.1, align="edge", color="red")
+                    ax.text(.015, self.water_discharge[ind_water_discharge, 1] + 10,
+                            str(self.water_discharge[ind_water_discharge, 1]))
+                    ax.set_ylim([0, 1000])
+                    ax.set_ylabel(r'Water discharge $m^3/s$')
+                    ax.yaxis.set_label_position("right")
+                    ax.yaxis.tick_right()
+                    plt.tick_params(
+                        axis='x',  # changes apply to the x-axis
+                        which='both',  # both major and minor ticks are affected
+                        bottom=False,  # ticks along the bottom edge are off
+                        top=False,  # ticks along the top edge are off
+                        labelbottom=False)  # labels along the bottom edge are off
+                    plt.tick_params(
+                        axis='y',  # changes apply to the x-axis
+                        which='both',  # both major and minor ticks are affected
+                        right=False,  # ticks along the bottom edge are off
+                        left=False,  # ticks along the top edge are off
+                        labelright=False)  # labels along the bottom edge are off
+
+                    if self.server:
+                        plt.savefig(self.figpath + "I_{:05d}.png".format(counter))
                         plt.close("all")
                     else:
-                        continue
-                        # plt.quiver(-8.65, 41.2, 1, 0)
-                        # plt.text(-8.65, 41.205, 'Flood tide')
-                else:
-                    if timestamp_data[i] >= tide[ind_tide, 0]:
-                        continue
-                        # plt.quiver(-8.65, 41.2, 1, 0)
-                        # plt.text(-8.65, 41.205, 'Flood tide')
-                    else:
-                        plt.figure(figsize=(10, 10))
-                        im = plt.scatter(lon[:, :, 0], lat[:, :, 0], c=sal_data[i, :, :, 0], vmin=15, vmax=36,
-                                         cmap="Paired")
-                        plt.quiver(lon_river_mouth, lat_river_mouth, u, v, scale=25)
-                        plt.quiver(-8.65, 41.2, -1, 0)
-                        plt.text(-8.65, 41.205, 'Ebb tide')
-                    # plt.quiver(-8.65, 41.2, -1, 0)
-                        plt.text(-8.7, 41.04, "Wind direction: " + wind_dir)
-                        plt.text(-8.7, 41.035, "Wind level: " + wind_level)
+                        plt.show()
+                    counter = counter + 1
+                    print(counter)
 
-                        plt.xlabel("Lon [deg]")
-                        plt.ylabel("Lat [deg]")
-                        plt.title("Surface salinity on " + datetime.fromtimestamp(timestamp_data[i]).strftime("%Y%m%d - %H:%M"))
-                        plt.colorbar(im)
-                        plt.savefig(figpath + "I_{:05d}.png".format(counter))
-                        counter = counter + 1
-                        print(counter)
-                        plt.close("all")
-                # plt.show()
-            else:
-                print(counter)
-                pass
-
+if __name__ == "__main__":
+    a = Delft3D(server = server)
 
 
