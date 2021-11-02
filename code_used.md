@@ -12,6 +12,6 @@ git rm --cached -r *.DS_Store
 
 git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch Adaptive_script/Porto/Onboard.zip' --prune-empty --tag-name-filter cat -- --all
 
-
-
+scp -r target user@192.168.1.100:"/file\\ path\\ with\\ spaces/myfile.txt"
+- black space is replaced by \\
 <!-- git filter-branch -f --index-filter 'git rm --cached --ignore-unmatch Porto/Setup/Grid/Base.txt' -->
