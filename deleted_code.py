@@ -29,6 +29,7 @@
                 showscale=True,
                 coloraxis="coloraxis"
             )
+
         )])
         fig.update_coloraxes(colorscale="jet")
         figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/"

@@ -15,7 +15,7 @@ print("Time consuemed: ", t2 - t1)
 
 
 #%%
-path = " "
+
 #%%
 print(lat.shape)
 print(salinity.shape)

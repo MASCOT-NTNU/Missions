@@ -35,7 +35,7 @@ scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Port
 
 scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/* pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_PORTO/Config/
 
-scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Adaptive/* pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_PORTO/Adaptive/
+scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Adaptive/* pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_NEW/Adaptive/
 
 scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/path_initial_survey.txt pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT/Config/
 scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Adaptive/* pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT/Adaptive/
