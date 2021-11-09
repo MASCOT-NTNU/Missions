@@ -12,6 +12,8 @@ __status__ = "UnderDevelopment"
 import time
 import os
 from datetime import datetime
+
+import numpy as np
 from scipy.stats import mvn, norm
 from DataHandler import DataHandler
 from AUV import AUV
@@ -47,7 +49,7 @@ class MASCOT(AUV, DataHandler):
         self.load_global_path()
         self.load_prior()
         self.travelled_waypoints = 0
-        self.move_to_starting_loc()
+        self.get_starting_loc()
         self.run()
 
     def load_global_path(self):
@@ -83,6 +85,17 @@ class MASCOT(AUV, DataHandler):
         print("R_sal: ", self.R_sal)
         print("N: ", self.N)
 
+    def get_starting_loc(self):
+        self.ind_start = np.loadtxt(self.path_global + "/Config/ind_start.txt", delimiter=", ")
+        print("ind_start: ", self.ind_start)
+        self.ind_next = self.ind_start
+        self.updateF(self.ind_next)
+        self.data_path_lat.append(self.lat_loc[self.ind_start])
+        self.data_path_lon.append(self.lon_loc[self.ind_start])
+        self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]), deg2rad(self.lon_loc[self.ind_start]),
+                                     -self.depth_loc[self.ind_start], speed=self.speed)
+        self.updateWaypoint()
+
     def updateF(self, ind):
         self.F = np.zeros([1, self.N])
         self.F[0, ind] = True
@@ -92,19 +105,6 @@ class MASCOT(AUV, DataHandler):
         for i in range(EP.shape[0]):
             EP[i] = norm.cdf(Threshold, mu[i], Sigma[i, i])
         return EP
-
-    def move_to_starting_loc(self):
-        EP_Prior = self.EP_1D(self.mu_prior, self.Sigma_prior, self.Threshold_S)
-        ep_criterion = 0.5  # excursion probability close to 0.5
-        self.ind_start = (np.abs(EP_Prior - ep_criterion)).argmin()
-        if self.ind_start == 0:
-            self.ind_start = np.random.randint(self.N)
-        self.ind_next = self.ind_start
-        self.updateF(self.ind_next)
-        self.data_path_lat.append(self.lat_loc[self.ind_start])
-        self.data_path_lon.append(self.lon_loc[self.ind_start])
-        self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),deg2rad(self.lon_loc[self.ind_start]),-self.depth_loc[self.ind_start],speed = self.speed)
-        self.updateWaypoint()
 
     def find_candidates_loc(self):
         '''
@@ -131,6 +131,15 @@ class MASCOT(AUV, DataHandler):
             m = mu[i]
             IntA = IntA + mvn.mvnun(-np.inf, threshold, m, sn2)[0] - mvn.mvnun(-np.inf, threshold, m, sn2)[0] ** 2
         return IntA
+
+    def get_normalised_distance_vector(self):
+        dx, dy = latlon2xy(self.lat_loc, self.lon_loc, self.lat_loc[self.ind_now], self.lon_loc[self.ind_now])
+        dz = self.depth_loc - self.depth_loc[self.ind_now]
+        dist = np.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+        dist_normalised = dist / np.amax(dist)
+        # print("oridinary distance: ", dist)
+        # print("normalised distance: ", dist_normalised)
+        return dist_normalised
 
     def find_next_EIBV_1D(self, mu, Sig):
         id = []  # ind vector for containing the filtered desired candidate location
@@ -168,8 +177,8 @@ class MASCOT(AUV, DataHandler):
         t2 = time.time()
 
         if len(eibv) == 0:  # in case it is in the corner and not found any valid candidate locations
-            self.ind_next = np.abs(
-                self.EP_1D(mu, Sig, self.Threshold_S) - .5).argmin()  # if not found next, use the other one
+            dist_normalised = self.get_normalised_distance_vector() # it moves to the location with the mean of both distance and ep
+            self.ind_next = (np.abs(self.EP_1D(mu, Sig, self.Threshold_S) - .5) + dist_normalised).argmin()  # if not found next, use the other one
         else:
             self.ind_next = self.ind_cand[np.argmin(np.array(eibv))]
         self.data_path_lat.append(self.lat_loc[self.ind_next])
@@ -215,6 +224,7 @@ class MASCOT(AUV, DataHandler):
     def send_next_waypoint(self):
         self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_next]),deg2rad(self.lon_loc[self.ind_next]),-self.depth_loc[self.ind_next],speed = self.speed)
         print("next waypoint", deg2rad(self.lat_loc[self.ind_next]),deg2rad(self.lon_loc[self.ind_next]),-self.depth_loc[self.ind_next])
+        self.auv_handler.spin() # to wait until the state has changed
 
     def run(self):
         self.createDataPath(self.path_global)

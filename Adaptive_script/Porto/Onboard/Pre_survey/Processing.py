@@ -22,11 +22,40 @@ from PolygonHandler import PolygonCircle
 from GridHandler import GridPoly
 from PreProcessor import PreProcessor
 from AUV import AUV
+from Orienteer import Orienteer
 
 class MissionComplete(AUV):
     def __init__(self):
         AUV.__init__(self)
         self.send_SMS_mission_complete()
+
+    def load_global_path(self):
+        print("Now it will load the global path.")
+        self.path_global = open("path_global.txt", 'r').read()
+        print("global path is set up successfully!")
+        print(self.path_global)
+
+    def get_starting_loc(self):
+        self.prior_extracted_path = self.path_global + "/Data/Corrected/Prior_extracted.txt"
+        self.data_prior = np.loadtxt(self.prior_extracted_path, delimiter=", ")
+        self.lat_loc = self.data_prior[:, 0]
+        self.lon_loc = self.data_prior[:, 1]
+        self.depth_loc = self.data_prior[:, 2]
+
+        self.ind_start = np.loadtxt(self.path_global + "/Config/ind_start.txt", delimiter=", ")
+        print("ind_start: ", self.ind_start)
+        self.lat_start = self.lat_loc[self.ind_start]
+        self.lon_start = self.lon_loc[self.ind_start]
+        self.depth_start = self.depth_loc[self.ind_start]
+        print("Starting locaiton: ", self.lat_start, self.lon_start, self.depth_start)
+
+    def send_SMS_starting_loc(self):
+        print("Starting location has been sent to: ", self.phone_number)
+        SMS = Sms()
+        SMS.number.data = self.phone_number
+        SMS.timeout.data = 60
+        SMS.contents.data = ""
+        self.sms_pub_.publish(SMS)
 
     def send_SMS_mission_complete(self):
         print("Mission complete Message has been sent to: ", self.phone_number)
@@ -41,7 +70,9 @@ if __name__ == "__main__":
     b = PolygonCircle()
     c = GridPoly()
     d = PreProcessor()
-    e = MissionComplete()
+    e = Orienteer()
+    f = MissionComplete()
+
 
 
 

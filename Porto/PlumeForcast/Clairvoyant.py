@@ -24,6 +24,7 @@ server = True
 if not server:
     path_data_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Data/"
     figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/PlumeForcast/fig/"
+    path_config = ""
 else:
     path_data_new = "/home/ahomea/y/yaoling/MASCOT/Porto_Data_Processing/MOHID/Data/"
     figpath = "/home/ahomea/y/yaoling/MASCOT/Porto_Data_Processing/MOHID/fig/"
