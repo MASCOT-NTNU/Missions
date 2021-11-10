@@ -65,7 +65,7 @@ class Orienteer:
         if self.ind_start == 0:
             self.ind_start = np.random.randint(self.N)
         print("ind_start: ", self.ind_start)
-        np.savetxt(self.path_global + "/Config/ind_start.txt", self.ind_start, delimiter=", ")
+        np.savetxt(self.path_global + "/Config/ind_start.txt", self.ind_start.reshape(-1, 1), delimiter=", ")
         print("Starting index is saved successfully!")
 
 if __name__ == "__main__":

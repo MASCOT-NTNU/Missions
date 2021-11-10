@@ -1,0 +1,12 @@
+[2021/11/05 15:50:21] - WRN [Supervisors.Vehicle] >> now in 'SERVICE' mode
+[2021/11/05 15:50:21] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:22] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:22] - WRN [Plan.DB] >> storing plan 'follow_ntnu' issued through a PlanControl request
+[2021/11/05 15:50:22] - MSG [Plan.Engine] >> request -- Start Plan (follow_ntnu)
+[2021/11/05 15:50:22] - MSG [Plan.Engine] >> plan initializing: follow_ntnu
+[2021/11/05 15:50:22] - MSG [Plan.Engine] >> 1: executing maneuver
+[2021/11/05 15:50:22] - MSG [Plan.Engine] >> reply -- Start Plan (follow_ntnu) -- 1: executing maneuver
+[2021/11/05 15:50:22] - WRN [Supervisors.Vehicle] >> now in 'MANEUVERING' mode
+[2021/11/05 15:50:22] - MSG [Transports.Logging] >> log stopped '20211105/155020'
+[2021/11/05 15:50:22] - MSG [Plan.DB] >> set plan (follow_ntnu) -- OK (updated)
+[2021/11/05 15:50:22] - MSG [Transports.Logging] >> log started '20211105/155022_follow_ntnu'

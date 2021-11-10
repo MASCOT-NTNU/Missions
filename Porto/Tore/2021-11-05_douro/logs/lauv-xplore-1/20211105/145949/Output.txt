@@ -1,0 +1,38 @@
+[2021/11/05 14:59:49] - MSG [Power.PCTLv2] >> firmware version 2.4.3
+[2021/11/05 14:59:49] - MSG [Actuators.Broom] >> firmware version 1.1.2
+[2021/11/05 14:59:50] - MSG [Monitors.Entities] >> AHRS : Boot -> Normal | active | timeouts: 0 | faults: 0 | frequency: 45
+[2021/11/05 14:59:50] - MSG [Actuators.Broom] >> setup completed
+[2021/11/05 14:59:50] - MSG [Monitors.Entities] >> Motor Controller : Boot -> Normal | active | timeouts: 0 | faults: 0 | frequency: 3
+[2021/11/05 14:59:50] - MSG [Monitors.Entities] >> Attitude : Boot -> Normal | idle
+[2021/11/05 14:59:50] - MSG [Monitors.Entities] >> Leak Sensor - Bottom : Boot -> Normal | active
+[2021/11/05 14:59:50] - MSG [Monitors.Entities] >> Leak Sensor - Antenna : Boot -> Normal | active
+[2021/11/05 14:59:51] - MSG [Monitors.Entities] >> Operational Limits : Boot -> Normal | active
+[2021/11/05 14:59:51] - WRN [Supervisors.Vehicle] >> vehicle errors: Clock, Operational Limits, Navigation, BATMAN, Leak Sensor - Bottom, Leak Sensor - Antenna, GPS
+[2021/11/05 14:59:53] - MSG [Power.BATMANv2] >> Firmware Version: 1.0.0
+[2021/11/05 14:59:54] - MSG [Transports.Discovery] >> new node within range 'ccu-lsts-1-24' / 16664 / 10.0.1.24
+[2021/11/05 14:59:54] - MSG [Transports.UDP] >> activating transmission to node 'ccu-lsts-1-24'
+[2021/11/05 14:59:54] - MSG [Monitors.Entities] >> GPS : Boot -> Normal | active
+[2021/11/05 14:59:54] - WRN [Supervisors.Vehicle] >> vehicle errors: Clock, Navigation, BATMAN
+[2021/11/05 14:59:54] - MSG [Monitors.Entities] >> Navigation : Boot -> Normal | active
+[2021/11/05 14:59:54] - MSG [Sensors.Keller] >> calibrated
+[2021/11/05 14:59:55] - MSG [Monitors.Entities] >> BATMAN : Boot -> Normal | H: 100 %, Volt: 27.854 V, RCap: 68.527 Ah, ETD: 3d 22h 12m
+[2021/11/05 14:59:59] - WRN [Transports.GSM] >> Parsing unrecognized Base64 message as text
+[2021/11/05 14:59:59] - MSG [Autonomy.TextActions] >> Processing text message from +351913431349: 'info'
+[2021/11/05 14:59:59] - MSG [Autonomy.TextActions] >> Replying to +351913431349: 'Failed to exec : .'
+[2021/11/05 14:59:59] - MSG [Transports.CommManager] >> Request to send data over SMS to +351913431349 (1)
+[2021/11/05 14:59:59] - MSG [Transports.CommManager] >> Status of transmission message (1) changed to: Message has been queued for GSM transmission.
+[2021/11/05 15:00:02] - MSG [Transports.CommManager] >> Status of transmission message (1) changed to: Message has been sent via GSM.
+[2021/11/05 15:00:22] - WRN [Monitors.Clock] >> adjusting CPU clock by -2.9548 s
+[2021/11/05 15:00:20] - MSG [Monitors.Entities] >> Clock : Boot -> Normal | synchronized
+[2021/11/05 15:00:20] - MSG [Supervisors.Vehicle] >> entity errors cleared
+[2021/11/05 15:00:20] - WRN [Supervisors.Vehicle] >> now in 'SERVICE' mode
+[2021/11/05 15:00:20] - MSG [Plan.Engine] >> vehicle ready
+[2021/11/05 15:00:22] - MSG [Transports.Discovery] >> new node within range 'ccu-spike-42:3E' / 16958 / 10.0.2.62
+[2021/11/05 15:00:26] - MSG [Transports.UDP] >> activating transmission to node 'ccu-spike-42:3E'
+[2021/11/05 15:00:28] - MSG [Plan.Engine] >> request -- Start Plan (teleop-spike-423e)
+[2021/11/05 15:00:28] - MSG [Plan.Engine] >> plan initializing: teleop-spike-423e
+[2021/11/05 15:00:28] - MSG [Plan.Engine] >> Teleoperation: executing maneuver
+[2021/11/05 15:00:28] - MSG [Plan.Engine] >> reply -- Start Plan (teleop-spike-423e) -- Teleoperation: executing maneuver
+[2021/11/05 15:00:28] - MSG [Transports.Logging] >> log stopped '20211105/145949'
+[2021/11/05 15:00:28] - MSG [Transports.Logging] >> log started '20211105/150028_teleop-spike-423e'
+[2021/11/05 15:00:28] - WRN [Supervisors.Vehicle] >> now in 'MANEUVERING' mode

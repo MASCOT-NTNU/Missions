@@ -1,0 +1,49 @@
+[2021/11/05 15:01:05] - MSG [Plan.Engine] >> Goto1: executing maneuver
+[2021/11/05 15:01:06] - WRN [Supervisors.Vehicle] >> now in 'MANEUVERING' mode
+[2021/11/05 15:01:06] - MSG [Control.Path.VectorField] >> path (lat/lon): 41.12240 -8.69088 to 41.12591 -8.69265
+[2021/11/05 15:01:31] - MSG [Transports.UDP] >> deactivating transmission to node 'ccu-spike-42:3E'
+[2021/11/05 15:03:10] - WRN [Monitors.Servos] >> potential fault in servo #0: position error above 12.00º
+[2021/11/05 15:04:06] - MSG [Transports.UDP] >> deactivating transmission to node 'ccu-lsts-1-24'
+[2021/11/05 15:06:06] - WRN [Transports.IridiumSBD] >> transmission failed: no network service (32)
+[2021/11/05 15:07:12] - MSG [Plan.Engine] >> YoYo1: executing maneuver
+[2021/11/05 15:07:12] - MSG [Control.Path.VectorField] >> path (lat/lon): 41.12591 -8.69265 to 41.13412 -8.69771
+[2021/11/05 15:10:58] - MSG [Transports.CommManager] >> Requesting report transmission over Iridium.
+[2021/11/05 15:21:23] - MSG [Transports.CommManager] >> Requesting report transmission over Iridium.
+[2021/11/05 15:21:30] - MSG [Plan.Engine] >> StationKeeping1: executing maneuver
+[2021/11/05 15:21:31] - MSG [Maneuver.Multiplexer] >> outside safe region (distance: 64.4 m)
+[2021/11/05 15:21:31] - MSG [Control.Path.VectorField] >> path (lat/lon): 41.13408 -8.69778 to 41.13454 -8.69731
+[2021/11/05 15:22:20] - MSG [Maneuver.Multiplexer] >> inside safe region (distance: 6.5 m)
+[2021/11/05 15:23:13] - MSG [Maneuver.Multiplexer] >> outside safe region (distance: 10.3 m)
+[2021/11/05 15:23:13] - MSG [Control.Path.VectorField] >> path (lat/lon): 41.13445 -8.69729 to 41.13454 -8.69731
+[2021/11/05 15:23:20] - MSG [Maneuver.Multiplexer] >> inside safe region (distance: 6.6 m)
+[2021/11/05 15:24:02] - MSG [Transports.UDP] >> activating transmission to node 'ccu-lsts-1-24'
+[2021/11/05 15:24:13] - MSG [Maneuver.Multiplexer] >> outside safe region (distance: 10.4 m)
+[2021/11/05 15:24:13] - MSG [Control.Path.VectorField] >> path (lat/lon): 41.13445 -8.69733 to 41.13454 -8.69731
+[2021/11/05 15:24:21] - MSG [Maneuver.Multiplexer] >> inside safe region (distance: 7.1 m)
+[2021/11/05 15:24:52] - MSG [Transports.UDP] >> deactivating transmission to node 'ccu-lsts-1-24'
+[2021/11/05 15:24:57] - MSG [Transports.UDP] >> activating transmission to node 'ccu-lsts-1-24'
+[2021/11/05 15:25:16] - MSG [Maneuver.Multiplexer] >> outside safe region (distance: 10.0 m)
+[2021/11/05 15:25:16] - MSG [Control.Path.VectorField] >> path (lat/lon): 41.13445 -8.69729 to 41.13454 -8.69731
+[2021/11/05 15:25:23] - MSG [Maneuver.Multiplexer] >> inside safe region (distance: 6.8 m)
+[2021/11/05 15:25:37] - MSG [Autonomy.TextActions] >> Processing text message from +351913431349: 'pos'
+[2021/11/05 15:25:37] - MSG [Plan.Generator] >> generating plan from 'pos' template...
+[2021/11/05 15:25:37] - MSG [Plan.Generator] >> Unable to generate plan using template pos
+[2021/11/05 15:25:38] - MSG [Monitors.Emergency] >> sending IridiumMsg (t:30) to +351913431349: (T) (lauv-xplore-1) 15:25:37 / 41 8.070750, -8 41.842690 / f:97 v:279 c:100 / s: M / p:100
+[2021/11/05 15:25:38] - MSG [Monitors.Emergency] >> sending SMS (t:30) to +351913431349: (T) (lauv-xplore-1) 15:25:37 / 41 8.070750, -8 41.842690 / f:97 v:279 c:100 / s: M / p:100
+[2021/11/05 15:25:38] - MSG [Transports.CommManager] >> Request to send data over satellite (0)
+[2021/11/05 15:25:38] - MSG [Transports.CommManager] >> Request to send data over SMS to +351913431349 (1)
+[2021/11/05 15:25:38] - MSG [Transports.CommManager] >> Status of transmission message (0) changed to: Message has been queued for Satellite transmission.
+[2021/11/05 15:25:38] - MSG [Transports.CommManager] >> Status of transmission message (1) changed to: Message has been queued for GSM transmission.
+[2021/11/05 15:25:42] - MSG [Transports.CommManager] >> Status of transmission message (1) changed to: Message has been sent via GSM.
+[2021/11/05 15:25:50] - MSG [Transports.IridiumSBD] >> Message sent successfully.
+[2021/11/05 15:25:50] - MSG [Transports.CommManager] >> Status of transmission message (0) changed to: Message has been sent via Iridium.
+[2021/11/05 15:26:12] - MSG [Maneuver.Multiplexer] >> outside safe region (distance: 10.2 m)
+[2021/11/05 15:26:12] - MSG [Control.Path.VectorField] >> path (lat/lon): 41.13445 -8.69732 to 41.13454 -8.69731
+[2021/11/05 15:26:13] - WRN [Plan.DB] >> storing plan 'cmd-lauv-xplore-1' issued through a PlanControl request
+[2021/11/05 15:26:13] - MSG [Plan.Engine] >> request -- Start Plan (cmd-lauv-xplore-1)
+[2021/11/05 15:26:13] - MSG [Plan.Engine] >> plan initializing: cmd-lauv-xplore-1
+[2021/11/05 15:26:13] - MSG [Plan.Engine] >> 1: executing maneuver
+[2021/11/05 15:26:13] - MSG [Transports.Logging] >> log stopped '20211105/150102_preSurvey'
+[2021/11/05 15:26:13] - MSG [Plan.Engine] >> reply -- Start Plan (cmd-lauv-xplore-1) -- 1: executing maneuver
+[2021/11/05 15:26:13] - MSG [Plan.DB] >> set plan (cmd-lauv-xplore-1) -- OK (updated)
+[2021/11/05 15:26:13] - MSG [Transports.Logging] >> log started '20211105/152613_cmd-lauv-xplore-1'

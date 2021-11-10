@@ -1,0 +1,144 @@
+[2021/11/05 17:55:28] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:29] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:30] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:31] - MSG [Transports.CommManager] >> Status of transmission message (4) changed to: Message has been sent via GSM.
+[2021/11/05 17:55:31] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:31] - MSG [Plan.Engine] >> 1: executing maneuver
+[2021/11/05 17:55:31] - WRN [Supervisors.Vehicle] >> now in 'MANEUVERING' mode
+[2021/11/05 17:55:32] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:32] - MSG [Control.Path.VectorField] >> path (lat/lon): 41.10963 -8.68536 to 41.10963 -8.68536
+[2021/11/05 17:55:33] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:33] - MSG [Plan.Engine] >> 2: executing maneuver
+[2021/11/05 17:55:34] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:34] - MSG [Maneuver.Multiplexer] >> inside safe region (distance: 3.2 m)
+[2021/11/05 17:55:35] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:36] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:37] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:38] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:39] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:40] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:41] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:42] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:43] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:44] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:45] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:46] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:47] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:48] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:49] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:50] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:51] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:52] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:53] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:54] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:55] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:56] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:57] - MSG [Transports.Discovery] >> new node within range 'ccu-lsts-1-29' / 16669 / 10.0.1.29
+[2021/11/05 17:55:57] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:58] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:55:59] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:00] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:01] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:02] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:03] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:03] - MSG [Maneuver.Multiplexer] >> outside safe region (distance: 10.0 m)
+[2021/11/05 17:56:03] - MSG [Control.Path.VectorField] >> path (lat/lon): 41.10956 -8.68540 to 41.10965 -8.68536
+[2021/11/05 17:56:04] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:05] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:06] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:07] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:08] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:09] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:10] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:11] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:12] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:13] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:14] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:15] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:16] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:17] - MSG [Maneuver.Multiplexer] >> inside safe region (distance: 4.4 m)
+[2021/11/05 17:56:17] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:18] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:19] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:20] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:21] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:22] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:23] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:24] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:25] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:26] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:27] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:28] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:29] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:30] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:31] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:32] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:33] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:34] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:35] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:36] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:37] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:38] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:39] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:40] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:41] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:42] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:43] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:44] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:45] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:46] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:47] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:48] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:49] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:50] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:51] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:52] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:53] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:54] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:55] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:56] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:57] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:57] - MSG [Maneuver.Multiplexer] >> outside safe region (distance: 10.3 m)
+[2021/11/05 17:56:57] - MSG [Control.Path.VectorField] >> path (lat/lon): 41.10956 -8.68538 to 41.10965 -8.68536
+[2021/11/05 17:56:58] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:56:59] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:00] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:01] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:02] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:03] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:04] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:05] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:06] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:07] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:08] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:09] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:10] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:11] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:11] - MSG [Maneuver.Multiplexer] >> inside safe region (distance: 5.7 m)
+[2021/11/05 17:57:12] - MSG [Transports.CommManager] >> Requesting report transmission over Iridium.
+[2021/11/05 17:57:12] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:13] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:14] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:15] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:16] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:17] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:18] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:19] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:20] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:21] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:22] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:23] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:24] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:25] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:26] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:27] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:28] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:29] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:30] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:31] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:32] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:33] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:34] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:34] - MSG [Plan.Engine] >> plan completed
+[2021/11/05 17:57:34] - MSG [Transports.Logging] >> log stopped '20211105/175527_surface'
+[2021/11/05 17:57:35] - MSG [Transports.Logging] >> log started '20211105/175734'

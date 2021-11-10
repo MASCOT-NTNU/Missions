@@ -27,7 +27,9 @@ from Orienteer import Orienteer
 class MissionComplete(AUV):
     def __init__(self):
         AUV.__init__(self)
-        self.send_SMS_mission_complete()
+        self.load_global_path()
+        self.get_starting_loc()
+        self.send_SMS_starting_loc_mission_complete()
 
     def load_global_path(self):
         print("Now it will load the global path.")
@@ -42,27 +44,21 @@ class MissionComplete(AUV):
         self.lon_loc = self.data_prior[:, 1]
         self.depth_loc = self.data_prior[:, 2]
 
-        self.ind_start = np.loadtxt(self.path_global + "/Config/ind_start.txt", delimiter=", ")
+        self.ind_start = int(np.loadtxt(self.path_global + "/Config/ind_start.txt", delimiter=", "))
         print("ind_start: ", self.ind_start)
         self.lat_start = self.lat_loc[self.ind_start]
         self.lon_start = self.lon_loc[self.ind_start]
         self.depth_start = self.depth_loc[self.ind_start]
         print("Starting locaiton: ", self.lat_start, self.lon_start, self.depth_start)
 
-    def send_SMS_starting_loc(self):
+    def send_SMS_starting_loc_mission_complete(self):
         print("Starting location has been sent to: ", self.phone_number)
         SMS = Sms()
         SMS.number.data = self.phone_number
         SMS.timeout.data = 60
-        SMS.contents.data = ""
-        self.sms_pub_.publish(SMS)
-
-    def send_SMS_mission_complete(self):
-        print("Mission complete Message has been sent to: ", self.phone_number)
-        SMS = Sms()
-        SMS.number.data = self.phone_number
-        SMS.timeout.data = 60
-        SMS.contents.data = "Congrats, PostProcessing and PreProcessing Mission complete."
+        SMS.contents.data = "Congrats, PostProcessing and PreProcessing Mission complete." + \
+                            "\n Starting location: lat: " + str(self.lat_start) + " lon: " + \
+                            str(self.lon_start) + " depth: " + str(self.depth_start) + "\n"
         self.sms_pub_.publish(SMS)
 
 if __name__ == "__main__":

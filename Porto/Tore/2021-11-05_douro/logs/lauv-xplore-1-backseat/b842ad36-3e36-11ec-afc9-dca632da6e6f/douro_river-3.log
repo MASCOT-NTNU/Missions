@@ -1,0 +1,96 @@
+[rospy.client][INFO] 2021-11-05 12:48:58,785: init_node, name[/douro_river], pid[746]
+[xmlrpc][INFO] 2021-11-05 12:48:58,787: XML-RPC server binding to 0.0.0.0:0
+[xmlrpc][INFO] 2021-11-05 12:48:58,788: Started XML-RPC server [http://raspberrypi:37491/]
+[rospy.init][INFO] 2021-11-05 12:48:58,789: ROS Slave URI: [http://raspberrypi:37491/]
+[rospy.impl.masterslave][INFO] 2021-11-05 12:48:58,790: _ready: http://raspberrypi:37491/
+[rospy.registration][INFO] 2021-11-05 12:48:58,794: Registering with master node http://localhost:11311
+[xmlrpc][INFO] 2021-11-05 12:48:58,794: xml rpc node: starting XML-RPC server
+[rospy.init][INFO] 2021-11-05 12:48:58,891: registered with master
+[rospy.rosout][INFO] 2021-11-05 12:48:58,892: initializing /rosout core topic
+[rospy.rosout][INFO] 2021-11-05 12:48:58,916: connected to core topic /rosout
+[rospy.simtime][INFO] 2021-11-05 12:48:58,921: /use_sim_time is not set, will not subscribe to simulated time [/clock] topic
+[rospy.internal][INFO] 2021-11-05 12:48:59,020: topic[/IMC/Out/EntityList] adding connection to [http://raspberrypi:38779/], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,034: topic[/IMC/Out/Heartbeat] adding connection to [http://raspberrypi:38779/], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,094: topic[/IMC/Out/VehicleState] adding connection to [http://raspberrypi:38779/], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,106: topic[/IMC/Out/EstimatedState] adding connection to [http://raspberrypi:38779/], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,150: topic[/rosout] adding connection to [/rosout], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,181: topic[/IMC/In/EntityList] adding connection to [/imc_bridge], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,191: topic[/IMC/In/Reference] adding connection to [/imc_bridge], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,201: topic[/IMC/Out/FollowRefState] adding connection to [http://raspberrypi:38779/], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,209: topic[/IMC/Out/PlanControl] adding connection to [http://raspberrypi:38779/], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,221: topic[/IMC/Out/Temperature] adding connection to [http://raspberrypi:38779/], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,234: topic[/IMC/Out/Salinity] adding connection to [http://raspberrypi:38779/], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,290: topic[/Vehicle/Out/Salinity_filtered] adding connection to [http://raspberrypi:37491/], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,308: topic[/Vehicle/Out/EstimatedState_filtered] adding connection to [http://raspberrypi:37491/], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,312: topic[/Vehicle/Out/Salinity_filtered] adding connection to [/douro_river], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,321: topic[/Vehicle/Out/EstimatedState_filtered] adding connection to [/douro_river], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,377: topic[/IMC/In/LogBookEntry] adding connection to [/imc_bridge], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,382: topic[/IMC/In/Sms] adding connection to [/imc_bridge], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,385: topic[/IMC/In/IridiumMsgTx] adding connection to [/imc_bridge], count 0
+[rospy.internal][INFO] 2021-11-05 12:48:59,387: topic[/IMC/In/ReportControl] adding connection to [/imc_bridge], count 0
+[rosout][INFO] 2021-11-05 12:49:02,031: initiated
+[rosout][INFO] 2021-11-05 12:49:02,036: dispatching entitylist query 
+[rosout][INFO] 2021-11-05 12:49:02,040: dispatching entitylist query 
+[rosout][INFO] 2021-11-05 12:55:07,114: Popping up.
+[rosout][WARNING] 2021-11-05 12:56:06,779: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 12:56:06,787: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 12:56:07,277: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 12:56:07,779: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 12:56:08,274: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 12:56:08,778: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 12:56:09,279: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 12:56:09,778: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 12:56:10,274: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 12:56:10,778: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 12:56:11,275: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 12:56:11,778: System encountered an error, restart FollowReference to continue.
+[rosout][INFO] 2021-11-05 13:03:13,053: Popping up.
+[rosout][INFO] 2021-11-05 13:11:23,052: Popping up.
+[rosout][INFO] 2021-11-05 13:19:08,042: Popping up.
+[rosout][INFO] 2021-11-05 13:26:56,042: Popping up.
+[rosout][INFO] 2021-11-05 13:34:30,041: Popping up.
+[rosout][WARNING] 2021-11-05 13:35:48,363: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:35:48,370: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:35:48,860: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:35:49,359: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:35:49,863: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:35:50,358: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:35:50,860: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:35:51,360: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:35:51,861: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:35:52,362: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:35:52,860: System encountered an error, restart FollowReference to continue.
+[rosout][INFO] 2021-11-05 13:48:56,051: Popping up.
+[rosout][WARNING] 2021-11-05 13:53:34,398: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:53:34,407: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:53:34,900: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:53:35,396: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:53:35,899: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:53:36,395: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:53:36,898: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:53:37,397: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:53:37,896: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:53:38,397: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 13:53:38,899: System encountered an error, restart FollowReference to continue.
+[rosout][INFO] 2021-11-05 13:56:39,041: Popping up.
+[rosout][INFO] 2021-11-05 14:04:20,042: Popping up.
+[rosout][INFO] 2021-11-05 14:12:07,041: Popping up.
+[rosout][INFO] 2021-11-05 14:19:47,041: Popping up.
+[rosout][INFO] 2021-11-05 14:27:27,041: Popping up.
+[rosout][INFO] 2021-11-05 14:35:16,041: Popping up.
+[rosout][INFO] 2021-11-05 14:42:58,060: Popping up.
+[rosout][INFO] 2021-11-05 14:50:53,062: Popping up.
+[rosout][INFO] 2021-11-05 14:58:45,052: Popping up.
+[rosout][WARNING] 2021-11-05 14:59:52,538: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 14:59:52,546: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 14:59:53,035: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 14:59:53,537: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 14:59:54,038: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 14:59:54,535: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 14:59:55,038: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 14:59:55,535: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 14:59:56,038: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 14:59:56,536: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 14:59:57,039: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 15:11:58,562: System encountered an error, restart FollowReference to continue.
+[rosout][WARNING] 2021-11-05 15:11:58,570: System encountered an error, restart FollowReference to continue.

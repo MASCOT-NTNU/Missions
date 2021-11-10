@@ -1,0 +1,7 @@
+[2021/11/05 17:58:09] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:58:10] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:58:11] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:58:12] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:58:12] - MSG [Plan.Engine] >> plan completed
+[2021/11/05 17:58:12] - MSG [Transports.Logging] >> log stopped '20211105/175808_teleop-spike-410f'
+[2021/11/05 17:58:12] - MSG [Transports.Logging] >> log started '20211105/175812'

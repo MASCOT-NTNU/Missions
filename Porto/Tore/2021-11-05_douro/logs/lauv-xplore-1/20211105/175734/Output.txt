@@ -1,0 +1,56 @@
+[2021/11/05 17:57:35] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:35] - WRN [Supervisors.Vehicle] >> now in 'SERVICE' mode
+[2021/11/05 17:57:36] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:37] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:38] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:39] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:40] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:41] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:42] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:43] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:44] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:45] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:46] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:47] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:48] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:49] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:49] - MSG [Transports.UDP] >> activating transmission to node 'ccu-spike-41:0F'
+[2021/11/05 17:57:50] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:51] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:52] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:53] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:54] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:55] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:56] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:57] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:57] - ERR [Supervisors.Vehicle] >> got abort request
+[2021/11/05 17:57:57] - WRN [Supervisors.Vehicle] >> now in 'ERROR' mode
+[2021/11/05 17:57:58] - MSG [Monitors.Emergency] >> sending IridiumMsg (t:30) to +351913431349: (A) (lauv-xplore-1) 17:57:58 / 41 6.572150, -8 41.125040 / f:89 v:273 c:100 / s: S
+[2021/11/05 17:57:58] - MSG [Monitors.Emergency] >> sending SMS (t:30) to +351913431349: (A) (lauv-xplore-1) 17:57:58 / 41 6.572150, -8 41.125040 / f:89 v:273 c:100 / s: S
+[2021/11/05 17:57:58] - MSG [Transports.CommManager] >> Request to send data over satellite (32)
+[2021/11/05 17:57:58] - MSG [Transports.CommManager] >> Request to send data over SMS to +351913431349 (33)
+[2021/11/05 17:57:58] - MSG [Transports.CommManager] >> Status of transmission message (32) changed to: Message has been queued for Satellite transmission.
+[2021/11/05 17:57:58] - MSG [Transports.CommManager] >> Status of transmission message (33) changed to: Message has been queued for GSM transmission.
+[2021/11/05 17:57:58] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:57:58] - WRN [Supervisors.Vehicle] >> now in 'SERVICE' mode
+[2021/11/05 17:57:58] - MSG [Plan.Engine] >> vehicle ready
+[2021/11/05 17:57:59] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:58:00] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:58:01] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:58:02] - MSG [Transports.CommManager] >> Status of transmission message (33) changed to: Message has been sent via GSM.
+[2021/11/05 17:58:02] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:58:03] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:58:04] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:58:04] - MSG [Transports.IridiumSBD] >> Message sent successfully.
+[2021/11/05 17:58:04] - MSG [Transports.CommManager] >> Status of transmission message (32) changed to: Message has been sent via Iridium.
+[2021/11/05 17:58:05] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:58:06] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:58:07] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:58:08] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 17:58:08] - MSG [Plan.Engine] >> request -- Start Plan (teleop-spike-410f)
+[2021/11/05 17:58:08] - MSG [Plan.Engine] >> plan initializing: teleop-spike-410f
+[2021/11/05 17:58:08] - MSG [Plan.Engine] >> Teleoperation: executing maneuver
+[2021/11/05 17:58:08] - MSG [Plan.Engine] >> reply -- Start Plan (teleop-spike-410f) -- Teleoperation: executing maneuver
+[2021/11/05 17:58:08] - MSG [Transports.Logging] >> log stopped '20211105/175734'
+[2021/11/05 17:58:08] - MSG [Transports.Logging] >> log started '20211105/175808_teleop-spike-410f'
+[2021/11/05 17:58:08] - WRN [Supervisors.Vehicle] >> now in 'MANEUVERING' mode

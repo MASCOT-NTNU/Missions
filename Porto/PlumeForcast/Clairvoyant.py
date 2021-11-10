@@ -24,10 +24,11 @@ server = True
 if not server:
     path_data_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Data/"
     figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/PlumeForcast/fig/"
-    path_config = ""
+    path_config = "/home/ahomea/y/yaoling/MASCOT/Porto_Data_Processing/MOHID/Config/"
 else:
     path_data_new = "/home/ahomea/y/yaoling/MASCOT/Porto_Data_Processing/MOHID/Data/"
     figpath = "/home/ahomea/y/yaoling/MASCOT/Porto_Data_Processing/MOHID/fig/"
+    path_config = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/"
 
 
 class DataFetcher:
@@ -53,22 +54,26 @@ class DataFetcher:
         print(self.string_dates)
         for i in range(len(self.string_dates)):
             if i < len(self.string_dates) - 1:
-                string_date1 = self.string_dates[i]
-                year1 = string_date1[:4]
-                month1 = string_date1[4:6]
-                day1 = string_date1[6:]
-                string_date2 = self.string_dates[i+1]
-                year2 = string_date2[:4]
-                month2 = string_date2[4:6]
-                day2 = string_date2[6:]
-                print('ftp://Renato:REP_Modelling@ftp.mohid.com/CoLAB_Atlantic/LSTS/Douro/'+year1+'-'+month1+'-'+day1+'_'+year2+'-'+month2+'-'+day2+'/WaterProperties.hdf5',
-                                           path_data_new + 'WaterProperties_'+string_date1+'.hdf5')
-                try:
-                    urllib.request.urlretrieve('ftp://Renato:REP_Modelling@ftp.mohid.com/CoLAB_Atlantic/LSTS/Douro/'+year1+'-'+month1+'-'+day1+'_'+year2+'-'+month2+'-'+day2+'/WaterProperties.hdf5',
+                if os.path.exists(path_data_new + 'WaterProperties_' + string_date1 + ".hdf5"):
+                    print("File exists, skip over...")
+                    continue
+                else:
+                    string_date1 = self.string_dates[i]
+                    year1 = string_date1[:4]
+                    month1 = string_date1[4:6]
+                    day1 = string_date1[6:]
+                    string_date2 = self.string_dates[i+1]
+                    year2 = string_date2[:4]
+                    month2 = string_date2[4:6]
+                    day2 = string_date2[6:]
+                    print('ftp://Renato:REP_Modelling@ftp.mohid.com/CoLAB_Atlantic/LSTS/Douro/'+year1+'-'+month1+'-'+day1+'_'+year2+'-'+month2+'-'+day2+'/WaterProperties.hdf5',
                                                path_data_new + 'WaterProperties_'+string_date1+'.hdf5')
-                except:
-                    print("Something wrong, but I ignored")
-                    pass
+                    try:
+                        urllib.request.urlretrieve('ftp://Renato:REP_Modelling@ftp.mohid.com/CoLAB_Atlantic/LSTS/Douro/'+year1+'-'+month1+'-'+day1+'_'+year2+'-'+month2+'-'+day2+'/WaterProperties.hdf5',
+                                                   path_data_new + 'WaterProperties_'+string_date1+'.hdf5')
+                    except:
+                        print("Something wrong, but I ignored")
+                        pass
                 print(i)
         print("data is fetched successfully!")
 
@@ -114,6 +119,9 @@ class Clairvoyant:
         files = os.listdir(path_data_new)
         files.sort()
         counter = 0
+
+        OpArea = np.loadtxt(path_config + "", delimiter=", ")
+
         for i in range(len(files)):
             if files[i] != ".DS_Store":
                 print(files[i])

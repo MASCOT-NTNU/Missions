@@ -1,0 +1,154 @@
+[2021/11/05 15:48:26] - MSG [Maneuver.FollowReference.AUV] >> waiting for first reference
+[2021/11/05 15:48:26] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:26] - MSG [Maneuver.FollowReference.AUV] >> Z reference changed to 0.000000
+[2021/11/05 15:48:26] - MSG [Maneuver.FollowReference.AUV] >> Speed reference changed to 1.200000
+[2021/11/05 15:48:26] - MSG [Maneuver.FollowReference.AUV] >> Z reference changed to 0.000000
+[2021/11/05 15:48:26] - MSG [Maneuver.FollowReference.AUV] >> Speed reference changed to 1.200000
+[2021/11/05 15:48:26] - MSG [Control.Path.VectorField] >> path (lat/lon): 41.12970 -8.69579 to 41.13010 -8.69520
+[2021/11/05 15:48:26] - MSG [Maneuver.FollowReference.AUV] >> going towards (41.130104, -8.695197, 0.000000).
+[2021/11/05 15:48:26] - MSG [Control.Path.VectorField] >> path (lat/lon): 41.12970 -8.69579 to 41.13010 -8.69520
+[2021/11/05 15:48:26] - MSG [Maneuver.FollowReference.AUV] >> going towards (41.130104, -8.695197, 0.000000).
+[2021/11/05 15:48:27] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:28] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:29] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:30] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:31] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:32] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:33] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:34] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:35] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:36] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:37] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:38] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:39] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:40] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:41] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:42] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:43] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:44] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:45] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:46] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:47] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:48] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:49] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:50] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:51] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:52] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:53] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:54] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:55] - WRN [Transports.IridiumSBD] >> transmission failed: no network service (32)
+[2021/11/05 15:48:55] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:56] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:57] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:58] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:48:59] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:00] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:01] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:02] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:03] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:04] - MSG [Transports.UDP] >> deactivating transmission to node 'ccu-lsts-1-24'
+[2021/11/05 15:49:04] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:05] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:06] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:07] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:08] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:09] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:10] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:11] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:11] - MSG [Maneuver.FollowReference.AUV] >> hovering next to (41.130104, -8.695197).
+[2021/11/05 15:49:11] - MSG [Control.Path.VectorField] >> path (lat/lon): 41.13006 -8.69525 to 41.13010 -8.69520
+[2021/11/05 15:49:12] - MSG [Transports.TCP.Server/Backseat] >> incoming: ReportControl
+[2021/11/05 15:49:12] - MSG [Transports.TCP.Server/Backseat] >> incoming: IridiumMsgTx
+[2021/11/05 15:49:12] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:12] - MSG [Transports.TCP.Server/Backseat] >> incoming: Sms
+[2021/11/05 15:49:12] - MSG [Maneuver.FollowReference.AUV] >> Speed reference changed to 1.700000
+[2021/11/05 15:49:12] - MSG [Maneuver.FollowReference.AUV] >> Z reference changed to 0.000000
+[2021/11/05 15:49:12] - MSG [Maneuver.FollowReference.AUV] >> Speed reference changed to 1.700000
+[2021/11/05 15:49:12] - MSG [Maneuver.FollowReference.AUV] >> hovering next to (41.130071, -8.695236).
+[2021/11/05 15:49:12] - MSG [Maneuver.FollowReference.AUV] >> hovering next to (41.130071, -8.695236).
+[2021/11/05 15:49:12] - WRN [Control.Path.VectorField] >> not active
+[2021/11/05 15:49:12] - MSG [Control.Path.VectorField] >> path (lat/lon): 41.13007 -8.69523 to 41.13007 -8.69524
+[2021/11/05 15:49:13] - MSG [Monitors.Emergency] >> sending IridiumMsg (t:30) to +351913431349: (R) (lauv-xplore-1) 15:49:13 / 41 7.804170, -8 41.713460 / f:96 v:274 c:100 / s: M / p:-1
+[2021/11/05 15:49:13] - MSG [Monitors.Emergency] >> sending SMS (t:30) to +351913431349: (R) (lauv-xplore-1) 15:49:13 / 41 7.804170, -8 41.713460 / f:96 v:274 c:100 / s: M / p:-1
+[2021/11/05 15:49:13] - MSG [Transports.CommManager] >> Request to send data over satellite (4)
+[2021/11/05 15:49:13] - MSG [Transports.CommManager] >> Request to send data over SMS to +351913431349 (5)
+[2021/11/05 15:49:13] - MSG [Transports.CommManager] >> Status of transmission message (4) changed to: Message has been queued for Satellite transmission.
+[2021/11/05 15:49:13] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:14] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:15] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:16] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:17] - MSG [Transports.CommManager] >> Status of transmission message (5) changed to: Message has been queued for GSM transmission.
+[2021/11/05 15:49:17] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:18] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:19] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:20] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:21] - MSG [Transports.IridiumSBD] >> Message sent successfully.
+[2021/11/05 15:49:21] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:22] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:23] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:24] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:25] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:26] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:27] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:28] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:29] - MSG [Transports.IridiumSBD] >> Message sent successfully.
+[2021/11/05 15:49:29] - MSG [Transports.CommManager] >> Status of transmission message (4) changed to: Message has been sent via Iridium.
+[2021/11/05 15:49:29] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:30] - MSG [Transports.CommManager] >> Status of transmission message (5) changed to: Message has been sent via GSM.
+[2021/11/05 15:49:30] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:31] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:32] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:33] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:34] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:35] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:36] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:37] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:38] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:39] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:40] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:41] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:42] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:43] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:44] - MSG [Transports.UDP] >> activating transmission to node 'ccu-lsts-1-24'
+[2021/11/05 15:49:44] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:45] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:46] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:47] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:48] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:49] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:50] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:51] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:52] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:53] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:54] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:55] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:56] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:57] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:58] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:49:59] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:00] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:01] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:02] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:03] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:04] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:05] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:06] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:07] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:08] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:09] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:10] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:11] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:12] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:13] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:14] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:15] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:16] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:17] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:18] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:19] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:20] - MSG [Transports.TCP.Server/Backseat] >> incoming: Reference
+[2021/11/05 15:50:20] - MSG [Plan.Engine] >> request -- Stop Plan ()
+[2021/11/05 15:50:20] - MSG [Plan.Engine] >> reply -- Stop Plan (follow_ntnu) -- OK
+[2021/11/05 15:50:20] - MSG [Plan.Engine] >> plan stopped
+[2021/11/05 15:50:20] - MSG [Transports.Logging] >> log stopped '20211105/154825_follow_ntnu'
+[2021/11/05 15:50:21] - MSG [Transports.Logging] >> log started '20211105/155020'

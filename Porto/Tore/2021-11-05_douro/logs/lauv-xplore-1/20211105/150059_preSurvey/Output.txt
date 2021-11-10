@@ -1,0 +1,7 @@
+[2021/11/05 15:01:00] - MSG [Plan.Engine] >> request -- Start Plan (teleop-spike-423e)
+[2021/11/05 15:01:00] - MSG [Plan.Engine] >> plan initializing: teleop-spike-423e
+[2021/11/05 15:01:00] - MSG [Plan.Engine] >> Teleoperation: executing maneuver
+[2021/11/05 15:01:00] - MSG [Plan.Engine] >> reply -- Start Plan (teleop-spike-423e) -- Teleoperation: executing maneuver
+[2021/11/05 15:01:00] - MSG [Transports.Logging] >> log stopped '20211105/150059_preSurvey'
+[2021/11/05 15:01:00] - MSG [Transports.Logging] >> log started '20211105/150100_teleop-spike-423e'
+[2021/11/05 15:01:00] - WRN [Supervisors.Vehicle] >> now in 'MANEUVERING' mode
