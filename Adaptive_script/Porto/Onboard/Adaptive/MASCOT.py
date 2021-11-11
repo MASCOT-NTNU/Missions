@@ -215,6 +215,8 @@ class MASCOT(AUV, DataHandler):
                                                 self.lon_origin)
         self.append_path([lat_temp, lon_temp, self.vehicle_pos[2]])
         self.append_timestamp(datetime.now().timestamp())
+        self.append_ind_now(self.ind_now)
+        self.append_sal_sampled(self.sal_sampled)
 
     def send_starting_waypoint(self):
         self.auv_handler.setWaypoint(deg2rad(self.lat_loc[self.ind_start]),deg2rad(self.lon_loc[self.ind_start]),-self.depth_loc[self.ind_start],speed = self.speed)
@@ -228,6 +230,7 @@ class MASCOT(AUV, DataHandler):
         self.createDataPath(self.path_global)
         self.t1 = time.time()
         # self.counter_waypoint = 0
+        self.sal_sampled = 0
         self.counter_data_saved = 0
         self.send_starting_waypoint()
 

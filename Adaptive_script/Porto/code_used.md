@@ -1,22 +1,14 @@
-scp /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/* pi@10.0.2.32:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_PORTO/
+scp Temperature.csv yaoling@129.241.15.64:"/Users/yaoling/OneDrive\\ -\\ NTNU/MASCOT_PhD/Missions/Porto/Tore/2021-11-05_douro/logs/lauv-xplore-1/20211105/Merged/mra/csv/"
+
+scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Adaptive/* pi@192.168.1.99:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_NEW/Adaptive/
+
+scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Pre_survey/* pi@192.168.1.99:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_NEW/Pre_survey/
+
+scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/* pi@192.168.1.99:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_NEW/Config/
 
 
-scp /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/*.py pi@10.0.2.32:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_PORTO/
+scp pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_NEW/Config/grid.txt .
 
-
-scp -r pi@10.0.2.32:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_PORTO/Data/* /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Data/Porto/Simulator
-
-scp /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/*.kml pi@10.0.10.123:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_PORTO/
-
-scp /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/*.txt pi@10.0.10.123:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_PORTO/
-
-scp /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/*.py pi@10.0.10.123:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_PORTO/
-
-scp /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/MASCOT.py pi@10.0.10.123:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_PORTO/
-
-scp /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/*.py pi@10.0.10.123:/scp pi@10.0.10.123:/home/pi/adaframe_ws/src/imc_ros_interface/scripts/auv_handler.py .
-
-/home/pi/adaframe_ws/src/imc_ros_interface/scripts
 
 ip: 10.0.2.33
 netmask: 255.255.0.0
@@ -31,11 +23,11 @@ scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Port
 scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Pre_survey/Pre_surveyor.py pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT/
 scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/* pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_PORTO/
 
-scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Pre_survey/* pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_PORTO/Pre_survey*
+scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Pre_survey/* pi@raspberrypi.local:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_NEW/Pre_survey/
 
 scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/* pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_PORTO/Config/
 
-scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Adaptive/* pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_NEW/Adaptive/
+scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Adaptive/* pi@raspberrypi.local:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_NEW/Adaptive/
 
 scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Config/path_initial_survey.txt pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT/Config/
 scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Adaptive/* pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT/Adaptive/

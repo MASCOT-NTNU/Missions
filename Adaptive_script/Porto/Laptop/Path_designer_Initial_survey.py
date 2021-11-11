@@ -69,7 +69,7 @@ class PathDesigner:
         self.string_date = "2021-09-23_2021-09-24"
         self.string_hour = "05_12"
         self.wind_dir = "North" # [North, East, West, South]
-        self.wind_level = "Moderate" # [Mild, Moderate, Heavy]
+        self.wind_level = "Heavy" # [Mild, Moderate, Heavy]
         self.data_path = self.data_path[:81] + self.string_date + "/WaterProperties.hdf5"
         print("Mission date: ", self.string_date)
         print("Mission hour: ", self.string_hour)

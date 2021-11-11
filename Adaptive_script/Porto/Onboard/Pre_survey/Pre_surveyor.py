@@ -99,7 +99,6 @@ class PreSurveyor(AUV, DataHandler):
         self.counter_waypoint = 0
         self.counter_data_saved = 0
         self.update_waypoint()
-        self.popup = False
         self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoint_depth_now,speed=self.speed)
         # self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoint_depth_now) # continue with the current waypoint
 
@@ -117,31 +116,25 @@ class PreSurveyor(AUV, DataHandler):
                     self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.popup_duration,
                                            phone_number=self.phone_number,
                                            iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
-                    self.popup = True
                     self.t1 = time.time() # restart the counter for time
                     self.t2 = time.time()
 
                 if self.auv_handler.getState() == "waiting":
-                    if self.popup:
-                        print("Only popping up, I will resume moving...")
-                        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, self.waypoint_depth_now,speed=self.speed)
-                        self.popup = False
+                    print("Arrived the current location")
+                    if self.counter_waypoint + 1 >= len(self.path_initial_survey):
+                        x_auv = self.vehicle_pos[0]  # x distance from the origin
+                        y_auv = self.vehicle_pos[1]  # y distance from the origin
+                        lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
+                        self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.popup_duration,
+                                               phone_number=self.phone_number,
+                                               iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
+                        self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, 0,
+                                                     speed=self.speed)
+                        self.send_SMS_mission_complete(lat_auv, lon_auv)
+                        rospy.signal_shutdown("Mission completed!!!")
+                        break
                     else:
-                        print("Arrived the current location")
-                        if self.counter_waypoint + 1 >= len(self.path_initial_survey):
-                            x_auv = self.vehicle_pos[0]  # x distance from the origin
-                            y_auv = self.vehicle_pos[1]  # y distance from the origin
-                            lat_auv, lon_auv = self.vehpos2latlon(x_auv, y_auv, self.lat_origin, self.lon_origin)
-                            self.auv_handler.PopUp(sms=True, iridium=True, popup_duration=self.popup_duration,
-                                                   phone_number=self.phone_number,
-                                                   iridium_dest=self.iridium_destination)  # self.ada_state = "surfacing"
-                            self.auv_handler.setWaypoint(self.waypoint_lat_now, self.waypoint_lon_now, 0,
-                                                         speed=self.speed)
-                            self.send_SMS_mission_complete(lat_auv, lon_auv)
-                            rospy.signal_shutdown("Mission completed!!!")
-                            break
-                        else:
-                            self.move_to_next_waypoint()
+                        self.move_to_next_waypoint()
 
                 self.last_state = self.auv_handler.getState()
                 self.auv_handler.spin()

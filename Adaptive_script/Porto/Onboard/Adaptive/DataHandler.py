@@ -20,6 +20,8 @@ class DataHandler:
     data_temperature = []
     data_path_waypoints = []
     data_timestamp = []
+    data_ind_now = []
+    data_sal_sampled = []
     path_onboard = ''
 
     def __init__(self):
@@ -36,6 +38,12 @@ class DataHandler:
 
     def append_timestamp(self, value):
         DataHandler.data_timestamp.append(value)
+
+    def append_ind_now(self, value):
+        DataHandler.data_ind_now.append(value)
+
+    def append_sal_sampled(self, value):
+        DataHandler.data_sal_sampled.append(value)
 
     def createDataPath(self, path_global):
         self.date_string = datetime.now().strftime("%Y_%m%d_%H%M")
@@ -66,10 +74,14 @@ class DataHandler:
         self.data_temperature_saved = np.array(self.data_temperature).reshape(-1, 1)
         self.data_path_waypoints_saved = np.array(self.data_path_waypoints).reshape(-1, 3)
         self.data_timestamp_saved = np.array(self.data_timestamp).reshape(-1, 1)
+        self.data_ind_now_saved = np.array(self.data_ind_now).reshape(-1, 1)
+        self.data_sal_sampled_saved = np.array(self.data_sal_sampled).reshape(-1, 1)
         np.savetxt(self.data_path_mission + "/data_salinity.txt", self.data_salinity_saved, delimiter=", ")
         np.savetxt(self.data_path_mission + "/data_temperature.txt", self.data_temperature_saved, delimiter=", ")
         np.savetxt(self.data_path_mission + "/data_path.txt", self.data_path_waypoints_saved, delimiter=", ")
         np.savetxt(self.data_path_mission + "/data_timestamp.txt", self.data_timestamp_saved, delimiter=", ")
+        np.savetxt(self.data_path_mission + "/data_ind_now.txt", self.data_ind_now_saved, delimiter=", ")
+        np.savetxt(self.data_path_mission + "/data_sal_sampled.txt", self.data_sal_sampled_saved, delimiter=", ")
         print("Data is saved successfully!")
 
     def vehpos2latlon(self, x, y, lat_origin, lon_origin):
