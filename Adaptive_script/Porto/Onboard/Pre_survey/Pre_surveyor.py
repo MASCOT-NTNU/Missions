@@ -107,9 +107,11 @@ class PreSurveyor(AUV, DataHandler):
             if self.init:
                 self.t2 = time.time()
                 print("Elapsed time: ", self.t2 - self.t1)
+                print("counter waypoint: ", self.counter_waypoint)
+                print("Current waypoin: ", self.waypoint_lat_now, self.waypoint_lon_now, self.waypoint_depth_now)
                 self.append_mission_data()
                 self.save_mission_data()
-                print(self.auv_handler.getState())
+                self.current_state = self.auv_handler.getState()
 
                 if (self.t2 - self.t1) / self.maxtime_underwater >= 1 and (self.t2 - self.t1) % self.maxtime_underwater >= 0:
                     print("Longer than 10 mins, need a long break")
@@ -119,7 +121,9 @@ class PreSurveyor(AUV, DataHandler):
                     self.t1 = time.time() # restart the counter for time
                     self.t2 = time.time()
 
-                if self.auv_handler.getState() == "waiting":
+                print("current state: ", self.current_state)
+                print("last state: ", self.last_state)
+                if self.current_state == "waiting":
                     print("Arrived the current location")
                     if self.counter_waypoint + 1 >= len(self.path_initial_survey):
                         x_auv = self.vehicle_pos[0]  # x distance from the origin
@@ -134,9 +138,10 @@ class PreSurveyor(AUV, DataHandler):
                         rospy.signal_shutdown("Mission completed!!!")
                         break
                     else:
+                        print("sending new waypoint")
                         self.move_to_next_waypoint()
 
-                self.last_state = self.auv_handler.getState()
+                self.last_state = self.current_state
                 self.auv_handler.spin()
             self.rate.sleep()
 
