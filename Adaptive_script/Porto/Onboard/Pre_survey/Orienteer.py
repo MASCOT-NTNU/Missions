@@ -9,9 +9,9 @@ __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
 
-import numpy as np
 from scipy.stats import norm
 import time
+from usr_func import *
 
 '''
 
@@ -25,10 +25,12 @@ class Orienteer:
     def __init__(self):
         t1 = time.time()
         self.load_global_path()
+        self.load_file_path_initial_survey()
+        self.load_auv_loc_now()
         self.load_prior()
         self.find_starting_loc()
         t2 = time.time()
-        print("Time consumed: ", t2 - t1)
+        print("Orienteer is initialised successfully! Time consumed: ", t2 - t1)
 
     def load_global_path(self):
         print("Now it will load the global path.")
@@ -48,6 +50,9 @@ class Orienteer:
         self.threshold_path = self.path_global + "/Config/threshold.txt"
         self.data_prior = np.loadtxt(self.prior_extracted_path, delimiter=", ")
         self.salinity_prior_corrected = self.data_prior[:, -1]
+        self.lat_prior = self.data_prior[:, 0]
+        self.lon_prior = self.data_prior[:, 1]
+        self.depth_prior = self.data_prior[:, 2]
         self.mu_prior = self.salinity_prior_corrected
         self.Sigma_prior = np.loadtxt(self.sigma_path, delimiter=", ")
         self.Threshold_S = np.loadtxt(self.threshold_path, delimiter=", ")
@@ -58,10 +63,30 @@ class Orienteer:
         print("Threshold: ", self.Threshold_S)
         print("N: ", self.N)
 
+    def load_file_path_initial_survey(self):
+        print("Loading the pre survey file path...")
+        self.f_pre = open(self.path_global + "/Config/filepath_initial_survey.txt", 'r')
+        self.filepath_initial_survey = self.f_pre.read()
+        self.f_pre.close()
+        print("Finished pre survey file path, filepath: ", self.filepath_initial_survey)
+
+    def load_auv_loc_now(self):
+        print("Loading the current AUV location now...")
+        self.auv_loc = np.loadtxt(self.filepath_initial_survey + "/data_path.txt", delimiter=", ")
+        self.lat_auv_now, self.lon_auv_now, self.depth_auv_now = self.auv_loc[-1, :]
+        print("Current AUV location is loaded successfully: ", self.lat_auv_now, self.lon_auv_now, self.depth_auv_now)
+
+    def get_normalised_distance_vector(self):
+        dx, dy = latlon2xy(self.lat_prior, self.lon_prior, self.lat_auv_now, self.lon_auv_now)
+        dist = np.sqrt(dx ** 2 + dy ** 2)
+        dist_normalised = dist / np.amax(dist)
+        return dist_normalised
+
     def find_starting_loc(self):
+        dist_norm = self.get_normalised_distance_vector()
         EP_Prior = self.EP_1D(self.mu_prior, self.Sigma_prior, self.Threshold_S)
         ep_criterion = 0.5  # excursion probability close to 0.5
-        self.ind_start = (np.abs(EP_Prior - ep_criterion)).argmin()
+        self.ind_start = (np.abs(EP_Prior - ep_criterion + dist_norm)).argmin()
         if self.ind_start == 0:
             self.ind_start = np.random.randint(self.N)
         print("ind_start: ", self.ind_start)

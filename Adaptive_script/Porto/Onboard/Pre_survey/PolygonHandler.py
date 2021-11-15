@@ -21,19 +21,40 @@ class PolygonCircle:
     npoints = 200 # boundary points
 
     def __init__(self):
-        print("Circular Polygon Generator is initialised successfully! ")
         self.load_global_path()
+        self.load_path_initial_survey()
+        self.load_file_path_initial_survey()
+        self.load_auv_loc_now()
         self.load_prior()
         self.find_polygon_centre()
         self.get_polygon_centre()
         self.getCircularPolygon()
         # self.checkCircle()
+        print("Circular Polygon Generator is initialised successfully! ")
 
     def load_global_path(self):
         print("Now it will load the global path.")
         self.path_global = open("path_global.txt", 'r').read()
         print("global path is set up successfully!")
         print(self.path_global)
+
+    def load_path_initial_survey(self):
+        print("Loading the initial survey path...")
+        self.path_initial_survey = np.loadtxt(self.path_global + "/Config/path_initial_survey.txt", delimiter=", ")
+        print("Initial survey path is loaded successfully, path_initial_survey: ", self.path_initial_survey)
+
+    def load_file_path_initial_survey(self):
+        print("Loading the pre survey file path...")
+        self.f_pre = open(self.path_global + "/Config/filepath_initial_survey.txt", 'r')
+        self.filepath_initial_survey = self.f_pre.read()
+        self.f_pre.close()
+        print("Finished pre survey file path, filepath: ", self.filepath_initial_survey)
+
+    def load_auv_loc_now(self):
+        print("Loading the current AUV location now...")
+        self.auv_loc = np.loadtxt(self.filepath_initial_survey + "/data_path.txt", delimiter=", ")
+        self.lat_auv_now, self.lon_auv_now, self.depth_auv_now = self.auv_loc[-1, :]
+        print("Current AUV location is loaded successfully: ", self.lat_auv_now, self.lon_auv_now, self.depth_auv_now)
 
     def load_prior(self):
         self.prior_data_corrected = np.loadtxt(self.path_global + "/Data/Corrected/Prior_corrected.txt", delimiter=", ")
@@ -60,12 +81,20 @@ class PolygonCircle:
         return ind_loc
 
     def find_polygon_centre(self):
-        self.path_initial_survey = np.loadtxt(self.path_global + "/Config/path_initial_survey.txt", delimiter=", ")
         self.sal_path_initial_survey = []
-        for i in range(10, self.path_initial_survey.shape[0] - 10):
-            self.sal_path_initial_survey.append(self.getPriorIndAtLoc([self.path_initial_survey[i, 0],
-                                                                       self.path_initial_survey[i, 1], self.path_initial_survey[i, 2]]))
-        self.sal_gradient = np.gradient(np.array(self.sal_path_initial_survey))
+        for i in range(self.path_initial_survey.shape[0]): # to avoide edging effects
+            print(self.sal_path_initial_survey)
+            self.sal_path_initial_survey.append(self.salinity_prior_corrected[self.getPriorIndAtLoc(
+                [self.path_initial_survey[i, 0], self.path_initial_survey[i, 1], self.path_initial_survey[i, 2]])])
+
+        x_dist, y_dist = latlon2xy(self.path_initial_survey[:, 0], self.path_initial_survey[:, 1], self.lat_auv_now, self.lon_auv_now)
+        xy_dist = np.sqrt(x_dist ** 2 + y_dist ** 2)
+        xy_dist = xy_dist / np.amax(xy_dist)
+        print("Computed distance: ", xy_dist)
+        self.sal_gradient = np.abs(np.gradient(np.array(self.sal_path_initial_survey)))
+        self.sal_gradient = self.sal_gradient / np.amax(self.sal_gradient) - xy_dist # penalise the distance far away from the auv loc
+        # self.sal_gradient = self.sal_gradient / np.amax(self.sal_gradient)
+        print("gradient: ", self.sal_gradient)
         self.ind_optimal = np.where(self.sal_gradient == np.nanmax(self.sal_gradient))[0][0]
         self.lat_centre = self.path_initial_survey[self.ind_optimal, 0] # optimal index is from the maximum gradient
         self.lon_centre = self.path_initial_survey[self.ind_optimal, 1]

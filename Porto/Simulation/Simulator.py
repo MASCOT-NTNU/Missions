@@ -20,6 +20,8 @@ class Simulator:
     path_data_global = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Simulation/Data/"
     path_adaptive = path_data_global + "Adaptive/"
     path_presurvey = path_data_global + "PreSurvey/"
+    path_config = path_data_global + "Config/"
+    path_data = path_data_global + "Data/"
     figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Simulation/fig/"
 
     def __init__(self):
@@ -39,18 +41,21 @@ class Simulator:
         pass
 
     def load_prior(self):
-        self.prior_corrected = np.loadtxt(self.path_data_global + "Prior_corrected.txt", delimiter=", ")
-        self.prior_extracted = np.loadtxt(self.path_data_global + "Prior_extracted.txt", delimiter=", ")
+        self.prior_corrected = np.loadtxt(self.path_data + "Prior_corrected.txt", delimiter=", ")
+        self.prior_extracted = np.loadtxt(self.path_data + "Prior_extracted.txt", delimiter=", ")
         print("Prior is loaded successfully!")
         pass
 
     def visualiseAdaptive(self):
         files = sorted(os.listdir(self.path_adaptive))
-        for file in files:
-            if file.startswith("MissionData_on_"):
-                self.load_adaptive_data(file)
-
-            break
+        file = files[-1]
+        print(file)
+        self.load_adaptive_data(file)
+        # for file in files:
+        #     if file.startswith("MissionData_on_"):
+        #         self.load_adaptive_data(file)
+        #
+        #     break
 
     def visualisePrior(self):
         X = self.prior_corrected[:, 1]

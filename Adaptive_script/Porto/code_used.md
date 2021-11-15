@@ -11,6 +11,8 @@ scp pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_
 
 scp pi@192.168.1.99:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_NEW/Import/* .
 
+
+
 ip: 10.0.2.33
 netmask: 255.255.0.0
 router: 10.0.0.1
@@ -57,4 +59,4 @@ echo "https://github.com/MASCOT-NTNU/Missions/tree/master/Adaptive_script/Porto/
 git pull origin master
 
 
-svn checkout https://github.com/MASCOT-NTNU/Missions/trunk/Adaptive_script/Porto/Onboard
+svn checkout https://github.com/MASCOT-NTNU/Missions/trunk/Adaptive_script/Porto/Onboard --> download git branches or contents from the github repo
