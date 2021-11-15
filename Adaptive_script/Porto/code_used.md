@@ -9,6 +9,7 @@ scp -r /Users/yaoling/OneDrive\ -\ NTNU/MASCOT_PhD/Missions/Adaptive_script/Port
 
 scp pi@129.241.15.208:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_NEW/Config/grid.txt .
 
+scp pi@192.168.1.99:/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT_NEW/Import/* .
 
 ip: 10.0.2.33
 netmask: 255.255.0.0
