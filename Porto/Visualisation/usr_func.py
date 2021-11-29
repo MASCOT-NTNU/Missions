@@ -26,3 +26,6 @@ def xy2latlon(x, y, lat_origin, lon_origin):
     lon = lon_origin + rad2deg(y * np.pi * 2.0 / (circumference * np.cos(deg2rad(lat))))
     return lat, lon
 
+
+def sum_up_to(number):
+    return sum(range(1, number + 1))

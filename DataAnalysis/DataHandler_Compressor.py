@@ -135,7 +135,7 @@ if __name__ == "__main__":
     a = DataCompressor()
 
 
-c#%%
+#%%
 ind_depth = 8
 
 import matplotlib.pyplot as plt

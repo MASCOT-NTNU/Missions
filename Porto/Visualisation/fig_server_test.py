@@ -1,10 +1,22 @@
-import plotly.graph_objects as go
-import numpy as np
+import multiprocessing
+from usr_func import *
 
-# Helix equation
-t = np.linspace(0, 10, 50)
-x, y, z = np.cos(t), np.sin(t), t
 
-fig = go.Figure(data=[go.Scatter3d(x=x, y=y, z=z,
-                                   mode='markers')])
-fig.write_image("test.png")
+a_pool = multiprocessing.Pool(processes=10)
+
+
+result = a_pool.map(sum_up_to, range(10))
+
+res = []
+ndim = 40000
+import time
+t1 = time.time()
+for i in range(ndim):
+    res.append(sum_up_to(i))
+t2 = time.time()
+print("Time consumed: ", t2 - t1)
+
+t1 = time.time()
+result = a_pool.map(sum_up_to, range(ndim))
+t2 = time.time()
+print("Time consumed: ", t2 - t1)

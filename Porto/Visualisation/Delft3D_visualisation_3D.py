@@ -239,7 +239,6 @@ class Delft3D:
                                         sizeref=1000),
                                 row=1, col=3)
                             tide_string = "Flood (Ocean to River)"
-                            fig.add_trace(row=1, col=3)
                         else:
                             fig.add_trace(
                                 go.Cone(x=[0], y=[0], z=[0], u=[-1], v=[0], w=[0], colorscale='Blues', showscale=False,
