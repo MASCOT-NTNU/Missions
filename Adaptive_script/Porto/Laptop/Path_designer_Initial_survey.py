@@ -36,7 +36,8 @@ class PathDesigner:
     data_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Maretec/Exemplo_Douro/2021-09-14_2021-09-15/WaterProperties.hdf5"
     # delft_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Sep_Prior/Merged_all/"
     # delft_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Merged_all/"
-    delft_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Merged_all_extracted/"
+    delft_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Dec_Prior/Extracted/"
+    # delft_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Merged_all_extracted/"
     figpath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Setup/Pre_survey/fig/"
     path_laptop = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Laptop/"
     path_onboard = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/"
@@ -349,17 +350,19 @@ class PathDesigner:
 
 if __name__ == "__main__":
     a = PathDesigner(debug = True)
+    wind_dirs = ["North"]
+    wind_levels = ["Moderate"]
     # wind_dirs = ['North', 'South', 'West', 'East']  # get wind_data for all conditions
     # wind_levels = ['Mild', 'Moderate', 'Heavy']  # get data for all conditions
-    # for wind_dir in wind_dirs:
-    #     for wind_level in wind_levels:
-    #         a.wind_dir = wind_dir
-    #         a.wind_level = wind_level
-    #         a.load_all_data()  # load all the essential data
-    #         a.compute_gradient()  # compute the gradient along
-    #         a.get_optimal_transect_line()  # get the optimal transect line
-    #         a.design_path_initial()  # design the optimal path
-    #         a.plot_gradient_along_lines()  # plot the gradient along designed lines
+    for wind_dir in wind_dirs:
+        for wind_level in wind_levels:
+            a.wind_dir = wind_dir
+            a.wind_level = wind_level
+            a.load_all_data()  # load all the essential data
+            a.compute_gradient()  # compute the gradient along
+            a.get_optimal_transect_line()  # get the optimal transect line
+            a.design_path_initial()  # design the optimal path
+            a.plot_gradient_along_lines()  # plot the gradient along designed lines
 
 #%%
 # import matplotlib.pyplot as plt
@@ -375,10 +378,10 @@ if __name__ == "__main__":
 # plt.plot(opa[:, 1], opa[:, 0], 'k.')
 # plt.plot(path_presurvey[:, 1], path_presurvey[:, 0], 'r-')
 # plt.show()
-
-
-
-
+#
+#
+#
+#
 # fig = go.Figure(data=[go.Scatter3d(x=path_presurvey[:, 1], y=path_presurvey[:, 0],
 #                                    z=-path_presurvey[:, 2],
 #                                    marker=dict(size=12, color="black"), line=dict(color='darkblue', width=2), )])

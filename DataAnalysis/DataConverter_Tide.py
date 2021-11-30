@@ -8,7 +8,7 @@ __maintainer__ = "Yaolin Ge"
 __email__ = "yaolin.ge@ntnu.no"
 __status__ = "UnderDevelopment"
 
-from DataAnalysis.usr_func import *
+from usr_func import *
 import os
 import pandas as pd
 from datetime import datetime
@@ -16,7 +16,7 @@ from datetime import datetime
 
 class DataConverter_Tide:
     tide_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Tide/Data/"
-    month_selected = 11 # november
+    month_selected = 12 # December
                         # "Preia - Mar" --> high tide
                         # "Baixa - Mar" --> low tide
 
@@ -92,7 +92,7 @@ class DataConverter_Tide:
         self.ebb_start = np.array(self.ebb_start).reshape(-1, 1)
         self.ebb_end = np.array(self.ebb_end).reshape(-1, 1)
         self.ebb = np.hstack((self.ebb_start, self.ebb_end))
-        np.savetxt(self.tide_path[:-5] + "ebb.txt", self.ebb, delimiter = ", ")
+        np.savetxt(self.tide_path[:-5] + "ebb_dec.txt", self.ebb, delimiter = ", ")
 
 if __name__ == "__main__":
     a = DataConverter_Tide()

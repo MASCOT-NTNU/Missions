@@ -12,7 +12,8 @@ import matplotlib.path as mplPath  # used to determine whether a point is inside
 # logging.warning('And this, too')
 # logging.error('And non-ASCII stuff, too, like Øresund and Malmö')
 
-server = True
+# server = True
+server = False
 if server:
     from usr_func import *
 else:
@@ -23,13 +24,13 @@ class DataMerger:
     data_path = None # data_path contains the path for the mat file
     depth_layers = 8 # depth layers used for merging, only down to # layers
     if server == False:
-        ebb_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Tide/ebb.txt"
+        ebb_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Tide/ebb_dec.txt"
         wind_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Wind/wind_data.txt"
         log_path = "Log/"
-        data_folder = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/"
-        data_folder_merged = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/merged_test/"
+        data_folder = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Dec_Prior/"
+        data_folder_merged = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Dec_Prior/merged_test/"
     else:
-        ebb_path = "/home/ahomea/y/yaoling/MASCOT/delft3d/data/tide.txt"
+        ebb_path = "/home/ahomea/y/yaoling/MASCOT/delft3d/data/ebb_dec.txt"
         wind_path = "/home/ahomea/y/yaoling/MASCOT/delft3d/data/wind_data.txt"
         log_path = "/home/ahomea/y/yaoling/MASCOT/delft3d/log/"
         data_folder = "/home/ahomea/y/yaoling/MASCOT/delft3d/data/Dec/"
@@ -49,7 +50,7 @@ class DataMerger:
         '''
         self.data_path = data_path
         print("Data path is initialised successfully! ", self.data_path)
-        self.file_string = data_path[-13:-4]
+        self.file_string = data_path[-17:-8]
         print("File string: ", self.file_string)
         # os.system("say it will take more than 100 seconds to import data")
         t1 = time.time()
@@ -229,7 +230,7 @@ class DataMerger:
                 # print("salinity_merged_all: ", self.salinity_merged_all.shape)
                 if exist:
                     print("counter_mean: ", counter_mean)
-                    logging.info(wind_dir + " " + wind_level + "has " + counter_mean + " frames...")
+                    logging.info(wind_dir + " " + wind_level + "has " + str(counter_mean) + " frames...")
                     self.lat_mean = self.lat_merged_all / counter_mean
                     self.lon_mean = self.lon_merged_all / counter_mean
                     self.depth_mean = self.depth_merged_all / counter_mean
@@ -311,14 +312,16 @@ class DataMerger:
         files = os.listdir(self.data_folder + "Merged_all/")
         wind_dirs = ['North', 'South', 'West', 'East']  # get wind_data for all conditions
         wind_levels = ['Mild', 'Moderate', 'Heavy']  # get data for all conditions
-        plt.figure(figsize=(20, 30))
+        plt.figure(figsize=(30, 20))
         counter_plot = 0
-        for wind_dir in wind_dirs:
-            for wind_level in wind_levels:
+        for wind_level in wind_levels:
+            for wind_dir in wind_dirs:
+                print("wind_dir: ", wind_dir)
+                print("wind_level: ", wind_level)
                 for i in range(len(files)):
                     if wind_dir + "_" + wind_level in files[i]:
                         break
-                plt.subplot(4, 3, counter_plot + 1)
+                plt.subplot(3, 4, counter_plot + 1)
                 self.data_test = h5py.File(self.data_folder + "Merged_all/" + files[i], 'r')
                 self.lat_test = np.array(self.data_test.get("lat"))
                 self.lon_test = np.array(self.data_test.get("lon"))
@@ -342,9 +345,11 @@ class DataMerger:
 
 if __name__ == "__main__":
     a = DataMerger()
-    a.merge_all_data_from_file()
-    a.Average_all()
-    a.Compress_data()
+    # a.loaddata(data_path = "/Users/yaoling/Downloads/salinity_dez2017_1-005.mat")
+    # a.merge_all_data_from_file()
+    # a.Average_all()
+    # a.Compress_data()
+    a.checkMerged()
     print("Finished data merging...")
 
 
@@ -354,69 +359,74 @@ if __name__ == "__main__":
 # # path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/merged_test/Merged_North_Heavy_016_sal_1.h5"
 # # # path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Merged/Merged_North_Heavy_2016_sal_1.h5"
 # path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Nov_Prior/Extracted/North_Mild_all.h5"
-path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Dec_Prior/salinity_dez2016_1.mat"
-from datetime import datetime
-import mat73
-data = mat73.loadmat(path)
-data = data["data"]
-lon = data["X"]
-lat = data["Y"]
-depth = data["Z"]
-Time = data['Time']
-timestamp_data = (Time - 719529) * 24 * 3600  # 719529 is how many days have passed from Jan1 0,
-# to Jan1 1970. Since 1970Jan1, is used as the starting index for datetime
-salinity = data["Val"]
-string_date = datetime.fromtimestamp(timestamp_data[0]).strftime("%Y_%m")
+# path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Dec_Prior/salinity_dez2016_1.mat"
+# path = "/Users/yaoling/Downloads/salinity_dez2017_1-005.mat"
+path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Prior/Dec_Prior/Merged_all/North_Heavy_all.h5"
 
-# data = h5py.File(path, 'r')
-# lat = np.array(data.get("lat"))
-# lon = np.array(data.get("lon"))
-# depth = np.array(data.get("depth"))
-# salinity = np.array(data.get("salinity"))
 
-# box = np.array([[41.1419, -8.68112],
-# [41.1685, -8.74536],
-# [41.1005, -8.81627],
-# [41.042, -8.81393],
-# [41.0622, -8.68138]])
+# from datetime import datetime
+# import mat73
+# data = mat73.loadmat(path)
+# data = data["data"]
+# lon = data["X"]
+# lat = data["Y"]
+# depth = data["Z"]
+# Time = data['Time']
+# timestamp_data = (Time - 719529) * 24 * 3600  # 719529 is how many days have passed from Jan1 0,
+# # to Jan1 1970. Since 1970Jan1, is used as the starting index for datetime
+# salinity = data["Val"]
+# string_date = datetime.fromtimestamp(timestamp_data[0]).strftime("%Y_%m")
 
-# plt.scatter(lon[:, :, 0], lat[:, :, 0], c = salinity[:, :, 0], cmap = "Paired", vmax = 35)
-# plt.plot(box[:, 1], box[:, 0])
-# plt.colorbar()
-# plt.show()
+data = h5py.File(path, 'r')
+lat = np.array(data.get("lat"))
+lon = np.array(data.get("lon"))
+depth = np.array(data.get("depth"))
+salinity = np.array(data.get("salinity"))
 
-#%%
-print(lat.shape)
-print(lon.shape)
-print(depth.shape)
-print(salinity.shape)
+box = np.array([[41.1419, -8.68112],
+[41.1685, -8.74536],
+[41.1005, -8.81627],
+[41.042, -8.81393],
+[41.0622, -8.68138]])
 
-#%%
-import matplotlib.pyplot as plt
-plt.scatter(lon[:-1, :-1, 0], lat[:-1, :-1, 0], c = salinity[0, :, :], cmap = "Paired", vmax = 35)
+plt.scatter(lon[:, :, 0], lat[:, :, 0], c = salinity[:, :, 0], cmap = "Paired", vmax = 35)
+# plt.scatter(lon[:, 0], lat[:, 0], c = salinity[:, 0], cmap = "Paired", vmax = 35)
+plt.plot(box[:, 1], box[:, 0])
 plt.colorbar()
 plt.show()
+
 #%%
-import plotly.graph_objects as go
-import numpy as np
-import plotly
+# print(lat.shape)
+# print(lon.shape)
+# print(depth.shape)
+# print(salinity.shape)
 
-fig = go.Figure(data=[go.Scatter3d(
-    x=lon.flatten(),
-    y=lat.flatten(),
-    z=depth.flatten(),
-    mode='markers',
-    marker=dict(
-        size=12,
-        color=salinity.flatten(),                # set color to an array/list of desired values
-        colorscale='Viridis',   # choose a colorscale
-        opacity=0.8
-    )
-)])
-
-# # tight layout
-fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
-plotly.offline.plot(fig, "test.html", auto_open=True)
+#%%
+# import matplotlib.pyplot as plt
+# plt.scatter(lon[:, :, 0], lat[:, :, 0], c = salinity[0, :, :, 0], cmap = "Paired", vmax = 35)
+# plt.colorbar()
+# plt.show()
+#%%
+# import plotly.graph_objects as go
+# import numpy as np
+# import plotly
+#
+# fig = go.Figure(data=[go.Scatter3d(
+#     x=lon.flatten(),
+#     y=lat.flatten(),
+#     z=depth.flatten(),
+#     mode='markers',
+#     marker=dict(
+#         size=12,
+#         color=salinity.flatten(),                # set color to an array/list of desired values
+#         colorscale='Viridis',   # choose a colorscale
+#         opacity=0.8
+#     )
+# )])
+#
+# # # tight layout
+# fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+# plotly.offline.plot(fig, "test.html", auto_open=True)
 
 # fig.show()
 
