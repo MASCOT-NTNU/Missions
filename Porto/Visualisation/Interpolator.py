@@ -32,7 +32,7 @@ class Interpolator:
         self.alpha = 12
         self.k_n = 1  # k neighbours will be used for averaging
 
-        self.X = np.linspace(0, self.max_distance_lat, self.nlat)
+        self.X = np.linspace(0, self.max_distance_lat, self.nlat) # only distance along x direction
         self.Y = np.linspace(0, self.max_distance_lon, self.nlon)
         self.depth_domain = np.linspace(0, self.max_depth, self.ndepth)
         self.Rm = self.get_rotational_matrix(self.alpha)  # rotational matrix used to find the new grid
@@ -52,9 +52,9 @@ class Interpolator:
                     self.grid_3d_xy.append([self.X[i], self.Y[j], self.depth_domain[k]])
                     self.grid_3d_original.append([lat_loc, lon_loc, self.depth_domain[k]])
                     self.grid_3d_latlon.append([lat_old, lon_old, self.depth_domain[k]])
-        self.grid_3d_xy = np.array(self.grid_3d_xy)
-        self.grid_3d_original = np.array(self.grid_3d_original)
-        self.grid_3d_latlon = np.array(self.grid_3d_latlon)
+        self.grid_3d_xy = np.array(self.grid_3d_xy) # grid in xy
+        self.grid_3d_original = np.array(self.grid_3d_original) # grid in original axis
+        self.grid_3d_latlon = np.array(self.grid_3d_latlon) # grid in rotated axis
         print("Grid is generated successfully! ")
                 # values_gussian_filtered = gaussian_filter(values_3d, 1)
 
@@ -115,7 +115,7 @@ class Interpolator:
         for file in files:
             if file.endswith(".mat"):
                 print(self.path + file)
-                self.load_mat_data(file)
+                # self.load_mat_data(file)
 
 
 # Import data
@@ -181,20 +181,20 @@ a.make_new_grid()
     #     self.DM = self.DM_x + self.DM_y + self.DM_z
 
 
-ind_distance_matrix()
+# ind_distance_matrix()
 
 
 #%%
-import logging
-
-logging.basicConfig(filename="test.log",
-                            filemode='a',
-                            format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-                            datefmt='%H:%M:%S',
-                            level=logging.DEBUG)
-
-logging.info("Running Urban Planning")
-
-logger = logging.getLogger('urbanGUI')
+# import logging
+#
+# logging.basicConfig(filename="test.log",
+#                             filemode='a',
+#                             format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+#                             datefmt='%H:%M:%S',
+#                             level=logging.DEBUG)
+#
+# logging.info("Running Urban Planning")
+#
+# logger = logging.getLogger('urbanGUI')
 
 
