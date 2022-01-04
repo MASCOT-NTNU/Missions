@@ -122,7 +122,6 @@ class PathDesigner:
             print('User cancelled')
             sys.exit()
 
-
     def load_all_data(self):
         self.load_operational_area()
         self.loaddata_maretec()
