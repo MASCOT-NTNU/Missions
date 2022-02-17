@@ -25,7 +25,7 @@ def EP_1D(mu, Sigma, Threshold):
     :return:
     '''
     EP = np.zeros_like(mu)
-    for i in range(EP.shape[0]):
+    for i in range(EP.shape[0]):GetSINMODFromCoordinates
         EP[i] = norm.cdf(Threshold, mu[i], Sigma[i, i])
     return EP
 

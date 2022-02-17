@@ -6,6 +6,10 @@ git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch Adapt
 
 git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch Adaptive_script/samples_2020.05.01.nc' --prune-empty --tag-name-filter cat -- --all
 
+git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch Nidelva/GIS/Norway_shapefile/no_1km.shp' --prune-empty --tag-name-filter cat -- --all
+
+git pull origin master --allow-unrelated-histories
+
 git rm --cached -r **/.idea
 git rm --cached -r **/__pycache__
 git rm --cached -r *.DS_Store

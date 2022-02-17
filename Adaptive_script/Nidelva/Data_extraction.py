@@ -15,12 +15,14 @@ plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams.update({'font.size': 12})
 plt.rcParams.update({'font.style': 'oblique'})
 from datetime import datetime
-from Adaptive_script.Nidelva.usr_func import *
+# from Adaptive_script.Nidelva.usr_func import *
+from usr_func import *
 
 
 class EXCEL2TXT:
 
-    datapath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/'
+    # datapath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/May27/Data/'
+    datapath = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Nidelva/July06/Data/"
     # datapath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/Data/'
     # figpath = '/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Nidelva/July06/Adaptive/fig/'
 
@@ -100,17 +102,20 @@ class EXCEL2TXT:
                 print(datetime.fromtimestamp(self.time_loc.iloc[i]))
                 continue
 
-        self.lat = np.array(lat).reshape(-1, 1)
-        self.lon = np.array(lon).reshape(-1, 1)
-        self.x = np.array(x).reshape(-1, 1)
-        self.y = np.array(y).reshape(-1, 1)
-        self.z = np.array(z).reshape(-1, 1)
-        self.d = np.array(d).reshape(-1, 1)
-        self.sal = np.array(sal).reshape(-1, 1)
-        self.temp = np.array(temp).reshape(-1, 1)
-        self.time_mission = np.array(time_mission).reshape(-1, 1)
+        lat, lon, x, y, z, d, sal, temp, time_mission = map(vectorise, [lat, lon, x, y, z, d, sal, temp, time_mission])
+        # self.lat = np.array(lat).reshape(-1, 1)
+        # self.lon = np.array(lon).reshape(-1, 1)
+        # self.x = np.array(x).reshape(-1, 1)
+        # self.y = np.array(y).reshape(-1, 1)
+        # self.z = np.array(z).reshape(-1, 1)
+        # self.d = np.array(d).reshape(-1, 1)
+        # self.sal = np.array(sal).reshape(-1, 1)
+        # self.temp = np.array(temp).reshape(-1, 1)
+        # self.time_mission = np.array(time_mission).reshape(-1, 1)
 
         self.datasheet = np.hstack((time_mission, lat, lon, x, y, z, d, sal, temp))
+        df = pd.DataFrame(self.datasheet, columns=["timestamp", "lat", "lon", "x", "y", "z", "depth", "salinity", "temperature"])
+        df.to_csv(self.datapath+"Data_on_July06.csv")
         # np.savetxt(figpath + "../data.txt", datasheet, delimiter = ",")
         print("Data is saved successfully!")
 

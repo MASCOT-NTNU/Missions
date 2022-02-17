@@ -25,6 +25,7 @@ plt.rcParams.update({'font.style': 'oblique'})
 import pandas as pd
 from DataAnalysis.usr_func import *
 
+
 class AUVData:
     # path_data = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Adaptive_script/Porto/Onboard/Data/"
     path_data = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Missions/Porto/Simulation/Data/"
