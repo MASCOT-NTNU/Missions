@@ -424,7 +424,7 @@ def EIBV_1D(threshold, mu, Sig, F, R):
     :param threshold:
     :param mu:
     :param Sig:
-    :param F: sampling matrix
+    :param F: sampling vector
     :param R: noise matrix
     :return: EIBV evaluated at every point
     '''
