@@ -1,1 +1,0 @@
-/home/pi/adaframe_ws/src/adaframe_examples/scripts/MASCOT/Data/Pre_survey/Pre_survey_data_on_2021_1026_1920

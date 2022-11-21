@@ -1,5 +1,0 @@
-[2021/11/05 15:01:02] - MSG [Plan.Engine] >> request -- Start Plan (preSurvey)
-[2021/11/05 15:01:02] - MSG [Plan.Engine] >> plan initializing: preSurvey
-[2021/11/05 15:01:02] - MSG [Transports.Logging] >> log stopped '20211105/150100_teleop-spike-423e'
-[2021/11/05 15:01:02] - MSG [Transports.Logging] >> log started '20211105/150102_preSurvey'
-[2021/11/05 15:01:02] - WRN [Supervisors.Vehicle] >> now in 'CALIBRATION' mode

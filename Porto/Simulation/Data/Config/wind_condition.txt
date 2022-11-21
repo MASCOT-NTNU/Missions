@@ -1,1 +1,0 @@
-wind_dir=North, wind_level=Heavy
