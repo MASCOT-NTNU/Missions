@@ -3,6 +3,7 @@ from datetime import datetime
 import numpy as np
 import os
 
+
 class WaterDischargeHandler:
     path_water_discharge = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/WaterDischarge/Data/douro_discharge_2015_2021.csv"
     path_new = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/WaterDischarge/"

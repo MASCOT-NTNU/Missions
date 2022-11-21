@@ -16,9 +16,9 @@ from datetime import datetime
 
 class DataConverter_Tide:
     tide_path = "/Users/yaoling/OneDrive - NTNU/MASCOT_PhD/Data/Porto/Tide/Data/"
-    month_selected = 12 # December
-                        # "Preia - Mar" --> high tide
-                        # "Baixa - Mar" --> low tide
+    month_selected = 12  # December
+                         # "Preia - Mar" --> high tide
+                         # "Baixa - Mar" --> low tide
 
     def __init__(self):
         print("Tide handler is initialised successfully.")

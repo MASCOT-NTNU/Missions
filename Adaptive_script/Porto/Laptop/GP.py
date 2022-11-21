@@ -11,6 +11,7 @@ __status__ = "UnderDevelopment"
 import time
 import numpy as np
 
+
 class GP_Poly:
     '''
     Gaussian Process
@@ -120,6 +121,7 @@ class GP_Poly:
         x = GP_Poly.deg2rad((lat - lat_origin)) / 2 / np.pi * GP_Poly.circumference
         y = GP_Poly.deg2rad((lon - lon_origin)) / 2 / np.pi * GP_Poly.circumference * np.cos(GP_Poly.deg2rad(lat))
         return x, y
+
 
 if __name__ == "__main__":
     a = GP_Poly()

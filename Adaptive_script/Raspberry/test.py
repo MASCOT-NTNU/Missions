@@ -270,7 +270,7 @@ class PathPlanner(AUV, DataAssimilator):
                 self.last_state = self.auv_handler.getState()
                 self.auv_handler.spin()
             self.rate.sleep()
-    pass
+
 
 if __name__ == "__main__":
     a = PathPlanner()
